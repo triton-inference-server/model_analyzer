@@ -25,7 +25,7 @@ class AvgFirstTokenLatency(DecreasingRecord):
     A record for perf_analyzer avg first token to token latency metric
     """
 
-    tag = "avg_first_token_latency"
+    tag = "avg_first_latency"
 
     def __init__(self, value, timestamp=0):
         """
