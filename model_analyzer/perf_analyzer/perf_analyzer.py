@@ -16,6 +16,7 @@
 
 import csv
 import glob
+import json
 import logging
 import os
 import re
@@ -118,6 +119,14 @@ class PerfAnalyzer:
         ]
         return gpu_metrics
 
+    @staticmethod
+    def get_llm_metrics():
+        llm_metrics = [
+            llm_metric[PerfAnalyzer.RECORD_CLASS]
+            for llm_metric in PerfAnalyzer.llm_metric_table
+        ]
+        return llm_metrics
+
     def __init__(self, path, config, max_retries, timeout, max_cpu_util):
         """
         Parameters
@@ -143,6 +152,7 @@ class PerfAnalyzer:
         self._output = ""
         self._perf_records = {}
         self._gpu_records = []
+        self._llm_records = {}
         self._max_cpu_util = max_cpu_util
 
     def run(self, metrics, env=None):
@@ -215,6 +225,19 @@ class PerfAnalyzer:
         """
 
         return self._gpu_records
+
+    def get_llm_records(self):
+        """
+        Returns
+        -------
+        The LLM records from the last perf_analyzer run
+        """
+
+        if self._llm_records:
+            return self._llm_records
+        raise TritonModelAnalyzerException(
+            "Attempted to get perf_analyzer results" "without calling run first."
+        )
 
     def output(self):
         """
@@ -457,14 +480,8 @@ class PerfAnalyzer:
             logger.debug(
                 f"Reading PA results from {perf_config['latency-report-file']}"
             )
-            with open(perf_config["latency-report-file"], mode="r") as f:
-                csv_reader = csv.DictReader(f, delimiter=",")
-
-                for row in csv_reader:
-                    self._perf_records[
-                        perf_config["model-name"]
-                    ] = self._extract_perf_records_from_row(metrics, row)
-                    self._gpu_records = self._extract_gpu_records_from_row(metrics, row)
+            self._extract_gpu_records(perf_config, metrics)
+            self._extract_llm_records(perf_config, metrics)
 
         for perf_config in [
             mrc.perf_config() for mrc in self._config.model_run_configs()
@@ -472,6 +489,63 @@ class PerfAnalyzer:
             # Remove the latency file and all associated composing model latency files
             for f in glob.glob(f"*{perf_config['latency-report-file']}"):
                 os.remove(f)
+
+    def _extract_gpu_records(self, perf_config, metrics):
+        with open(perf_config["latency-report-file"], mode="r") as f:
+            csv_reader = csv.DictReader(f, delimiter=",")
+
+            for row in csv_reader:
+                self._perf_records[
+                    perf_config["model-name"]
+                ] = self._extract_perf_records_from_row(metrics, row)
+                self._gpu_records = self._extract_gpu_records_from_row(metrics, row)
+
+    def _extract_llm_records(self, perf_config, metrics):
+        with open(perf_config["profile-export-file"], mode="r") as f:
+            llm_output = json.load(f)
+
+            avg_first_token_to_token_latency = (
+                self._calculate_avg_first_token_to_token_latency(llm_output)
+            )
+            record = llm_metric[PerfAnalyzer.RECORD_CLASS](
+                value=avg_first_token_to_token_latency
+            )  # type: ignore
+
+            self._llm_records[perf_config["model-name"]].append(record)
+
+            # avg_avg_token_to_token_latency = (
+            #     self._calculate_avg_avg_token_to_token_latency(llm_output)
+            # )
+
+    def _calculate_avg_first_token_to_token_latency(self, llm_output: str) -> float:
+        total_first_token_latency = 0
+        for request in llm_output["experiments"][0]["requests"]:
+            total_first_token_latency += (
+                request["response_timestamps"][0] - request["timestamp"]
+            )
+
+        avg_first_token_to_token_latency = total_first_token_latency / len(
+            llm_output["experiments"][0]["requests"]
+        )
+
+        return avg_first_token_to_token_latency
+
+    def _calculate_avg_avg_token_to_token_latency(self, llm_output: str) -> float:
+        total_token_latency = 0
+        for request in llm_output["experiments"][0]["requests"]:
+            total_response_latency = 0
+            for response_timestamp in request["response_timestamps"]:
+                total_response_latency += response_timestamp - request["timestamp"]
+
+            total_token_latency += total_response_latency / len(
+                request["response_timestamps"]
+            )
+
+        avg_avg_token_to_token_latency = total_token_latency / len(
+            llm_output["experiments"][0]["requests"]
+        )
+
+        return avg_avg_token_to_token_latency
 
     def _extract_perf_records_from_row(
         self, requested_metrics: List[Record], row_metrics: Dict[str, str]

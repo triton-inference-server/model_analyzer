@@ -49,6 +49,7 @@ from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.triton.client.client_factory import TritonClientFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_factory import TritonServerFactory
+from tests.common.test_utils import construct_perf_analyzer_config
 
 from .common import test_result_collector as trc
 from .mocks.mock_client import MockTritonClientMethods
@@ -67,7 +68,56 @@ CONFIG_TEST_ARG = "sync"
 TEST_GRPC_URL = "test_hostname:test_port"
 
 
-class TestPerfAnalyzerMethods(trc.TestResultCollector):
+def mock_open_method(*args, **kwargs):
+    pa_csv_mock = """Concurrency,Inferences/Second,Client Send,Network+Server Send/Recv,Server Queue,Server Compute Input,Server Compute Infer,Server Compute Output,"""
+    pa_csv_mock += """Client Recv,p50 latency,p90 latency,p95 latency,p99 latency,Avg latency,request/response,response wait,"""
+    pa_csv_mock += """Avg GPU Utilization,Avg GPU Power Usage,Max GPU Memory Usage,Total GPU Memory\n"""
+    pa_csv_mock += """1,46.8,2,187,18,34,65,16,1,4600,4700,4800,4900,5000,3,314,"""
+    pa_csv_mock += """GPU-aaf4fea0:0.809;GPU-aaf4fea1:0.901;GPU-aaf4fea2:0.745;,GPU-aaf4fea0:91.2;GPU-aaf4fea1:100;,GPU-aaf4fea0:1000000000;GPU-aaf4fea1:2000000000,GPU-aaf4fea0:1500000000;GPU-aaf4fea2:3000000000"""
+
+    # yapf: disable
+    pa_json_mock = """
+    {
+        "experiments": [
+            {
+                "experiment": {
+                    "mode": "concurrency",
+                    "value": 4
+                },
+                "requests": [
+                    {
+                        "timestamp": 1,
+                        "sequence_id": 1,
+                        "response_timestamps": [2,3,4]
+                    },
+                    {
+                        "timestamp": 4,
+                        "sequence_id": 2,
+                        "response_timestamps": [5,6]
+                    },
+                    {
+                        "timestamp": 6,
+                        "sequence_id": 3,
+                        "response_timestamps": [7,8,9]
+                    }
+                ],
+                "window_boundaries": [1,5,6]
+            }
+        ],
+        "version": "1.2.3"
+    }
+    """
+    # yapf: enable
+
+    if args[0] == "my-model-results.csv":
+        return mock_open(read_data=pa_csv_mock)(*args, **kwargs)
+    elif args[0] == "my-model-llm-results.csv":
+        return mock_open(read_data=pa_json_mock)(*args, **kwargs)
+    else:
+        return mock_open(read_data=None)(*args, **kwargs)
+
+
+class TestPerfAnalyzer(trc.TestResultCollector):
     def setUp(self):
         # Mocks
         self.server_local_mock = MockServerLocalMethods()
@@ -80,7 +130,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.client_mock.start()
 
         # PerfAnalyzer config for all tests
-        self.config = PerfAnalyzerConfig()
+        self.config = construct_perf_analyzer_config()
         self.config["model-name"] = TEST_MODEL_NAME
         self.config["measurement-interval"] = 1000
         self.config["measurement-request-count"] = 50
@@ -88,6 +138,16 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.run_config = RunConfig({})
         self.run_config.add_model_run_config(
             ModelRunConfig("fake_name", MagicMock(), self.config)
+        )
+
+        self.llm_config = construct_perf_analyzer_config(is_llm_model=True)
+        self.llm_config["model-name"] = TEST_MODEL_NAME
+        self.llm_config["measurement-interval"] = 1000
+        self.llm_config["measurement-request-count"] = 50
+
+        self.llm_run_config = RunConfig({})
+        self.llm_run_config.add_model_run_config(
+            ModelRunConfig("fake_name", MagicMock(), self.llm_config)
         )
 
         self.gpus = [GPUDevice("TEST_DEVICE_NAME", 0, "TEST_PCI_BUS_ID", "TEST_UUID")]
@@ -259,7 +319,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         perf_analyzer = PerfAnalyzer(
             path=PERF_BIN_PATH,
-            config=self.run_config,
+            config=self.llm_run_config,
             max_retries=10,
             timeout=100,
             max_cpu_util=50,
@@ -268,18 +328,12 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.server.start()
         self.client.wait_for_server_ready(num_retries=1)
 
-        pa_csv_mock = """Concurrency,Inferences/Second,Client Send,Network+Server Send/Recv,Server Queue,Server Compute Input,Server Compute Infer,Server Compute Output,"""
-        pa_csv_mock += """Client Recv,p50 latency,p90 latency,p95 latency,p99 latency,Avg latency,request/response,response wait,"""
-        pa_csv_mock += """Avg GPU Utilization,Avg GPU Power Usage,Max GPU Memory Usage,Total GPU Memory\n"""
-        pa_csv_mock += """1,46.8,2,187,18,34,65,16,1,4600,4700,4800,4900,5000,3,314,"""
-        pa_csv_mock += """GPU-aaf4fea0:0.809;GPU-aaf4fea1:0.901;GPU-aaf4fea2:0.745;,GPU-aaf4fea0:91.2;GPU-aaf4fea1:100;,GPU-aaf4fea0:1000000000;GPU-aaf4fea1:2000000000,GPU-aaf4fea0:1500000000;GPU-aaf4fea2:3000000000"""
-
         # Test avg latency parsing. GPU metric is ignored for get_perf_records()
         perf_metrics = [PerfLatencyAvg, GPUUtilization]
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
