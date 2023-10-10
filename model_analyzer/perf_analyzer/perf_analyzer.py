@@ -501,21 +501,30 @@ class PerfAnalyzer:
                 self._gpu_records = self._extract_gpu_records_from_row(metrics, row)
 
     def _extract_llm_records(self, perf_config, metrics):
+        if not perf_config["profile-export-file"]:
+            return
+
+        self._llm_records[perf_config["model-name"]] = []
+
         with open(perf_config["profile-export-file"], mode="r") as f:
             llm_output = json.load(f)
 
             avg_first_token_to_token_latency = (
                 self._calculate_avg_first_token_to_token_latency(llm_output)
             )
-            record = llm_metric[PerfAnalyzer.RECORD_CLASS](
+            record = PerfAnalyzer.llm_metric_table[0][PerfAnalyzer.RECORD_CLASS](
                 value=avg_first_token_to_token_latency
             )  # type: ignore
 
             self._llm_records[perf_config["model-name"]].append(record)
 
-            # avg_avg_token_to_token_latency = (
-            #     self._calculate_avg_avg_token_to_token_latency(llm_output)
-            # )
+            avg_avg_token_to_token_latency = (
+                self._calculate_avg_avg_token_to_token_latency(llm_output)
+            )
+            record = PerfAnalyzer.llm_metric_table[0][PerfAnalyzer.RECORD_CLASS](
+                value=avg_first_token_to_token_latency
+            )  # type: ignore
+            self._llm_records[perf_config["model-name"]].append(record)
 
     def _calculate_avg_first_token_to_token_latency(self, llm_output: str) -> float:
         total_first_token_latency = 0

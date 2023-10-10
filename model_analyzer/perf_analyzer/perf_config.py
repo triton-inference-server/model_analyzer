@@ -196,7 +196,7 @@ class PerfAnalyzerConfig:
             "verbose-csv": "--verbose-csv",
         }
 
-        if profile_config.is_llm_mode():
+        if profile_config.is_llm_model():
             params.update({"profile-export-file": model_name + "-llm-results.csv"})
 
         if profile_config.triton_launch_mode == "c_api":

@@ -192,16 +192,17 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
     def test_perf_analyzer_boolean_args(self):
         """Test that only positive boolean args get added"""
-        expected_cli_str = "-m test_model --measurement-interval=1000 --binary-search --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -u localhost:8001 -i grpc -f my-model-results.csv --measurement-interval=1000 --concurrency-range=1 --binary-search --measurement-mode=count_windows --measurement-request-count=50 --collect-metrics --metrics-url=http://localhost:8002/metrics --metrics-interval=1000.0"
 
         self.config["async"] = "False"
         self.config["binary-search"] = "True"
 
+        foo = self.config.to_cli_string()
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
     def test_perf_analyzer_additive_args(self):
         shape = ["name1:1,2,3", "name2:4,5,6"]
-        expected_cli_str = "-m test_model --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -u localhost:8001 -i grpc -f my-model-results.csv --measurement-interval=1000 --concurrency-range=1 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-mode=count_windows --measurement-request-count=50 --collect-metrics --metrics-url=http://localhost:8002/metrics --metrics-interval=1000.0"
 
         self.config["shape"] = shape[:]
 
@@ -209,7 +210,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
         shape = "name1:1,2,3"
-        expected_cli_str = "-m test_model --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -u localhost:8001 -i grpc -f my-model-results.csv --measurement-interval=1000 --concurrency-range=1 --shape=name1:1,2,3 --measurement-mode=count_windows --measurement-request-count=50 --collect-metrics --metrics-url=http://localhost:8002/metrics --metrics-interval=1000.0"
         self.config["shape"] = shape
 
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
@@ -237,10 +238,13 @@ class TestPerfAnalyzer(trc.TestResultCollector):
         ssl_https_private_key_file = "h"
 
         expected_cli_str = (
-            f"-m test_model --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl "
+            f"-m test_model -b 1 -u localhost:8001 -i grpc -f my-model-results.csv --measurement-interval=1000 "
+            f"--concurrency-range=1 --measurement-mode=count_windows --measurement-request-count=50 --ssl-grpc-use-ssl "
             f"--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c "
-            f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e "
-            f"--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h"
+            f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d "
+            f"--ssl-https-client-certificate-type=e --ssl-https-client-certificate-file=f --ssl-https-private-key-type=g "
+            f"--ssl-https-private-key-file=h --collect-metrics --metrics-url=http://localhost:8002/metrics "
+            f"--metrics-interval=1000.0"
         )
 
         self.config["ssl-grpc-use-ssl"] = ssl_grpc_use_ssl
@@ -301,11 +305,15 @@ class TestPerfAnalyzer(trc.TestResultCollector):
         self.config["ssl-grpc-use-ssl"] = ssl_grpc_use_ssl
         self.assertEqual(self.config["ssl-grpc-use-ssl"], ssl_grpc_use_ssl)
         expected_cli_str = (
-            f"-m test_model --measurement-interval=1000 --measurement-request-count=50 "
+            f"-m test_model -b 1 -u localhost:8001 -i grpc -f my-model-results.csv --measurement-interval=1000 "
+            f"--concurrency-range=1 --measurement-mode=count_windows --measurement-request-count=50 "
             f"--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c "
-            f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e "
-            f"--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h"
+            f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d "
+            f"--ssl-https-client-certificate-type=e --ssl-https-client-certificate-file=f "
+            f"--ssl-https-private-key-type=g --ssl-https-private-key-file=h --collect-metrics "
+            f"--metrics-url=http://localhost:8002/metrics --metrics-interval=1000.0"
         )
+
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
     def test_run(self):
@@ -319,7 +327,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         perf_analyzer = PerfAnalyzer(
             path=PERF_BIN_PATH,
-            config=self.llm_run_config,
+            config=self.run_config,
             max_retries=10,
             timeout=100,
             max_cpu_util=50,
@@ -346,7 +354,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
@@ -359,7 +367,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
@@ -372,7 +380,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
@@ -385,7 +393,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
@@ -398,7 +406,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
@@ -411,7 +419,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
@@ -424,7 +432,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
@@ -437,7 +445,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
@@ -450,7 +458,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
@@ -463,7 +471,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(gpu_metrics)
 
@@ -481,7 +489,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(gpu_metrics)
 
@@ -497,7 +505,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(gpu_metrics)
 
@@ -516,7 +524,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(gpu_metrics)
 
@@ -541,7 +549,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
 
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
+            side_effect=mock_open_method,
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(perf_metrics)
 
@@ -705,10 +713,27 @@ class TestPerfAnalyzer(trc.TestResultCollector):
             "perf_analyzer",
             "-m",
             "test_model",
+            "-b",
+            "1",
+            "-u",
+            "localhost:8001",
+            "-i",
+            "grpc",
+            "-f",
+            "my-model-results.csv",
             "--measurement-interval",
             "1000",
+            "--concurrency-range",
+            "1",
+            "--measurement-mode",
+            "count_windows",
             "--measurement-request-count",
             "50",
+            "--collect-metrics",
+            "--metrics-url",
+            "http://localhost:8002/metrics",
+            "--metrics-interval",
+            "1000.0",
         ]
         self.assertEqual(pa._get_cmd(), expected_cmd)
 
