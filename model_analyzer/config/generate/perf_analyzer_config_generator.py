@@ -93,11 +93,12 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._model_name = model_name
         self._cli_config = cli_config
 
+        self._llm_input_dict = self._create_input_dict(model_perf_analyzer_flags)
+
         self._perf_analyzer_flags = self._set_perf_analyzer_flags(
             model_perf_analyzer_flags
         )
 
-        self._llm_input_dict = self._create_input_dict(model_perf_analyzer_flags)
         self._model_parameters = model_parameters
         self._parameters = self._create_parameter_list()
 
@@ -191,12 +192,15 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _set_perf_analyzer_flags(self, model_perf_analyzer_flags: dict) -> dict:
         # For LLM models we will be creating custom input data based on prompt length
+        perf_analyzer_flags = {
+            key: value for key, value in model_perf_analyzer_flags.items()
+        }
+
         if self._cli_config.is_llm_model():
-            perf_analyzer_flags = deepcopy(model_perf_analyzer_flags)
+            # perf_analyzer_flags = deepcopy(model_perf_analyzer_flags)
             perf_analyzer_flags.pop("input-data")
-            return perf_analyzer_flags
-        else:
-            return model_perf_analyzer_flags
+
+        return perf_analyzer_flags
 
     def _create_input_dict(self, model_perf_analyzer_flags: dict) -> dict:
         if self._cli_config.is_llm_model():
