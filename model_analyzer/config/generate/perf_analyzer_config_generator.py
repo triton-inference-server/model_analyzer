@@ -16,7 +16,6 @@
 
 import json
 import logging
-from copy import deepcopy
 from typing import Dict, Generator, List, Optional, Tuple
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
@@ -192,10 +191,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _set_perf_analyzer_flags(self, model_perf_analyzer_flags: dict) -> dict:
         # For LLM models we will be creating custom input data based on prompt length
-        perf_analyzer_flags = deepcopy(model_perf_analyzer_flags)
-        # perf_analyzer_flags = {
-        #     key: value for key, value in model_perf_analyzer_flags.items()
-        # }
+        perf_analyzer_flags = {k: v for k, v in model_perf_analyzer_flags.items()}
 
         if self._cli_config.is_llm_model():
             perf_analyzer_flags.pop("input-data")
@@ -212,9 +208,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             return {}
 
     def _modify_prompt_in_input_dict(self, prompt_length: int) -> Dict:
-        modified_input_dict = deepcopy(self._llm_input_dict)
-
         modified_prompt = ["hi"] * prompt_length
+
+        modified_input_dict = {k: v for k, v in self._llm_input_dict.items()}
         modified_input_dict["data"][0]["PROMPT"] = modified_prompt
 
         return modified_input_dict
@@ -322,10 +318,12 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _extract_prompt_length(
         self, unmodified_parameter_combination: Dict
     ) -> Tuple[int, Dict]:
-        if self._cli_config.is_llm_model():
-            modified_parameter_combination = deepcopy(unmodified_parameter_combination)
-            prompt_length = modified_parameter_combination.pop("prompt-length")
+        modified_parameter_combination = {
+            k: v for k, v in unmodified_parameter_combination.items()
+        }
 
+        if self._cli_config.is_llm_model():
+            prompt_length = modified_parameter_combination.pop("prompt-length")
             return prompt_length, modified_parameter_combination
         else:
             return 0, unmodified_parameter_combination
