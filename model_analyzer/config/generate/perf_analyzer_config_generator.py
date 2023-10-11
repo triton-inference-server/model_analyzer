@@ -360,9 +360,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         perf_config.update_config({"input-data": self._input_json_filename})
 
     def _write_modified_input_dict_to_file(self, modified_input_dict: Dict) -> None:
-        temp_input_data = open(self._input_json_filename, "w")
-        json.dump(modified_input_dict, temp_input_data)
-        temp_input_data.close()
+        with open(self._input_json_filename, "w") as f:
+            json.dump(modified_input_dict, f)
 
     def _create_non_parameter_perf_config_values(self) -> dict:
         perf_config_values = {
