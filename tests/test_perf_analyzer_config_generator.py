@@ -564,7 +564,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         Test LLM Search:
             - max token count 1->256
 
-        Concurrency and prompt length max set to 1
+        Concurrency and text input length max set to 1
         """
 
         # yapf: disable
@@ -586,17 +586,17 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             "--llm-search-enable",
             "--run-config-search-max-concurrency",
             "1",
-            "--run-config-search-max-prompt-length",
+            "--run-config-search-max-text-input-length",
             "1",
         ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args
         )
 
-    def test_llm_search_prompt_length(self):
+    def test_llm_search_text_input_length(self):
         """
         Test LLM Search:
-            - Prompt length 1->1024
+            - Input length 1->1024
 
         Concurrency and max token count set to 1
         """
@@ -610,10 +610,10 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        prompt_lengths = utils.generate_doubled_list(1, 1024)
+        text_input_lengths = utils.generate_doubled_list(1, 1024)
         expected_configs = [
             construct_perf_analyzer_config(llm_search_mode=True)
-            for pl in prompt_lengths
+            for pl in text_input_lengths
         ]
 
         pa_cli_args = [
@@ -919,7 +919,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         self.mock_os.start()
 
         self._input_data = """{
-            "data": [{"PROMPT": ["Hello, my name is"], "STREAM": [true]}]
+            "data": [{"text_input": ["Hello, my name is"], "stream": [true]}]
         }"""
 
     def tearDown(self):

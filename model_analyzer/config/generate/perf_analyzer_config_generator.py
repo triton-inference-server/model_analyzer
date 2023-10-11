@@ -16,6 +16,7 @@
 
 import json
 import logging
+from itertools import repeat
 from typing import Dict, Generator, List, Optional, Tuple
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
@@ -64,7 +65,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             custom perf analyzer configuration
 
         model_parameters: Dict
-            model constraints for batch sizes, concurrency, request rate, prompt length, etc..
+            model constraints for batch sizes, concurrency, request rate, text input length, etc..
 
         early_exit_enable: Bool
             If true, this class can early exit during search of concurrency/request rate
@@ -102,7 +103,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._inference_loads = self._create_inference_load_list()
 
         self._batch_sizes = sorted(model_parameters["batch_sizes"])
-        self._prompt_lengths = self._create_prompt_length_list()
+        self._text_input_lengths = self._create_text_input_length_list()
         self._max_token_counts = self._create_max_token_count_list()
 
         self._perf_config_non_parameter_values = (
@@ -190,7 +191,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._inference_load_results.extend(measurement)
 
     def _set_perf_analyzer_flags(self, model_perf_analyzer_flags: Dict) -> Dict:
-        # For LLM models we will be creating custom input data based on prompt length
+        # For LLM models we will be creating custom input data based on text input length
         perf_analyzer_flags = {k: v for k, v in model_perf_analyzer_flags.items()}
 
         if self._cli_config.is_llm_model():
@@ -238,18 +239,18 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 self._cli_config.run_config_search_max_concurrency,
             )
 
-    def _create_prompt_length_list(self) -> List[int]:
+    def _create_text_input_length_list(self) -> List[int]:
         if not self._cli_config.is_llm_model():
             return []
 
-        if self._model_parameters["prompt_length"]:
-            return sorted(self._model_parameters["prompt_length"])
+        if self._model_parameters["text_input_length"]:
+            return sorted(self._model_parameters["text_input_length"])
         elif self._cli_config.run_config_search_disable:
             return [1]
         else:
             return utils.generate_doubled_list(
-                self._cli_config.run_config_search_min_prompt_length,
-                self._cli_config.run_config_search_max_prompt_length,
+                self._cli_config.run_config_search_min_text_input_length,
+                self._cli_config.run_config_search_max_text_input_length,
             )
 
     def _create_max_token_count_list(self) -> List[int]:
@@ -286,16 +287,16 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         perf_config = self._create_base_perf_config()
 
         (
-            prompt_length,
+            text_input_length,
             modified_non_parameter_combination,
-        ) = self._extract_prompt_length(non_parameter_combination)
+        ) = self._extract_text_input_length(non_parameter_combination)
 
         self._update_perf_config_based_on_non_parameter_combination(
             perf_config, modified_non_parameter_combination
         )
         self._update_perf_config_based_on_inference_load(perf_config, inference_load)
         self._update_perf_config_based_on_perf_analyzer_flags(perf_config)
-        self._update_perf_config_for_llm_model(perf_config, prompt_length)
+        self._update_perf_config_for_llm_model(perf_config, text_input_length)
 
         return perf_config
 
@@ -307,7 +308,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         return perf_config
 
-    def _extract_prompt_length(
+    def _extract_text_input_length(
         self, non_parameter_combination: Dict
     ) -> Tuple[int, Dict]:
         if not self._cli_config.is_llm_model():
@@ -316,8 +317,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         modified_non_parameter_combination = {
             k: v for k, v in non_parameter_combination.items()
         }
-        prompt_length = modified_non_parameter_combination.pop("prompt-length")
-        return prompt_length, modified_non_parameter_combination
+        text_input_length = modified_non_parameter_combination.pop("text-input-length")
+        return text_input_length, modified_non_parameter_combination
 
     def _update_perf_config_based_on_non_parameter_combination(
         self, perf_config: PerfAnalyzerConfig, non_parameter_combination: Dict
@@ -340,21 +341,21 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             perf_config.update_config({"concurrency-range": inference_load})
 
     def _update_perf_config_for_llm_model(
-        self, perf_config: PerfAnalyzerConfig, prompt_length: int
+        self, perf_config: PerfAnalyzerConfig, text_input_length: int
     ) -> None:
         if not self._cli_config.is_llm_model():
             return
 
-        modified_input_dict = self._modify_prompt_in_input_dict(prompt_length)
+        modified_input_dict = self._modify_text_in_input_dict(text_input_length)
         self._write_modified_input_dict_to_file(modified_input_dict)
 
         perf_config.update_config({"input-data": self._input_json_filename})
 
-    def _modify_prompt_in_input_dict(self, prompt_length: int) -> Dict:
-        modified_prompt = ["hi"] * prompt_length
+    def _modify_text_in_input_dict(self, text_input_length: int) -> Dict:
+        modified_text = " ".join(repeat("Hello", text_input_length))
 
         modified_input_dict = {k: v for k, v in self._llm_input_dict.items()}
-        modified_input_dict["data"][0]["PROMPT"] = modified_prompt
+        modified_input_dict["data"][0]["text-input"] = modified_text
 
         return modified_input_dict
 
@@ -369,7 +370,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         if self._cli_config.is_llm_model():
             perf_config_values["max-token-count"] = self._max_token_counts
-            perf_config_values["prompt-length"] = self._prompt_lengths
+            perf_config_values["text-input-length"] = self._text_input_lengths
 
         return perf_config_values
 
