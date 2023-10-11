@@ -22,8 +22,8 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.input.config_defaults import DEFAULT_INPUT_JSON_PATH
 from model_analyzer.constants import (
     LOGGER_NAME,
+    THROUGHPUT_MINIMUM_CONSECUTIVE_INFERENCE_LOAD_TRIES,
     THROUGHPUT_MINIMUM_CONSECUTIVE_NON_PARAMETER_TRIES,
-    THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
     THROUGHPUT_MINIMUM_GAIN,
 )
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
@@ -74,19 +74,19 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         # All configs are pregenerated in _configs[][]
         # Indexed as follows:
-        #    _configs[_curr_non_parameter_index][_curr_parameter_index]
+        #    _configs[_curr_non_parameter_index][_curr_inference_load_index]
         #
         self._curr_non_parameter_index = 0
-        self._curr_parameter_index = 0
+        self._curr_inference_load_index = 0
         self._configs: List[List[PerfAnalyzerConfig]] = []
-        self._parameter_warning_printed = False
+        self._inference_load_warning_printed = False
 
         # Flag to indicate we have started to return results
         #
         self._generator_started = False
 
         self._last_results: List[RunConfigMeasurement] = []
-        self._parameter_results: List[Optional[RunConfigMeasurement]] = []
+        self._inference_load_results: List[Optional[RunConfigMeasurement]] = []
         self._non_parameter_results: List[Optional[RunConfigMeasurement]] = []
 
         self._model_name = model_name
@@ -99,7 +99,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         )
 
         self._model_parameters = model_parameters
-        self._parameters = self._create_parameter_list()
+        self._inference_loads = self._create_inference_load_list()
 
         self._batch_sizes = sorted(model_parameters["batch_sizes"])
         self._prompt_lengths = self._create_prompt_length_list()
@@ -121,7 +121,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     @staticmethod
     def throughput_gain_valid_helper(
         throughputs: List[Optional[RunConfigMeasurement]],
-        min_tries: int = THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
+        min_tries: int = THROUGHPUT_MINIMUM_CONSECUTIVE_INFERENCE_LOAD_TRIES,
         min_gain: float = THROUGHPUT_MINIMUM_GAIN,
     ) -> bool:
         if len(throughputs) < min_tries:
@@ -158,7 +158,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
             self._generator_started = True
             config = self._configs[self._curr_non_parameter_index][
-                self._curr_parameter_index
+                self._curr_inference_load_index
             ]
             yield (config)
 
@@ -187,7 +187,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             measurement = [max(valid_measurements)]
 
             self._last_results = measurement
-            self._parameter_results.extend(measurement)
+            self._inference_load_results.extend(measurement)
 
     def _set_perf_analyzer_flags(self, model_perf_analyzer_flags: Dict) -> Dict:
         # For LLM models we will be creating custom input data based on prompt length
@@ -207,8 +207,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         else:
             return {}
 
-    def _create_parameter_list(self) -> List[int]:
-        # The two possible parameters are request rate or concurrency
+    def _create_inference_load_list(self) -> List[int]:
+        # The two possible inference loads are request rate or concurrency
         # Concurrency is the default and will be used unless the user specifies
         # request rate, either as a model parameter or a config option
         if self._cli_config.is_request_rate_specified(self._model_parameters):
@@ -267,33 +267,33 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             )
 
     def _generate_perf_configs(self) -> None:
-        all_non_parameter_combinations = utils.generate_parameter_combinations(
+        non_parameter_combinations = utils.generate_parameter_combinations(
             self._perf_config_non_parameter_values
         )
-        for unmodified_non_parameter_combination in all_non_parameter_combinations:
-            all_perf_configs_for_a_given_parameter = []
-            for parameter in self._parameters:
+        for non_parameter_combination in non_parameter_combinations:
+            perf_configs_for_a_given_combination = []
+            for inference_load in self._inference_loads:
                 new_perf_config = self._create_new_perf_config(
-                    parameter, unmodified_non_parameter_combination
+                    inference_load, non_parameter_combination
                 )
-                all_perf_configs_for_a_given_parameter.append(new_perf_config)
+                perf_configs_for_a_given_combination.append(new_perf_config)
 
-            self._configs.append(all_perf_configs_for_a_given_parameter)
+            self._configs.append(perf_configs_for_a_given_combination)
 
     def _create_new_perf_config(
-        self, parameter: int, unmodified_non_parameter_combination: Dict
+        self, inference_load: int, non_parameter_combination: Dict
     ) -> PerfAnalyzerConfig:
         perf_config = self._create_base_perf_config()
 
         (
             prompt_length,
             modified_non_parameter_combination,
-        ) = self._extract_prompt_length(unmodified_non_parameter_combination)
+        ) = self._extract_prompt_length(non_parameter_combination)
 
         self._update_perf_config_based_on_non_parameter_combination(
             perf_config, modified_non_parameter_combination
         )
-        self._update_perf_config_based_on_parameter(perf_config, parameter)
+        self._update_perf_config_based_on_inference_load(perf_config, inference_load)
         self._update_perf_config_based_on_perf_analyzer_flags(perf_config)
         self._update_perf_config_for_llm_model(perf_config, prompt_length)
 
@@ -308,17 +308,16 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return perf_config
 
     def _extract_prompt_length(
-        self, unmodified_parameter_combination: Dict
+        self, non_parameter_combination: Dict
     ) -> Tuple[int, Dict]:
-        modified_parameter_combination = {
-            k: v for k, v in unmodified_parameter_combination.items()
-        }
+        if not self._cli_config.is_llm_model():
+            return 0, non_parameter_combination
 
-        if self._cli_config.is_llm_model():
-            prompt_length = modified_parameter_combination.pop("prompt-length")
-            return prompt_length, modified_parameter_combination
-        else:
-            return 0, unmodified_parameter_combination
+        modified_non_parameter_combination = {
+            k: v for k, v in non_parameter_combination.items()
+        }
+        prompt_length = modified_non_parameter_combination.pop("prompt-length")
+        return prompt_length, modified_non_parameter_combination
 
     def _update_perf_config_based_on_non_parameter_combination(
         self, perf_config: PerfAnalyzerConfig, non_parameter_combination: Dict
@@ -330,15 +329,15 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     ) -> None:
         perf_config.update_config(self._perf_analyzer_flags)
 
-    def _update_perf_config_based_on_parameter(
-        self, perf_config: PerfAnalyzerConfig, parameter: int
+    def _update_perf_config_based_on_inference_load(
+        self, perf_config: PerfAnalyzerConfig, inference_load: int
     ) -> None:
         if self._cli_config.is_llm_model():
-            perf_config.update_config({"periodic-concurrency-range": parameter})
+            perf_config.update_config({"periodic-concurrency-range": inference_load})
         elif self._cli_config.is_request_rate_specified(self._model_parameters):
-            perf_config.update_config({"request-rate-range": parameter})
+            perf_config.update_config({"request-rate-range": inference_load})
         else:
-            perf_config.update_config({"concurrency-range": parameter})
+            perf_config.update_config({"concurrency-range": inference_load})
 
     def _update_perf_config_for_llm_model(
         self, perf_config: PerfAnalyzerConfig, prompt_length: int
@@ -375,26 +374,26 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return perf_config_values
 
     def _step(self) -> None:
-        self._step_parameter()
+        self._step_inference_load()
 
-        if self._done_walking_parameters():
+        if self._done_walking_inference_loads():
             self._add_best_throughput_to_non_parameter_results()
-            self._reset_parameters()
+            self._reset_inference_loads()
             self._step_non_parameter()
 
     def _add_best_throughput_to_non_parameter_results(self) -> None:
-        if self._parameter_results:
+        if self._inference_load_results:
             # type is List[Optional[RCM]]
-            best = max(self._parameter_results)  # type: ignore
+            best = max(self._inference_load_results)  # type: ignore
             self._non_parameter_results.append(best)
 
-    def _reset_parameters(self) -> None:
-        self._curr_parameter_index = 0
-        self._parameter_warning_printed = False
-        self._parameter_results = []
+    def _reset_inference_loads(self) -> None:
+        self._curr_inference_load_index = 0
+        self._inference_load_warning_printed = False
+        self._inference_load_results = []
 
-    def _step_parameter(self) -> None:
-        self._curr_parameter_index += 1
+    def _step_inference_load(self) -> None:
+        self._curr_inference_load_index += 1
 
     def _step_non_parameter(self) -> None:
         self._curr_non_parameter_index += 1
@@ -402,11 +401,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _done_walking(self) -> bool:
         return self._done_walking_non_parameters()
 
-    def _done_walking_parameters(self) -> bool:
-        if len(self._parameters) == self._curr_parameter_index:
+    def _done_walking_inference_loads(self) -> bool:
+        if len(self._inference_loads) == self._curr_inference_load_index:
             return True
-        if self._early_exit_enable and not self._parameter_throughput_gain_valid():
-            if not self._parameter_warning_printed:
+        if self._early_exit_enable and not self._inference_load_throughput_gain_valid():
+            if not self._inference_load_warning_printed:
                 if self._cli_config.is_request_rate_specified(self._model_parameters):
                     logger.info(
                         "No longer increasing request rate as throughput has plateaued"
@@ -415,7 +414,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                     logger.info(
                         "No longer increasing concurrency as throughput has plateaued"
                     )
-                self._parameter_warning_printed = True
+                self._inference_load_warning_printed = True
             return True
         return False
 
@@ -434,11 +433,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _last_results_erroneous(self) -> bool:
         return not self._last_results or self._last_results[-1] is None
 
-    def _parameter_throughput_gain_valid(self) -> bool:
-        """Check if any of the last X parameter results resulted in valid gain"""
+    def _inference_load_throughput_gain_valid(self) -> bool:
+        """Check if any of the last X inference load results resulted in valid gain"""
         return PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
-            throughputs=self._parameter_results,
-            min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
+            throughputs=self._inference_load_results,
+            min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_INFERENCE_LOAD_TRIES,
             min_gain=THROUGHPUT_MINIMUM_GAIN,
         )
 
