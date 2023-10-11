@@ -72,7 +72,7 @@ class PerfAnalyzerConfig:
         "metrics-url",
         "metrics-interval",
         "bls-composing-models",
-        "max-token-count",
+        "request-parameter",
     ]
 
     input_to_options = [
@@ -276,7 +276,7 @@ class PerfAnalyzerConfig:
             "concurrency-range": self._args["concurrency-range"],
             "request-rate-range": self._args["request-rate-range"],
             "periodic-concurrency-range": self._args["periodic-concurrency-range"],
-            "max-token-count": self._args["max-token-count"],
+            "max-tokens": self._args["request-parameter"],
         }
 
     @classmethod
