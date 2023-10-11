@@ -197,7 +197,6 @@ class TestPerfAnalyzer(trc.TestResultCollector):
         self.config["async"] = "False"
         self.config["binary-search"] = "True"
 
-        foo = self.config.to_cli_string()
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
     def test_perf_analyzer_additive_args(self):

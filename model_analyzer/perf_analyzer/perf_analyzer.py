@@ -518,11 +518,11 @@ class PerfAnalyzer:
 
             self._llm_records[perf_config["model-name"]].append(record)
 
-            avg_avg_token_to_token_latency = (
-                self._calculate_avg_avg_token_to_token_latency(llm_output)
+            avg_token_to_token_latency = self._calculate_avg_token_to_token_latency(
+                llm_output
             )
             record = PerfAnalyzer.llm_metric_table[0][PerfAnalyzer.RECORD_CLASS](
-                value=avg_first_token_to_token_latency
+                value=avg_token_to_token_latency
             )  # type: ignore
             self._llm_records[perf_config["model-name"]].append(record)
 
@@ -539,7 +539,7 @@ class PerfAnalyzer:
 
         return avg_first_token_to_token_latency
 
-    def _calculate_avg_avg_token_to_token_latency(self, llm_output: str) -> float:
+    def _calculate_avg_token_to_token_latency(self, llm_output: str) -> float:
         total_token_latency = 0
         for request in llm_output["experiments"][0]["requests"]:
             total_response_latency = 0
@@ -550,11 +550,11 @@ class PerfAnalyzer:
                 request["response_timestamps"]
             )
 
-        avg_avg_token_to_token_latency = total_token_latency / len(
+        avg_token_to_token_latency = total_token_latency / len(
             llm_output["experiments"][0]["requests"]
         )
 
-        return avg_avg_token_to_token_latency
+        return avg_token_to_token_latency
 
     def _extract_perf_records_from_row(
         self, requested_metrics: List[Record], row_metrics: Dict[str, str]
