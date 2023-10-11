@@ -207,14 +207,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         else:
             return {}
 
-    def _modify_prompt_in_input_dict(self, prompt_length: int) -> Dict:
-        modified_prompt = ["hi"] * prompt_length
-
-        modified_input_dict = {k: v for k, v in self._llm_input_dict.items()}
-        modified_input_dict["data"][0]["PROMPT"] = modified_prompt
-
-        return modified_input_dict
-
     def _create_parameter_list(self) -> List[int]:
         # The two possible parameters are request rate or concurrency
         # Concurrency is the default and will be used unless the user specifies
@@ -358,6 +350,14 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._write_modified_input_dict_to_file(modified_input_dict)
 
         perf_config.update_config({"input-data": self._input_json_filename})
+
+    def _modify_prompt_in_input_dict(self, prompt_length: int) -> Dict:
+        modified_prompt = ["hi"] * prompt_length
+
+        modified_input_dict = {k: v for k, v in self._llm_input_dict.items()}
+        modified_input_dict["data"][0]["PROMPT"] = modified_prompt
+
+        return modified_input_dict
 
     def _write_modified_input_dict_to_file(self, modified_input_dict: Dict) -> None:
         with open(self._input_json_filename, "w") as f:
