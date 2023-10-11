@@ -526,7 +526,7 @@ class PerfAnalyzer:
             )  # type: ignore
             self._llm_records[perf_config["model-name"]].append(record)
 
-    def _calculate_avg_first_token_to_token_latency(self, llm_output: str) -> float:
+    def _calculate_avg_first_token_to_token_latency(self, llm_output: Dict) -> float:
         total_first_token_latency = 0
         for request in llm_output["experiments"][0]["requests"]:
             total_first_token_latency += (
@@ -539,8 +539,8 @@ class PerfAnalyzer:
 
         return avg_first_token_to_token_latency
 
-    def _calculate_avg_token_to_token_latency(self, llm_output: str) -> float:
-        total_token_latency = 0
+    def _calculate_avg_token_to_token_latency(self, llm_output: Dict) -> float:
+        total_token_latency = 0.0
         for request in llm_output["experiments"][0]["requests"]:
             total_response_latency = 0
             for response_timestamp in request["response_timestamps"]:
