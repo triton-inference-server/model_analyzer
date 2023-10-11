@@ -1548,7 +1548,7 @@ class ConfigCommandProfile(ConfigCommand):
 
     def is_llm_model(self) -> bool:
         """
-        Returns true the user has enabled llm search or set any llm search value
+        Returns true if the user has enabled llm search or set any llm search value
         """
         return (
             self.llm_search_enable
