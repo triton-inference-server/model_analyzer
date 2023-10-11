@@ -189,7 +189,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._last_results = measurement
             self._parameter_results.extend(measurement)
 
-    def _set_perf_analyzer_flags(self, model_perf_analyzer_flags: dict) -> dict:
+    def _set_perf_analyzer_flags(self, model_perf_analyzer_flags: Dict) -> Dict:
         # For LLM models we will be creating custom input data based on prompt length
         perf_analyzer_flags = {k: v for k, v in model_perf_analyzer_flags.items()}
 
