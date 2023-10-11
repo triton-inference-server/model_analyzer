@@ -198,7 +198,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         return perf_analyzer_flags
 
-    def _create_input_dict(self, model_perf_analyzer_flags: dict) -> dict:
+    def _create_input_dict(self, model_perf_analyzer_flags: Dict) -> Dict:
         if self._cli_config.is_llm_model():
             with open(model_perf_analyzer_flags["input-data"], "r") as f:
                 input_dict = json.load(f)
