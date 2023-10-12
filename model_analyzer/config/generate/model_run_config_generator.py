@@ -150,5 +150,13 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
         concurrency_specified = model.parameters()["concurrency"]
         config_parameters_exist = model.model_config_parameters()
 
-        self._pacg_early_exit_enable = early_exit_enable or not concurrency_specified
-        self._mcg_early_exit_enable = early_exit_enable or not config_parameters_exist
+        if config.is_llm_model():
+            self._pacg_early_exit_enable = False
+            self._mcg_early_exit_enable = False
+        else:
+            self._pacg_early_exit_enable = (
+                early_exit_enable or not concurrency_specified
+            )
+            self._mcg_early_exit_enable = (
+                early_exit_enable or not config_parameters_exist
+            )

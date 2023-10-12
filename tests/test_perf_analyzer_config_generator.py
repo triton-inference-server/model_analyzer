@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
 from model_analyzer.config.generate.perf_analyzer_config_generator import (
@@ -41,7 +41,11 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         super().__init__(methodname)
         self._perf_throughput = 1
 
-    def test_set_last_results(self):
+    @patch(
+        "model_analyzer.config.input.config_command_profile.ConfigCommandProfile.is_llm_model",
+        return_value=False,
+    )
+    def test_set_last_results(self, *args):
         """
         Test set_last_results() with multi model
 
@@ -60,8 +64,26 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             ["modelA", "modelB"], [{"perf_throughput": 10}, {"perf_throughput": 2}]
         )
 
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli_repository",
+            "-f",
+            "path-to-config-file",
+        ]
+
+        # yapf: disable
+        yaml_str = ("""
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
         pacg = PerfAnalyzerConfigGenerator(
-            MagicMock(), MagicMock(), MagicMock(), MagicMock(), early_exit_enable=False
+            config, MagicMock(), MagicMock(), MagicMock(), early_exit_enable=False
         )
 
         pacg.set_last_results([measurement1, measurement2, measurement3])
@@ -537,6 +559,74 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         self._run_and_test_perf_analyzer_config_generator(yaml_str, expected_configs)
 
+    def test_llm_search_max_token_count(self):
+        """
+        Test LLM Search:
+            - max token count 1->256
+
+        Concurrency and text input length max set to 1
+        """
+
+        # yapf: disable
+        yaml_str = ("""
+            perf_analyzer_flags:
+                input-data: input-data.json
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        max_token_counts = utils.generate_doubled_list(1, 256)
+        expected_configs = [
+            construct_perf_analyzer_config(max_token_count=mtc, llm_search_mode=True)
+            for mtc in max_token_counts
+        ]
+
+        pa_cli_args = [
+            "--llm-search-enable",
+            "--run-config-search-max-concurrency",
+            "1",
+            "--run-config-search-max-text-input-length",
+            "1",
+        ]
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_str, expected_configs, pa_cli_args
+        )
+
+    def test_llm_search_text_input_length(self):
+        """
+        Test LLM Search:
+            - Input length 1->1024
+
+        Concurrency and max token count set to 1
+        """
+
+        # yapf: disable
+        yaml_str = ("""
+            perf_analyzer_flags:
+                input-data: input-data.json
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        text_input_lengths = utils.generate_doubled_list(1, 1024)
+        expected_configs = [
+            construct_perf_analyzer_config(llm_search_mode=True)
+            for pl in text_input_lengths
+        ]
+
+        pa_cli_args = [
+            "--llm-search-enable",
+            "--run-config-search-max-concurrency",
+            "1",
+            "--run-config-search-max-token-count",
+            "1",
+        ]
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_str, expected_configs, pa_cli_args
+        )
+
     def test_perf_analyzer_config_ssl_options(self):
         """
         Test Perf Analyzer SSL options:
@@ -754,13 +844,17 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
-        pacg = PerfAnalyzerConfigGenerator(
-            config,
-            config.profile_models[0].model_name(),
-            config.profile_models[0].perf_analyzer_flags(),
-            config.profile_models[0].parameters(),
-            early_exit,
-        )
+        with patch(
+            "model_analyzer.config.generate.perf_analyzer_config_generator.open",
+            mock_open(read_data=self._input_data),
+        ):
+            pacg = PerfAnalyzerConfigGenerator(
+                config,
+                config.profile_models[0].model_name(),
+                config.profile_models[0].perf_analyzer_flags(),
+                config.profile_models[0].parameters(),
+                early_exit,
+            )
 
         perf_analyzer_configs = []
         for perf_config in pacg.get_configs():
@@ -823,6 +917,10 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             mock_paths=["model_analyzer.config.input.config_utils"]
         )
         self.mock_os.start()
+
+        self._input_data = """{
+            "data": [{"text_input": ["Hello, my name is"], "stream": [true]}]
+        }"""
 
     def tearDown(self):
         self.mock_os.stop()

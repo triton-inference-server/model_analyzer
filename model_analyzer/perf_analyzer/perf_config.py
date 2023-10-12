@@ -33,6 +33,7 @@ class PerfAnalyzerConfig:
         "measurement-interval",
         "concurrency-range",
         "request-rate-range",
+        "periodic-concurrency-range",
         "request-distribution",
         "request-intervals",
         "binary-search",
@@ -71,6 +72,7 @@ class PerfAnalyzerConfig:
         "metrics-url",
         "metrics-interval",
         "bls-composing-models",
+        "request-parameter",
     ]
 
     input_to_options = [
@@ -273,6 +275,8 @@ class PerfAnalyzerConfig:
             "batch-size": self._options["-b"],
             "concurrency-range": self._args["concurrency-range"],
             "request-rate-range": self._args["request-rate-range"],
+            "periodic-concurrency-range": self._args["periodic-concurrency-range"],
+            "max-tokens": self._args["request-parameter"],
         }
 
     @classmethod

@@ -25,17 +25,17 @@ from model_analyzer.config.input.config_defaults import (
     DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
     DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
 )
-from model_analyzer.constants import THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES
+from model_analyzer.constants import THROUGHPUT_MINIMUM_CONSECUTIVE_INFERENCE_LOAD_TRIES
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.result.constraint_manager import ConstraintManager
-from model_analyzer.result.parameter_search import ParameterSearch
+from model_analyzer.result.inference_load_search import InferenceLoadSearch
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 from .common import test_result_collector as trc
 from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 
 
-class TestParameterSearch(trc.TestResultCollector):
+class TestInferenceLoadSearch(trc.TestResultCollector):
     def setUp(self):
         self._min_concurrency_index = int(log2(DEFAULT_RUN_CONFIG_MIN_CONCURRENCY))
         self._max_concurrency_index = int(log2(DEFAULT_RUN_CONFIG_MAX_CONCURRENCY))
@@ -67,9 +67,9 @@ class TestParameterSearch(trc.TestResultCollector):
         """
         config = self._create_single_model_no_constraints()
         constraint_manager = ConstraintManager(config)
-        concurrency_search = ParameterSearch(config)
+        concurrency_search = InferenceLoadSearch(config)
 
-        for concurrency in concurrency_search.search_parameters():
+        for concurrency in concurrency_search.search_inference_loads():
             self._concurrencies.append(concurrency)
 
             concurrency_search.add_run_config_measurement(
@@ -90,11 +90,11 @@ class TestParameterSearch(trc.TestResultCollector):
         """
         config = self._create_single_model_no_constraints()
         constraint_manager = ConstraintManager(config)
-        concurrency_search = ParameterSearch(
+        concurrency_search = InferenceLoadSearch(
             config, model_parameters={"request_rate": "True"}
         )
 
-        for request_rate in concurrency_search.search_parameters():
+        for request_rate in concurrency_search.search_inference_loads():
             self._request_rates.append(request_rate)
 
             concurrency_search.add_run_config_measurement(
@@ -115,7 +115,7 @@ class TestParameterSearch(trc.TestResultCollector):
         """
         config = self._create_single_model_no_constraints()
         constraint_manager = ConstraintManager(config)
-        concurrency_search = ParameterSearch(config)
+        concurrency_search = InferenceLoadSearch(config)
         INCREASE_THROUGHPUT_COUNT = 4
 
         # [100, 200, 400, 800, 1000, 1000,...]
@@ -124,7 +124,7 @@ class TestParameterSearch(trc.TestResultCollector):
             for c in range(self._min_concurrency_index, self._max_concurrency_index + 1)
         ]
 
-        for i, concurrency in enumerate(concurrency_search.search_parameters()):
+        for i, concurrency in enumerate(concurrency_search.search_inference_loads()):
             self._concurrencies.append(concurrency)
 
             concurrency_search.add_run_config_measurement(
@@ -140,7 +140,7 @@ class TestParameterSearch(trc.TestResultCollector):
             2**c
             for c in range(
                 INCREASE_THROUGHPUT_COUNT
-                + THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES
+                + THROUGHPUT_MINIMUM_CONSECUTIVE_INFERENCE_LOAD_TRIES
             )
         ]
         self.assertEqual(self._concurrencies, expected_concurrencies)
@@ -152,12 +152,12 @@ class TestParameterSearch(trc.TestResultCollector):
         """
         config = self._create_single_model_with_constraints("95")
         constraint_manager = ConstraintManager(config)
-        concurrency_search = ParameterSearch(config)
+        concurrency_search = InferenceLoadSearch(config)
 
         self._expected_concurrencies.extend([12, 10, 9])
         latencies = [10 * c for c in self._expected_concurrencies]
 
-        for i, concurrency in enumerate(concurrency_search.search_parameters()):
+        for i, concurrency in enumerate(concurrency_search.search_inference_loads()):
             self._concurrencies.append(concurrency)
 
             concurrency_search.add_run_config_measurement(
@@ -178,12 +178,12 @@ class TestParameterSearch(trc.TestResultCollector):
         """
         config = self._create_single_model_with_constraints("155")
         constraint_manager = ConstraintManager(config)
-        concurrency_search = ParameterSearch(config)
+        concurrency_search = InferenceLoadSearch(config)
 
         self._expected_concurrencies.extend([12, 14, 15])
         latencies = [10 * c for c in self._expected_concurrencies]
 
-        for i, concurrency in enumerate(concurrency_search.search_parameters()):
+        for i, concurrency in enumerate(concurrency_search.search_inference_loads()):
             self._concurrencies.append(concurrency)
 
             concurrency_search.add_run_config_measurement(
@@ -204,14 +204,14 @@ class TestParameterSearch(trc.TestResultCollector):
         """
         config = self._create_single_model_with_constraints("155")
         constraint_manager = ConstraintManager(config)
-        concurrency_search = ParameterSearch(config)
+        concurrency_search = InferenceLoadSearch(config)
 
         self._expected_concurrencies.extend([12, 14, 15])
         latencies = [10 * c for c in self._expected_concurrencies]
         # this adds an early constraint violation which should be ignored
         latencies[1] = 200
 
-        for i, concurrency in enumerate(concurrency_search.search_parameters()):
+        for i, concurrency in enumerate(concurrency_search.search_inference_loads()):
             self._concurrencies.append(concurrency)
 
             concurrency_search.add_run_config_measurement(
@@ -233,12 +233,12 @@ class TestParameterSearch(trc.TestResultCollector):
         """
         config = self._create_single_model_with_constraints("970")
         constraint_manager = ConstraintManager(config)
-        concurrency_search = ParameterSearch(config)
+        concurrency_search = InferenceLoadSearch(config)
 
         self._expected_concurrencies.extend([768, 896, 960, 992, 976])
         latencies = self._expected_concurrencies
 
-        for i, concurrency in enumerate(concurrency_search.search_parameters()):
+        for i, concurrency in enumerate(concurrency_search.search_inference_loads()):
             self._concurrencies.append(concurrency)
 
             concurrency_search.add_run_config_measurement(
@@ -258,10 +258,10 @@ class TestParameterSearch(trc.TestResultCollector):
         """
         config = self._create_single_model_no_constraints()
         constraint_manager = ConstraintManager(config)
-        concurrency_search = ParameterSearch(config)
+        concurrency_search = InferenceLoadSearch(config)
 
         with self.assertRaises(TritonModelAnalyzerException):
-            for concurrency in concurrency_search.search_parameters():
+            for concurrency in concurrency_search.search_inference_loads():
                 self._concurrencies.append(concurrency)
 
                 if concurrency < 32:

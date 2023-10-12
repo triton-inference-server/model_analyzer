@@ -498,6 +498,8 @@ class ConfigCommandProfile(ConfigCommand):
                                 "batch_sizes": ConfigListNumeric(type_=int),
                                 "concurrency": ConfigListNumeric(type_=int),
                                 "request_rate": ConfigListNumeric(type_=int),
+                                "text_input_length": ConfigListNumeric(type_=int),
+                                "max_token_count": ConfigListNumeric(type_=int),
                             }
                         ),
                         "objectives": objectives_scheme,
@@ -571,10 +573,10 @@ class ConfigCommandProfile(ConfigCommand):
         )
         self._add_config(
             ConfigField(
-                "prompt_length",
-                flags=["--prompt-length"],
+                "text_input_length",
+                flags=["--text-input-length"],
                 field_type=ConfigListNumeric(int),
-                description="Comma-delimited list of prompt length values or ranges <start:end:step>"
+                description="Comma-delimited list of text input length values or ranges <start:end:step>"
                 " to be used during profiling LLMs",
             )
         )
@@ -811,25 +813,25 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(bool),
                 parser_args={"action": "store_true"},
                 default_value=config_defaults.DEFAULT_LLM_SEARCH_ENABLE,
-                description="Enables searching values are important to LLMs: prompt length, max token, etc...",
+                description="Enables searching values are important to LLMs: text input length, max token, etc...",
             )
         )
         self._add_config(
             ConfigField(
-                "run_config_search_min_prompt_length",
-                flags=["--run-config-search-min-prompt-length"],
+                "run_config_search_min_text_input_length",
+                flags=["--run-config-search-min-text-input-length"],
                 field_type=ConfigPrimitive(int),
-                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_PROMPT_LENGTH,
-                description="Min prompt length that run config search should start with.",
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH,
+                description="Min text input length that run config search should start with.",
             )
         )
         self._add_config(
             ConfigField(
-                "run_config_search_max_prompt_length",
-                flags=["--run-config-search-max-prompt-length"],
+                "run_config_search_max_text_input_length",
+                flags=["--run-config-search-max-text-input-length"],
                 field_type=ConfigPrimitive(int),
-                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_PROMPT_LENGTH,
-                description="Max prompt length that run config search will not go beyond.",
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_TEXT_INPUT_LENGTH,
+                description="Max text input length that run config search will not go beyond.",
             )
         )
         self._add_config(
@@ -1419,6 +1421,8 @@ class ConfigCommandProfile(ConfigCommand):
                     "batch_sizes": self.batch_sizes,
                     "concurrency": self.concurrency,
                     "request_rate": self.request_rate,
+                    "text_input_length": self.text_input_length,
+                    "max_token_count": self.max_token_count,
                 }
             else:
                 new_model["parameters"] = {}
@@ -1442,6 +1446,24 @@ class ConfigCommandProfile(ConfigCommand):
                     )
                 else:
                     new_model["parameters"].update({"request_rate": self.request_rate})
+
+                if "text_input_length" in model.parameters():
+                    new_model["parameters"].update(
+                        {"text_input_length": model.parameters()["text_input_length"]}
+                    )
+                else:
+                    new_model["parameters"].update(
+                        {"text_input_length": self.text_input_length}
+                    )
+
+                if "max_token_count" in model.parameters():
+                    new_model["max_token_count"].update(
+                        {"max_token_count": model.parameters()["max_token_count"]}
+                    )
+                else:
+                    new_model["parameters"].update(
+                        {"max_token_count": self.text_input_length}
+                    )
 
             if (
                 new_model["parameters"]["request_rate"]
@@ -1522,4 +1544,22 @@ class ConfigCommandProfile(ConfigCommand):
             or self.request_rate_search_enable
             or self.get_config()["run_config_search_min_request_rate"].is_set_by_user()
             or self.get_config()["run_config_search_max_request_rate"].is_set_by_user()
+        )
+
+    def is_llm_model(self) -> bool:
+        """
+        Returns true if the user has enabled llm search or set any llm search value
+        """
+        return (
+            self.llm_search_enable
+            or self.get_config()[
+                "run_config_search_min_text_input_length"
+            ].is_set_by_user()
+            or self.get_config()[
+                "run_config_search_max_text_input_length"
+            ].is_set_by_user()
+            or self.get_config()["run_config_search_min_token_count"].is_set_by_user()
+            or self.get_config()["run_config_search_max_token_count"].is_set_by_user()
+            or self.get_config()["text_input_length"].is_set_by_user()
+            or self.get_config()["max_token_count"].is_set_by_user()
         )
