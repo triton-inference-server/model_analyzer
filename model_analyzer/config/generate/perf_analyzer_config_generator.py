@@ -24,7 +24,7 @@ from model_analyzer.config.input.config_defaults import DEFAULT_INPUT_JSON_PATH
 from model_analyzer.constants import (
     LOGGER_NAME,
     THROUGHPUT_MINIMUM_CONSECUTIVE_INFERENCE_LOAD_TRIES,
-    THROUGHPUT_MINIMUM_CONSECUTIVE_NON_PARAMETER_TRIES,
+    THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
     THROUGHPUT_MINIMUM_GAIN,
 )
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
@@ -75,9 +75,12 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         # All configs are pregenerated in _configs[][]
         # Indexed as follows:
-        #    _configs[_curr_non_parameter_index][_curr_inference_load_index]
+        #    _configs[_curr_parameter_index][_curr_inference_load_index]
         #
-        self._curr_non_parameter_index = 0
+        # Parameters are: batch size, text input length, max token size
+        # Inference load are: concurrency/periodic-concurrency, request-rate
+        #
+        self._curr_parameter_index = 0
         self._curr_inference_load_index = 0
         self._configs: List[List[PerfAnalyzerConfig]] = []
         self._inference_load_warning_printed = False
@@ -88,7 +91,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         self._last_results: List[RunConfigMeasurement] = []
         self._inference_load_results: List[Optional[RunConfigMeasurement]] = []
-        self._non_parameter_results: List[Optional[RunConfigMeasurement]] = []
+        self._parameter_results: List[Optional[RunConfigMeasurement]] = []
 
         self._model_name = model_name
         self._cli_config = cli_config
@@ -106,13 +109,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._text_input_lengths = self._create_text_input_length_list()
         self._max_token_counts = self._create_max_token_count_list()
 
-        self._perf_config_non_parameter_values = (
-            self._create_non_parameter_perf_config_values()
-        )
-        self._non_parameter_count = len(
-            utils.generate_parameter_combinations(
-                self._perf_config_non_parameter_values
-            )
+        self._perf_config_parameter_values = self._create_parameter_perf_config_values()
+        self._parameter_count = len(
+            utils.generate_parameter_combinations(self._perf_config_parameter_values)
         )
 
         self._input_json_filename = DEFAULT_INPUT_JSON_PATH + "/input-data.json"
@@ -158,7 +157,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 break
 
             self._generator_started = True
-            config = self._configs[self._curr_non_parameter_index][
+            config = self._configs[self._curr_parameter_index][
                 self._curr_inference_load_index
             ]
             yield (config)
@@ -268,31 +267,31 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             )
 
     def _generate_perf_configs(self) -> None:
-        non_parameter_combinations = utils.generate_parameter_combinations(
-            self._perf_config_non_parameter_values
+        parameter_combinations = utils.generate_parameter_combinations(
+            self._perf_config_parameter_values
         )
-        for non_parameter_combination in non_parameter_combinations:
+        for parameter_combination in parameter_combinations:
             perf_configs_for_a_given_combination = []
             for inference_load in self._inference_loads:
                 new_perf_config = self._create_new_perf_config(
-                    inference_load, non_parameter_combination
+                    inference_load, parameter_combination
                 )
                 perf_configs_for_a_given_combination.append(new_perf_config)
 
             self._configs.append(perf_configs_for_a_given_combination)
 
     def _create_new_perf_config(
-        self, inference_load: int, non_parameter_combination: Dict
+        self, inference_load: int, parameter_combination: Dict
     ) -> PerfAnalyzerConfig:
         perf_config = self._create_base_perf_config()
 
         (
             text_input_length,
-            modified_non_parameter_combination,
-        ) = self._extract_text_input_length(non_parameter_combination)
+            modified_parameter_combination,
+        ) = self._extract_text_input_length(parameter_combination)
 
-        self._update_perf_config_based_on_non_parameter_combination(
-            perf_config, modified_non_parameter_combination
+        self._update_perf_config_based_on_parameter_combination(
+            perf_config, modified_parameter_combination
         )
         self._update_perf_config_based_on_inference_load(perf_config, inference_load)
         self._update_perf_config_based_on_perf_analyzer_flags(perf_config)
@@ -309,21 +308,21 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return perf_config
 
     def _extract_text_input_length(
-        self, non_parameter_combination: Dict
+        self, parameter_combination: Dict
     ) -> Tuple[int, Dict]:
         if not self._cli_config.is_llm_model():
-            return 0, non_parameter_combination
+            return 0, parameter_combination
 
-        modified_non_parameter_combination = {
-            k: v for k, v in non_parameter_combination.items()
+        modified_parameter_combination = {
+            k: v for k, v in parameter_combination.items()
         }
-        text_input_length = modified_non_parameter_combination.pop("text-input-length")
-        return text_input_length, modified_non_parameter_combination
+        text_input_length = modified_parameter_combination.pop("text-input-length")
+        return text_input_length, modified_parameter_combination
 
-    def _update_perf_config_based_on_non_parameter_combination(
-        self, perf_config: PerfAnalyzerConfig, non_parameter_combination: Dict
+    def _update_perf_config_based_on_parameter_combination(
+        self, perf_config: PerfAnalyzerConfig, parameter_combination: Dict
     ) -> None:
-        perf_config.update_config(non_parameter_combination)
+        perf_config.update_config(parameter_combination)
 
     def _update_perf_config_based_on_perf_analyzer_flags(
         self, perf_config: PerfAnalyzerConfig
@@ -363,7 +362,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         with open(self._input_json_filename, "w") as f:
             json.dump(modified_input_dict, f)
 
-    def _create_non_parameter_perf_config_values(self) -> dict:
+    def _create_parameter_perf_config_values(self) -> dict:
         perf_config_values = {
             "batch-size": self._batch_sizes,
         }
@@ -380,15 +379,15 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._step_inference_load()
 
         if self._done_walking_inference_loads():
-            self._add_best_throughput_to_non_parameter_results()
+            self._add_best_throughput_to_parameter_results()
             self._reset_inference_loads()
-            self._step_non_parameter()
+            self._step_parameter()
 
-    def _add_best_throughput_to_non_parameter_results(self) -> None:
+    def _add_best_throughput_to_parameter_results(self) -> None:
         if self._inference_load_results:
             # type is List[Optional[RCM]]
             best = max(self._inference_load_results)  # type: ignore
-            self._non_parameter_results.append(best)
+            self._parameter_results.append(best)
 
     def _reset_inference_loads(self) -> None:
         self._curr_inference_load_index = 0
@@ -398,11 +397,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _step_inference_load(self) -> None:
         self._curr_inference_load_index += 1
 
-    def _step_non_parameter(self) -> None:
-        self._curr_non_parameter_index += 1
+    def _step_parameter(self) -> None:
+        self._curr_parameter_index += 1
 
     def _done_walking(self) -> bool:
-        return self._done_walking_non_parameters()
+        return self._done_walking_parameters()
 
     def _done_walking_inference_loads(self) -> bool:
         if len(self._inference_loads) == self._curr_inference_load_index:
@@ -421,11 +420,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             return True
         return False
 
-    def _done_walking_non_parameters(self) -> bool:
-        if self._non_parameter_count == self._curr_non_parameter_index:
+    def _done_walking_parameters(self) -> bool:
+        if self._parameter_count == self._curr_parameter_index:
             return True
 
-        if self._early_exit_enable and not self._non_parameter_throughput_gain_valid():
+        if self._early_exit_enable and not self._parameter_throughput_gain_valid():
             logger.info(
                 "No longer increasing client batch size as throughput has plateaued"
             )
@@ -444,10 +443,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             min_gain=THROUGHPUT_MINIMUM_GAIN,
         )
 
-    def _non_parameter_throughput_gain_valid(self) -> bool:
+    def _parameter_throughput_gain_valid(self) -> bool:
         """Check if any of the last X non-parameter results resulted in valid gain"""
         return PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
-            throughputs=self._non_parameter_results,
-            min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_NON_PARAMETER_TRIES,
+            throughputs=self._parameter_results,
+            min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
             min_gain=THROUGHPUT_MINIMUM_GAIN,
         )
