@@ -59,6 +59,8 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
                 "perf_client_send_recv",
                 "perf_server_compute_input",
                 "gpu_power_usage",
+                "avg_first_token_latency",
+                "avg_token_to_token_latency",
             ]
         }
         self.more_is_better_types = {
