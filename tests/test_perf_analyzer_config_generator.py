@@ -570,7 +570,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: disable
         yaml_str = ("""
             perf_analyzer_flags:
-                input-data: input_data.json
+                input-data: input-data.json
             profile_models:
                 - my-model
             """)
@@ -604,7 +604,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: disable
         yaml_str = ("""
             perf_analyzer_flags:
-                input-data: input_data.json
+                input-data: input-data.json
             profile_models:
                 - my-model
             """)
