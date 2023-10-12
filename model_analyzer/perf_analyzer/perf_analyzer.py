@@ -37,7 +37,9 @@ from model_analyzer.constants import (
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.record.record import Record
 from model_analyzer.record.types.avg_first_token_latency import AvgFirstTokenLatency
-from model_analyzer.record.types.avg_token_latency import AvgTokenLatency
+from model_analyzer.record.types.avg_token_to_token_latency import (
+    AvgTokenToTokenLatency,
+)
 from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
 from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
 from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
@@ -95,8 +97,8 @@ class PerfAnalyzer:
     ]
 
     llm_metric_table = [
-        ["avg_first_latency",           "Avg first token latency",     AvgFirstTokenLatency,     "1000"],
-        ["avg_avg_latency",           "Avg token latency",           AvgTokenLatency,          "1000"]
+        ["avg_first_latency",          None,                    AvgFirstTokenLatency,     "1000"],
+        ["avg_token_to_token_latency", None,                    AvgTokenToTokenLatency,   "1000"]
     ]
     # yapf: enable
 

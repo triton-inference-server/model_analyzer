@@ -20,12 +20,12 @@ from model_analyzer.record.record import DecreasingRecord
 
 
 @total_ordering
-class AvgTokenLatency(DecreasingRecord):
+class AvgTokenToTokenLatency(DecreasingRecord):
     """
     A record for perf_analyzer avg token-to-token latency metric
     """
 
-    tag = "avg_token_latency"
+    tag = "avg_token_to_token_latency"
 
     def __init__(self, value, timestamp=0):
         """
