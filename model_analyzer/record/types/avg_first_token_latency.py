@@ -22,10 +22,10 @@ from model_analyzer.record.record import DecreasingRecord
 @total_ordering
 class AvgFirstTokenLatency(DecreasingRecord):
     """
-    A record for perf_analyzer avg first token to token latency metric
+    A record for perf_analyzer average first token latency metric
     """
 
-    tag = "avg_first_latency"
+    tag = "avg_first_token_latency"
 
     def __init__(self, value, timestamp=0):
         """

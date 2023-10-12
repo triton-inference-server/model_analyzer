@@ -22,7 +22,7 @@ from model_analyzer.record.record import DecreasingRecord
 @total_ordering
 class AvgTokenToTokenLatency(DecreasingRecord):
     """
-    A record for perf_analyzer avg token-to-token latency metric
+    A record for perf_analyzer average token-to-token latency metric
     """
 
     tag = "avg_token_to_token_latency"

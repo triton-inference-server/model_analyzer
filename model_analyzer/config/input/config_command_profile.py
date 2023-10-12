@@ -66,10 +66,6 @@ class ConfigCommandProfile(ConfigCommand):
         super().__init__()
         self._fill_config()
 
-    # FIXME: placeholder until branch is merged
-    def is_llm_model(self):
-        return False
-
     def _resolve_protobuf_field(self, field: FieldDescriptor) -> ConfigSweep:
         """
         Recursively resolve protobuf fields.

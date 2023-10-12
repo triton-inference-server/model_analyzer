@@ -287,12 +287,12 @@ def construct_perf_analyzer_config(
 
     if request_rate:
         pa_config._args["request-rate-range"] = request_rate
-    elif llm_search_mode:
+    elif is_llm_model:
         pa_config._args["periodic-concurrency-range"] = concurrency
     else:
         pa_config._args["concurrency-range"] = concurrency
 
-    if llm_search_mode:
+    if is_llm_model:
         pa_config._args["request-parameter"] = (
             "max_token:" + str(max_token_count) + ":int"
         )

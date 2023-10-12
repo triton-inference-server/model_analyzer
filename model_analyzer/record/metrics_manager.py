@@ -69,8 +69,8 @@ class MetricsManager:
         "gpu_power_usage",
         "cpu_available_ram",
         "cpu_used_ram",
-        "avg_first_latency",
-        "avg_token_latency",
+        "avg_first_token_latency",
+        "avg_token_to_token_latency",
     ]
 
     def __init__(self, config, client, server, gpus, result_manager, state_manager):
