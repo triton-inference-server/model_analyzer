@@ -140,7 +140,7 @@ class TestPerfAnalyzer(trc.TestResultCollector):
             ModelRunConfig("fake_name", MagicMock(), self.config)
         )
 
-        self.llm_config = construct_perf_analyzer_config(is_llm_model=True)
+        self.llm_config = construct_perf_analyzer_config(llm_search_mode=True)
         self.llm_config["model-name"] = TEST_MODEL_NAME
         self.llm_config["measurement-interval"] = 1000
         self.llm_config["measurement-request-count"] = 50

@@ -578,7 +578,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         max_token_counts = utils.generate_doubled_list(1, 256)
         expected_configs = [
-            construct_perf_analyzer_config(max_token_count=mtc, is_llm_model=True)
+            construct_perf_analyzer_config(max_token_count=mtc, llm_search_mode=True)
             for mtc in max_token_counts
         ]
 
@@ -612,7 +612,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         text_input_lengths = utils.generate_doubled_list(1, 1024)
         expected_configs = [
-            construct_perf_analyzer_config(is_llm_model=True)
+            construct_perf_analyzer_config(llm_search_mode=True)
             for pl in text_input_lengths
         ]
 
