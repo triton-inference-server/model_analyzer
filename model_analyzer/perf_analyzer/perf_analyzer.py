@@ -486,11 +486,16 @@ class PerfAnalyzer:
         for perf_config in [
             mrc.perf_config() for mrc in self._config.model_run_configs()
         ]:
-            # Remove the latency file and all associated composing model latency files
+            # Remove the latency/profile export files and all associated composing model latency files
             for f in glob.glob(f"*{perf_config['latency-report-file']}"):
+                os.remove(f)
+            for f in glob.glob(f"*{perf_config['profile-export-file']}"):
                 os.remove(f)
 
     def _extract_gpu_records(self, perf_config, metrics):
+        if perf_config["profile-export-file"]:
+            return
+
         with open(perf_config["latency-report-file"], mode="r") as f:
             csv_reader = csv.DictReader(f, delimiter=",")
 
@@ -521,7 +526,7 @@ class PerfAnalyzer:
             avg_token_to_token_latency = self._calculate_avg_token_to_token_latency(
                 llm_output
             )
-            record = PerfAnalyzer.llm_metric_table[0][PerfAnalyzer.RECORD_CLASS](
+            record = PerfAnalyzer.llm_metric_table[1][PerfAnalyzer.RECORD_CLASS](
                 value=avg_token_to_token_latency
             )  # type: ignore
             self._llm_records[perf_config["model-name"]].append(record)

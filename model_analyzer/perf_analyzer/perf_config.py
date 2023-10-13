@@ -73,6 +73,7 @@ class PerfAnalyzerConfig:
         "metrics-interval",
         "bls-composing-models",
         "request-parameter",
+        "request-period",
     ]
 
     input_to_options = [
@@ -197,7 +198,7 @@ class PerfAnalyzerConfig:
         }
 
         if profile_config.is_llm_model():
-            params.update({"profile-export-file": model_name + "-llm-results.csv"})
+            params.update({"profile-export-file": model_name + "-results.json"})
 
         if profile_config.triton_launch_mode == "c_api":
             params.update(
