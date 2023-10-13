@@ -211,7 +211,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         # The two possible inference loads are request rate or concurrency
         # Concurrency is the default and will be used unless the user specifies
         # request rate, either as a model parameter or a config option
-        if self._cli_config.is_request_rate_specified(self._model_parameters):
+        if self._cli_config.is_llm_model():
+            return self._create_periodic_concurrency_list()
+        elif self._cli_config.is_request_rate_specified(self._model_parameters):
             return self._create_request_rate_list()
         else:
             return self._create_concurrency_list()
@@ -238,6 +240,17 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 self._cli_config.run_config_search_max_concurrency,
             )
 
+    def _create_periodic_concurrency_list(self) -> List[int]:
+        if self._model_parameters["periodic_concurrency"]:
+            return sorted(self._model_parameters["periodic_concurrency"])
+        elif self._cli_config.run_config_search_disable:
+            return [1]
+        else:
+            return utils.generate_doubled_list(
+                self._cli_config.run_config_search_min_periodic_concurrency,
+                self._cli_config.run_config_search_max_periodic_concurrency,
+            )
+
     def _create_text_input_length_list(self) -> List[int]:
         if not self._cli_config.is_llm_model():
             return []
@@ -262,8 +275,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             return [1]
         else:
             return utils.generate_doubled_list(
-                self._cli_config.run_config_search_min_token_count,
-                self._cli_config.run_config_search_max_token_count,
+                self._cli_config.run_config_search_min_max_token_count,
+                self._cli_config.run_config_search_max_max_token_count,
             )
 
     def _generate_perf_configs(self) -> None:

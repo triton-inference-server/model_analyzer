@@ -584,8 +584,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         pa_cli_args = [
             "--llm-search-enable",
-            "--run-config-search-max-concurrency",
-            "1",
+            "--run-config-search-max-periodic-concurrency",
+            "16",
             "--run-config-search-max-text-input-length",
             "1",
         ]
@@ -598,7 +598,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         Test LLM Search:
             - Input length 1->1024
 
-        Concurrency and max token count set to 1
+        Periodic Concurrency and max token count set to 1
         """
 
         # yapf: disable
@@ -618,9 +618,9 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         pa_cli_args = [
             "--llm-search-enable",
-            "--run-config-search-max-concurrency",
-            "1",
-            "--run-config-search-max-token-count",
+            "--run-config-search-max-periodic-concurrency",
+            "16",
+            "--run-config-search-max-max-token-count",
             "1",
         ]
         self._run_and_test_perf_analyzer_config_generator(
