@@ -118,9 +118,10 @@ class ConfigRangeNumeric(ConfigValue):
                     and "step" in value
                 )
                 if two_key_condition or three_key_condition:
-                    step = 1
                     start = int(value["start"])
                     stop = int(value["stop"])
+                    step = 1 if not "step" in value else int(value["step"])
+
                     if start > stop:
                         return ConfigStatus(
                             CONFIG_PARSER_FAILURE,
@@ -130,9 +131,7 @@ class ConfigRangeNumeric(ConfigValue):
                             config_object=self,
                         )
 
-                    if "step" in value:
-                        step = int(value["step"])
-                    new_value = list(range(start, stop + 1, step))
+                    new_value = [f"{start}:{stop}:{step}"]
                 else:
                     return ConfigStatus(
                         CONFIG_PARSER_FAILURE,
