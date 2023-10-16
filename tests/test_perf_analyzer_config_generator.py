@@ -627,6 +627,43 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             yaml_str, expected_configs, pa_cli_args
         )
 
+    def test_periodic_concurrency_parameter(self):
+        """
+        Test LLM Search:
+            - periodic-concurrency: 10:100:10
+
+        Max token set to 1
+        Text input set to 1
+        """
+
+        # yapf: disable
+        yaml_str = ("""
+            perf_analyzer_flags:
+                input-data: input-data.json
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        expected_configs = [
+            construct_perf_analyzer_config(
+                llm_search_mode=True, periodic_concurrency="10:100:10"
+            )
+        ]
+
+        pa_cli_args = [
+            "--llm-search-enable",
+            "--periodic-concurrency",
+            "10:100:10",
+            "--run-config-search-max-max-token-count",
+            "1",
+            "--run-config-search-max-text-input-length",
+            "1",
+        ]
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_str, expected_configs, pa_cli_args
+        )
+
     def test_perf_analyzer_config_ssl_options(self):
         """
         Test Perf Analyzer SSL options:
