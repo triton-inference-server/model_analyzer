@@ -20,7 +20,14 @@ from itertools import repeat
 from typing import Dict, Generator, List, Optional, Tuple
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.config.input.config_defaults import DEFAULT_INPUT_JSON_PATH
+from model_analyzer.config.input.config_defaults import (
+    DEFAULT_INPUT_JSON_PATH,
+    DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
+    DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
+    DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY,
+    DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
+    DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH,
+)
 from model_analyzer.constants import (
     LOGGER_NAME,
     THROUGHPUT_MINIMUM_CONSECUTIVE_INFERENCE_LOAD_TRIES,
@@ -222,7 +229,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if self._model_parameters["request_rate"]:
             return sorted(self._model_parameters["request_rate"])
         elif self._cli_config.run_config_search_disable:
-            return [1]
+            return [DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE]
         else:
             return utils.generate_doubled_list(
                 self._cli_config.run_config_search_min_request_rate,
@@ -233,7 +240,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if self._model_parameters["concurrency"]:
             return sorted(self._model_parameters["concurrency"])
         elif self._cli_config.run_config_search_disable:
-            return [1]
+            return [DEFAULT_RUN_CONFIG_MIN_CONCURRENCY]
         else:
             return utils.generate_doubled_list(
                 self._cli_config.run_config_search_min_concurrency,
@@ -244,7 +251,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if self._model_parameters["periodic_concurrency"]:
             return sorted(self._model_parameters["periodic_concurrency"])
         elif self._cli_config.run_config_search_disable:
-            return [1]
+            return [DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY]
         else:
             return utils.generate_doubled_list(
                 self._cli_config.run_config_search_min_periodic_concurrency,
@@ -258,7 +265,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if self._model_parameters["text_input_length"]:
             return sorted(self._model_parameters["text_input_length"])
         elif self._cli_config.run_config_search_disable:
-            return [1]
+            return [DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH]
         else:
             return utils.generate_doubled_list(
                 self._cli_config.run_config_search_min_text_input_length,
@@ -272,7 +279,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if self._model_parameters["max_token_count"]:
             return sorted(self._model_parameters["max_token_count"])
         elif self._cli_config.run_config_search_disable:
-            return [1]
+            return [DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT]
         else:
             return utils.generate_doubled_list(
                 self._cli_config.run_config_search_min_max_token_count,
