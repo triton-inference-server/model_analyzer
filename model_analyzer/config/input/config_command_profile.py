@@ -571,7 +571,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "periodic_concurrency",
                 flags=["--periodic-concurrency"],
                 field_type=ConfigRangeNumeric(int),
-                default_value="1:1:1",
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY,
                 description="Ranges <start:end:step> to be used during profiling",
             )
         )

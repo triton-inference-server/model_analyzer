@@ -142,10 +142,7 @@ class ConfigRangeNumeric(ConfigValue):
                         config_object=self,
                     )
             elif self._is_list(value):
-                if not value:
-                    assert "This should only be reached by the default case - which is an empty list"
-
-                new_value = []
+                new_value = value
             else:
                 new_value = [type_(value)]
         except ValueError as e:
