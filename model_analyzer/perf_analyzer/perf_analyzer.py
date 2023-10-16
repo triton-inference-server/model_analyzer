@@ -22,6 +22,7 @@ import os
 import re
 import signal
 import tempfile
+from statistics import mean
 from subprocess import STDOUT, Popen
 from typing import Dict, List
 
@@ -532,34 +533,28 @@ class PerfAnalyzer:
             self._llm_records[perf_config["model-name"]].append(record)
 
     def _calculate_avg_first_token_latency(self, llm_output: Dict) -> float:
-        total_first_token_latency = 0
+        total_first_token_latencies = []
         for request in llm_output["experiments"][0]["requests"]:
-            total_first_token_latency += (
+            total_first_token_latencies.append(
                 request["response_timestamps"][0] - request["timestamp"]
             )
 
-        avg_first_token_latency = total_first_token_latency / len(
-            llm_output["experiments"][0]["requests"]
-        )
+        avg_first_token_latency = mean(total_first_token_latencies)
 
         return avg_first_token_latency
 
     def _calculate_avg_token_to_token_latency(self, llm_output: Dict) -> float:
-        total_token_to_token_latency = 0.0
+        token_to_token_latencies = []
         for request in llm_output["experiments"][0]["requests"]:
-            total_response_to_response_latency = 0
+            response_to_response_latencies = []
             prev_response = request["response_timestamps"][0]
             for response in request["response_timestamps"][1:]:
-                total_response_to_response_latency = response - prev_response
+                response_to_response_latencies.append(response - prev_response)
                 prev_response = response
 
-            total_token_to_token_latency += total_response_to_response_latency / len(
-                request["response_timestamps"]
-            )
+            token_to_token_latencies.append(mean(response_to_response_latencies))
 
-        avg_token_to_token_latency = total_token_to_token_latency / len(
-            llm_output["experiments"][0]["requests"]
-        )
+        avg_token_to_token_latency = mean(token_to_token_latencies)
 
         return avg_token_to_token_latency
 
