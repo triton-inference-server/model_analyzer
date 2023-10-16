@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,9 +18,9 @@ from .config_status import ConfigStatus
 from .config_value import ConfigValue
 
 
-class ConfigListNumeric(ConfigValue):
+class ConfigRangeNumeric(ConfigValue):
     """
-    A list of numeric values.
+    A range of numeric values.
     """
 
     def __init__(
@@ -35,7 +33,7 @@ class ConfigListNumeric(ConfigValue):
         name=None,
     ):
         """
-        Create a new list of numeric values.
+        Create a new range of numeric values.
 
         Parameters
         ----------
@@ -71,21 +69,6 @@ class ConfigListNumeric(ConfigValue):
         self._cli_type = str
         self._value = []
 
-    def _process_list(self, value):
-        """
-        A function to process the case where value is
-        a list.
-        """
-
-        type_ = self._type
-        new_value = []
-
-        for item in value:
-            item = type_(item)
-            new_value.append(item)
-
-        return new_value
-
     def set_value(self, value):
         """
         Set the value for this field.
@@ -102,20 +85,29 @@ class ConfigListNumeric(ConfigValue):
 
         try:
             if self._is_string(value):
+                if not ":" in value:
+                    return ConfigStatus(
+                        CONFIG_PARSER_FAILURE,
+                        f'When a string is used for field "{self.name()}",'
+                        ' it must be in the format "start:stop:step".',
+                        config_object=self,
+                    )
+
                 self._value = []
-                if "," in value:
-                    value = value.split(",")
-                elif ":" in value:
-                    value = value.split(":")
-                    if len(value) == 2:
-                        value = {"start": value[0], "stop": value[1], "step": 1}
-                    else:
-                        value = {"start": value[0], "stop": value[1], "step": value[2]}
+                value = value.split(":")
+                if len(value) == 2:
+                    value = {"start": value[0], "stop": value[1], "step": 1}
+                elif len(value) == 3:
+                    value = {"start": value[0], "stop": value[1], "step": value[2]}
+                else:
+                    return ConfigStatus(
+                        CONFIG_PARSER_FAILURE,
+                        f'When a string is used for field "{self.name()}",'
+                        ' it must be in the format "start:stop:step".',
+                        config_object=self,
+                    )
 
-            if self._is_list(value):
-                new_value = self._process_list(value)
-
-            elif self._is_dict(value):
+            if self._is_dict(value):
                 two_key_condition = (
                     len(value) == 2 and "start" in value and "stop" in value
                 )
@@ -149,6 +141,11 @@ class ConfigListNumeric(ConfigValue):
                         f' optional "step" key. Currently, contains {list(value)}.',
                         config_object=self,
                     )
+            elif self._is_list(value):
+                if not value:
+                    assert "This should only be reached by the default case - which is an empty list"
+
+                new_value = []
             else:
                 new_value = [type_(value)]
         except ValueError as e:

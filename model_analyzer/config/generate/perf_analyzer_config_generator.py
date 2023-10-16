@@ -215,8 +215,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             return {}
 
     def _create_inference_load_list(self) -> List[int]:
-        # The two possible inference loads are request rate or concurrency
-        # Concurrency is the default and will be used unless the user specifies
+        # The three possible inference loads are request rate, concurrency or periodic concurrency
+        # For LLM models periodic concurrency is used for non-LLM models
+        # concurrency is the default and will be used unless the user specifies
         # request rate, either as a model parameter or a config option
         if self._cli_config.is_llm_model():
             return self._create_periodic_concurrency_list()

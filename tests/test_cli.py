@@ -145,7 +145,7 @@ def get_test_options():
         #   expected_default_value
         OptionStruct("intlist", "profile", "--batch-sizes", "-b", "2, 4, 6", "1"),
         OptionStruct("intlist", "profile", "--concurrency", "-c", "1, 2, 3", None),
-        OptionStruct("intlist", "profile", "--periodic-concurrency", None, "1, 2, 3", None),
+        OptionStruct("intlist", "profile", "--periodic-concurrency", None, "10:100:5", None),
         OptionStruct("intlist", "profile", "--request-rate", None, "1, 2, 3", None),
         OptionStruct("intlist", "profile", "--request-period", None, "1, 2, 3", None),
         OptionStruct("intlist", "profile", "--text-input-length", None, "1, 2, 3", None),
@@ -603,9 +603,15 @@ class TestCLI(trc.TestResultCollector):
         return float(number) if "." in number else int(number)
 
     def _convert_string_to_int_list(self, list_values):
-        ret_val = [int(x) for x in list_values.split(",")]
+        if ":" in list_values:
+            ret_val = [int(x) for x in list_values.split(":")]
+            ret_val = list(range(ret_val[0], ret_val[1] + 1, ret_val[2]))
+        else:
+            ret_val = [int(x) for x in list_values.split(",")]
+
         if len(ret_val) == 1:
             return ret_val[0]
+
         return ret_val
 
     def _convert_string_to_string_list(self, list_values):
