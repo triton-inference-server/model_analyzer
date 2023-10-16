@@ -236,7 +236,7 @@ class PerfAnalyzer:
         if self._llm_records:
             return self._llm_records
         raise TritonModelAnalyzerException(
-            "Attempted to get perf_analyzer results" "without calling run first."
+            "Attempted to get perf_analyzer results without calling run first."
         )
 
     def output(self):
@@ -514,11 +514,11 @@ class PerfAnalyzer:
         with open(perf_config["profile-export-file"], mode="r") as f:
             llm_output = json.load(f)
 
-            avg_first_token_to_token_latency = (
-                self._calculate_avg_first_token_to_token_latency(llm_output)
+            avg_first_token_latency = self._calculate_avg_first_token_latency(
+                llm_output
             )
             record = PerfAnalyzer.llm_metric_table[0][PerfAnalyzer.RECORD_CLASS](
-                value=avg_first_token_to_token_latency
+                value=avg_first_token_latency
             )  # type: ignore
 
             self._llm_records[perf_config["model-name"]].append(record)
@@ -531,31 +531,33 @@ class PerfAnalyzer:
             )  # type: ignore
             self._llm_records[perf_config["model-name"]].append(record)
 
-    def _calculate_avg_first_token_to_token_latency(self, llm_output: Dict) -> float:
+    def _calculate_avg_first_token_latency(self, llm_output: Dict) -> float:
         total_first_token_latency = 0
         for request in llm_output["experiments"][0]["requests"]:
             total_first_token_latency += (
                 request["response_timestamps"][0] - request["timestamp"]
             )
 
-        avg_first_token_to_token_latency = total_first_token_latency / len(
+        avg_first_token_latency = total_first_token_latency / len(
             llm_output["experiments"][0]["requests"]
         )
 
-        return avg_first_token_to_token_latency
+        return avg_first_token_latency
 
     def _calculate_avg_token_to_token_latency(self, llm_output: Dict) -> float:
-        total_token_latency = 0.0
+        total_token_to_token_latency = 0.0
         for request in llm_output["experiments"][0]["requests"]:
-            total_response_latency = 0
-            for response_timestamp in request["response_timestamps"]:
-                total_response_latency += response_timestamp - request["timestamp"]
+            total_response_to_response_latency = 0
+            prev_response = request["response_timestamps"][0]
+            for response in request["response_timestamps"][1:]:
+                total_response_to_reponse_latency = response - prev_response
+                prev_response = response
 
-            total_token_latency += total_response_latency / len(
+            total_token_to_token_latency += total_response_to_response_latency / len(
                 request["response_timestamps"]
             )
 
-        avg_token_to_token_latency = total_token_latency / len(
+        avg_token_to_token_latency = total_token_to_token_latency / len(
             llm_output["experiments"][0]["requests"]
         )
 
