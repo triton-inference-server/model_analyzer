@@ -550,7 +550,7 @@ class PerfAnalyzer:
             total_response_to_response_latency = 0
             prev_response = request["response_timestamps"][0]
             for response in request["response_timestamps"][1:]:
-                total_response_to_reponse_latency = response - prev_response
+                total_response_to_response_latency = response - prev_response
                 prev_response = response
 
             total_token_to_token_latency += total_response_to_response_latency / len(
