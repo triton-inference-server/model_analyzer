@@ -290,8 +290,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             return True
         elif (end - start) % step:
             return True
-
-        return False
+        else:
+            return False
 
     def _create_text_input_length_list(self) -> List[int]:
         if not self._cli_config.is_llm_model():
