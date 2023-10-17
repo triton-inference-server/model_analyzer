@@ -46,7 +46,6 @@ from .config_list_string import ConfigListString
 from .config_none import ConfigNone
 from .config_object import ConfigObject
 from .config_primitive import ConfigPrimitive
-from .config_range_numeric import ConfigRangeNumeric
 from .config_sweep import ConfigSweep
 from .config_union import ConfigUnion
 from .objects.config_model_profile_spec import ConfigModelProfileSpec
@@ -499,7 +498,7 @@ class ConfigCommandProfile(ConfigCommand):
                             schema={
                                 "batch_sizes": ConfigListNumeric(type_=int),
                                 "concurrency": ConfigListNumeric(type_=int),
-                                "periodic_concurrency": ConfigRangeNumeric(type_=int),
+                                "periodic_concurrency": ConfigListString(),
                                 "request_rate": ConfigListNumeric(type_=int),
                                 "request_period": ConfigListNumeric(type_=int),
                                 "text_input_length": ConfigListNumeric(type_=int),
@@ -570,9 +569,8 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 "periodic_concurrency",
                 flags=["--periodic-concurrency"],
-                field_type=ConfigRangeNumeric(int),
-                default_value=config_defaults.DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY,
-                description="Ranges <start:end:step> to be used during profiling",
+                field_type=ConfigListString(),
+                description="A list of ranges <start:end:step> to be used during profiling",
             )
         )
         self._add_config(

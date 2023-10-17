@@ -145,7 +145,7 @@ def get_test_options():
         #   expected_default_value
         OptionStruct("intlist", "profile", "--batch-sizes", "-b", "2, 4, 6", "1"),
         OptionStruct("intlist", "profile", "--concurrency", "-c", "1, 2, 3", None),
-        OptionStruct("intlist", "profile", "--periodic-concurrency", None, "10:100:5", None),
+        OptionStruct("stringlist", "profile", "--periodic-concurrency", None, '"5:50:5", "10:100:10"', None, None),
         OptionStruct("intlist", "profile", "--request-rate", None, "1, 2, 3", None),
         OptionStruct("intlist", "profile", "--request-period", None, "1, 2, 3", None),
         OptionStruct("intlist", "profile", "--text-input-length", None, "1, 2, 3", None),

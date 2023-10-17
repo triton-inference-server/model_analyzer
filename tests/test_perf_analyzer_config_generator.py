@@ -577,15 +577,23 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         max_token_counts = utils.generate_doubled_list(1, 256)
-        expected_configs = [
-            construct_perf_analyzer_config(max_token_count=mtc, llm_search_mode=True)
-            for mtc in max_token_counts
-        ]
+        periodic_concurrencies = ["16:32:4", "16:32:8", "16:32:16"]
+
+        expected_configs = []
+        for mtc in max_token_counts:
+            for pc in periodic_concurrencies:
+                expected_configs.append(
+                    construct_perf_analyzer_config(
+                        max_token_count=mtc,
+                        llm_search_mode=True,
+                        periodic_concurrency=pc,
+                    )
+                )
 
         pa_cli_args = [
             "--llm-search-enable",
             "--run-config-search-max-periodic-concurrency",
-            "16",
+            "32",
             "--run-config-search-max-text-input-length",
             "1",
         ]
@@ -611,15 +619,21 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         text_input_lengths = utils.generate_doubled_list(1, 1024)
-        expected_configs = [
-            construct_perf_analyzer_config(llm_search_mode=True)
-            for pl in text_input_lengths
-        ]
+        periodic_concurrencies = ["16:32:4", "16:32:8", "16:32:16"]
+
+        expected_configs = []
+        for til in text_input_lengths:
+            for pc in periodic_concurrencies:
+                expected_configs.append(
+                    construct_perf_analyzer_config(
+                        llm_search_mode=True, periodic_concurrency=pc
+                    )
+                )
 
         pa_cli_args = [
             "--llm-search-enable",
             "--run-config-search-max-periodic-concurrency",
-            "16",
+            "32",
             "--run-config-search-max-max-token-count",
             "1",
         ]
@@ -659,6 +673,55 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             "1",
             "--run-config-search-max-text-input-length",
             "1",
+        ]
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_str, expected_configs, pa_cli_args
+        )
+
+    def test_periodic_concurrency_search(self):
+        """
+        Test LLM Search:
+            - Period Concurrency using RCS values
+
+        Max token set to 1
+        Text input set to 1
+        """
+
+        # yapf: disable
+        yaml_str = ("""
+            perf_analyzer_flags:
+                input-data: input-data.json
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        periodic_concurrencies = [
+            "16:32:8",
+            "16:32:16",
+            "16:64:8",
+            "16:64:16",
+            "32:64:8",
+            "32:64:16",
+            "32:64:32",
+        ]
+        expected_configs = [
+            construct_perf_analyzer_config(
+                llm_search_mode=True, periodic_concurrency=pc
+            )
+            for pc in periodic_concurrencies
+        ]
+
+        pa_cli_args = [
+            "--llm-search-enable",
+            "--run-config-search-max-max-token-count",
+            "1",
+            "--run-config-search-max-text-input-length",
+            "1",
+            "--run-config-search-max-periodic-concurrency",
+            "64",
+            "--run-config-search-min-periodic-concurrency-step",
+            "8",
         ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args

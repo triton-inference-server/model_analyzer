@@ -16,8 +16,8 @@
 
 import json
 import logging
-from itertools import repeat
-from typing import Dict, Generator, List, Optional, Tuple
+from itertools import permutations, repeat
+from typing import Any, Dict, Generator, List, Optional, Tuple
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_defaults import (
@@ -214,7 +214,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         else:
             return {}
 
-    def _create_inference_load_list(self) -> List[int]:
+    def _create_inference_load_list(self) -> List[Any]:
         # The three possible inference loads are request rate, concurrency or periodic concurrency
         # For LLM models periodic concurrency is used for non-LLM models
         # concurrency is the default and will be used unless the user specifies
@@ -248,16 +248,52 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 self._cli_config.run_config_search_max_concurrency,
             )
 
-    def _create_periodic_concurrency_list(self) -> List[int]:
+    def _create_periodic_concurrency_list(self) -> List[str]:
         if self._model_parameters["periodic_concurrency"]:
             return sorted(self._model_parameters["periodic_concurrency"])
         elif self._cli_config.run_config_search_disable:
-            return [DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY]
-        else:
-            return utils.generate_doubled_list(
-                self._cli_config.run_config_search_min_periodic_concurrency,
-                self._cli_config.run_config_search_max_periodic_concurrency,
-            )
+            return [DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY]
+
+        periodic_concurrencies = self._generate_periodic_concurrencies()
+        return periodic_concurrencies
+
+    def _generate_periodic_concurrencies(self) -> List[str]:
+        periodic_concurrencies = []
+
+        periodic_concurrency_doubled_list = utils.generate_doubled_list(
+            self._cli_config.run_config_search_min_periodic_concurrency,
+            self._cli_config.run_config_search_max_periodic_concurrency,
+        )
+
+        step_doubled_list = utils.generate_doubled_list(
+            self._cli_config.run_config_search_min_periodic_concurrency_step,
+            self._cli_config.run_config_search_max_periodic_concurrency_step,
+        )
+
+        for min_periodic_concurrency in periodic_concurrency_doubled_list:
+            for max_periodic_concurrency in periodic_concurrency_doubled_list:
+                for step in step_doubled_list:
+                    if self._is_illegal_periodic_concurrency_combination(
+                        min_periodic_concurrency, max_periodic_concurrency, step
+                    ):
+                        continue
+
+                    periodic_concurrencies.append(
+                        f"{min_periodic_concurrency}:{max_periodic_concurrency}:{step}"
+                    )
+        return periodic_concurrencies
+
+    def _is_illegal_periodic_concurrency_combination(
+        self, min: int, max: int, step: int
+    ) -> bool:
+        if min > max:
+            return True
+        elif max == min and step != 1:
+            return True
+        elif (max - min) % step:
+            return True
+
+        return False
 
     def _create_text_input_length_list(self) -> List[int]:
         if not self._cli_config.is_llm_model():
