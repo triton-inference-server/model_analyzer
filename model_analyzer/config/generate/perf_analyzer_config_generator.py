@@ -16,7 +16,7 @@
 
 import json
 import logging
-from itertools import permutations, repeat
+from itertools import repeat
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
@@ -24,9 +24,9 @@ from model_analyzer.config.input.config_defaults import (
     DEFAULT_INPUT_JSON_PATH,
     DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
     DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
-    DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY,
     DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
     DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH,
+    DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY,
 )
 from model_analyzer.constants import (
     LOGGER_NAME,
@@ -270,27 +270,25 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._cli_config.run_config_search_max_periodic_concurrency_step,
         )
 
-        for min_periodic_concurrency in periodic_concurrency_doubled_list:
-            for max_periodic_concurrency in periodic_concurrency_doubled_list:
+        for start in periodic_concurrency_doubled_list:
+            for end in periodic_concurrency_doubled_list:
                 for step in step_doubled_list:
                     if self._is_illegal_periodic_concurrency_combination(
-                        min_periodic_concurrency, max_periodic_concurrency, step
+                        start, end, step
                     ):
                         continue
 
-                    periodic_concurrencies.append(
-                        f"{min_periodic_concurrency}:{max_periodic_concurrency}:{step}"
-                    )
+                    periodic_concurrencies.append(f"{start}:{end}:{step}")
         return periodic_concurrencies
 
     def _is_illegal_periodic_concurrency_combination(
-        self, min: int, max: int, step: int
+        self, start: int, end: int, step: int
     ) -> bool:
-        if min > max:
+        if start > end:
             return True
-        elif max == min and step != 1:
+        elif start == end and step != 1:
             return True
-        elif (max - min) % step:
+        elif (end - start) % step:
             return True
 
         return False

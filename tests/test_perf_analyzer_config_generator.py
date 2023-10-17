@@ -622,7 +622,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         periodic_concurrencies = ["16:32:4", "16:32:8", "16:32:16"]
 
         expected_configs = []
-        for til in text_input_lengths:
+        for _ in text_input_lengths:
             for pc in periodic_concurrencies:
                 expected_configs.append(
                     construct_perf_analyzer_config(
