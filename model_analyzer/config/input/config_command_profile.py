@@ -46,7 +46,6 @@ from .config_list_string import ConfigListString
 from .config_none import ConfigNone
 from .config_object import ConfigObject
 from .config_primitive import ConfigPrimitive
-from .config_range_numeric import ConfigRangeNumeric
 from .config_sweep import ConfigSweep
 from .config_union import ConfigUnion
 from .objects.config_model_profile_spec import ConfigModelProfileSpec
