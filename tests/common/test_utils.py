@@ -235,7 +235,7 @@ def convert_avg_gpu_metrics_to_data(avg_gpu_metric_values):
 def construct_perf_analyzer_config(
     model_name="my-model",
     output_file_name="my-model-results.csv",
-    output_llm_file_name="my-model-results.json",
+    export_file_name="my-model-results.json",
     batch_size=DEFAULT_BATCH_SIZES,
     concurrency=1,
     request_rate=None,
@@ -254,8 +254,8 @@ def construct_perf_analyzer_config(
         The name of the model
     output_file_name: str
         The name of the output file
-    output_llm_file_name: str
-        The name of the LLM output file
+    export_file_name: str
+        The name of the export file
     batch_size: int
         The batch size for this PA configuration
     concurrency: int
@@ -283,7 +283,7 @@ def construct_perf_analyzer_config(
     pa_config._options["-b"] = batch_size
 
     if llm_search_mode:
-        pa_config._options["--profile-export-file"] = output_llm_file_name
+        pa_config._options["--profile-export-file"] = export_file_name
 
     if request_rate:
         pa_config._args["request-rate-range"] = request_rate

@@ -22,11 +22,11 @@ import os
 import re
 import signal
 import tempfile
-from statistics import mean
 from subprocess import STDOUT, Popen
 from typing import Dict, List
 
 import psutil
+from numpy import mean
 
 from model_analyzer.constants import (
     INTERVAL_SLEEP_TIME,
