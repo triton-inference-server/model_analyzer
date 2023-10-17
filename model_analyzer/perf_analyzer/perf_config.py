@@ -73,6 +73,7 @@ class PerfAnalyzerConfig:
         "metrics-interval",
         "bls-composing-models",
         "request-parameter",
+        "request-period",
     ]
 
     input_to_options = [
@@ -82,6 +83,7 @@ class PerfAnalyzerConfig:
         "url",
         "protocol",
         "latency-report-file",
+        "profile-export-file",
         "http-header",
     ]
 
@@ -112,6 +114,7 @@ class PerfAnalyzerConfig:
             "-u": None,
             "-i": None,
             "-f": None,
+            "--profile-export-file": None,
             "-H": None,
         }
         self._verbose = {"-v": None, "-v -v": None, "--verbose-csv": None}
@@ -123,6 +126,7 @@ class PerfAnalyzerConfig:
             "url": "-u",
             "protocol": "-i",
             "latency-report-file": "-f",
+            "profile-export-file": "--profile-export-file",
             "http-header": "-H",
         }
 
@@ -192,6 +196,9 @@ class PerfAnalyzerConfig:
             "measurement-mode": DEFAULT_MEASUREMENT_MODE,
             "verbose-csv": "--verbose-csv",
         }
+
+        if profile_config.is_llm_model():
+            params.update({"profile-export-file": model_name + "-results.json"})
 
         if profile_config.triton_launch_mode == "c_api":
             params.update(
@@ -307,7 +314,7 @@ class PerfAnalyzerConfig:
     @classmethod
     def remove_mrc_from_cli_string(cls, cli_string):
         """
-        utility function strips the measruement request count
+        utility function strips the measurement request count
         from a cli string representation
 
         Parameters
