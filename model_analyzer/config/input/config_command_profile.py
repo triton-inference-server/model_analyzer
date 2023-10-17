@@ -17,6 +17,7 @@
 import argparse
 import logging
 import os
+from typing import Dict
 
 import numba.cuda
 import psutil
@@ -497,7 +498,9 @@ class ConfigCommandProfile(ConfigCommand):
                             schema={
                                 "batch_sizes": ConfigListNumeric(type_=int),
                                 "concurrency": ConfigListNumeric(type_=int),
+                                "periodic_concurrency": ConfigListNumeric(type_=int),
                                 "request_rate": ConfigListNumeric(type_=int),
+                                "request_period": ConfigListNumeric(type_=int),
                                 "text_input_length": ConfigListNumeric(type_=int),
                                 "max_token_count": ConfigListNumeric(type_=int),
                             }
@@ -564,10 +567,28 @@ class ConfigCommandProfile(ConfigCommand):
         )
         self._add_config(
             ConfigField(
+                "periodic_concurrency",
+                flags=["--periodic-concurrency"],
+                field_type=ConfigListNumeric(int),
+                description="Comma-delimited list of periodic concurrency values or ranges <start:end:step>"
+                " to be used during profiling",
+            )
+        )
+        self._add_config(
+            ConfigField(
                 "request_rate",
                 flags=["--request-rate"],
                 field_type=ConfigListNumeric(int),
                 description="Comma-delimited list of request rate values or ranges <start:end:step>"
+                " to be used during profiling",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "request_period",
+                flags=["--request-period"],
+                field_type=ConfigListNumeric(int),
+                description="Comma-delimited list of request period values or ranges <start:end:step>"
                 " to be used during profiling",
             )
         )
@@ -687,7 +708,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--run-config-search-max-concurrency"],
                 field_type=ConfigPrimitive(int),
                 default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_CONCURRENCY,
-                description="Max concurrency value that run config search should not go beyond that.",
+                description="Max concurrency value that run config search should not go beyond.",
             )
         )
         self._add_config(
@@ -701,11 +722,47 @@ class ConfigCommandProfile(ConfigCommand):
         )
         self._add_config(
             ConfigField(
+                "run_config_search_max_periodic_concurrency",
+                flags=["--run-config-search-max-periodic-concurrency"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_PERIODIC_CONCURRENCY,
+                description="Max periodic concurrency value that run config search should not go beyond.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_min_periodic_concurrency",
+                flags=["--run-config-search-min-periodic-concurrency"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY,
+                description="Min periodic concurrency value that run config search should start with.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_max_periodic_concurrency_step",
+                flags=["--run-config-search-max-periodic-concurrency-step"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_PERIODIC_CONCURRENCY_STEP,
+                description="Max periodic concurrency step value that run config search should not go beyond.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_min_periodic_concurrency_step",
+                flags=["--run-config-search-min-periodic-concurrency-step"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY_STEP,
+                description="Min periodic concurrency step value that run config search should start with.",
+            )
+        )
+        self._add_config(
+            ConfigField(
                 "run_config_search_max_request_rate",
                 flags=["--run-config-search-max-request-rate"],
                 field_type=ConfigPrimitive(int),
                 default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE,
-                description="Max request rate value that run config search should not go beyond that.",
+                description="Max request rate value that run config search should not go beyond.",
             )
         )
         self._add_config(
@@ -719,11 +776,29 @@ class ConfigCommandProfile(ConfigCommand):
         )
         self._add_config(
             ConfigField(
+                "run_config_search_max_request_period",
+                flags=["--run-config-search-max-request-period"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_REQUEST_PERIOD,
+                description="Max request period value that run config search should not go beyond.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_min_request_period",
+                flags=["--run-config-search-min-request-period"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_REQUEST_PERIOD,
+                description="Min request period value that run config search should start with.",
+            )
+        )
+        self._add_config(
+            ConfigField(
                 "run_config_search_max_instance_count",
                 flags=["--run-config-search-max-instance-count"],
                 field_type=ConfigPrimitive(int),
                 default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT,
-                description="Max instance count value that run config search should not go beyond that.",
+                description="Max instance count value that run config search should not go beyond.",
             )
         )
         self._add_config(
@@ -836,20 +911,20 @@ class ConfigCommandProfile(ConfigCommand):
         )
         self._add_config(
             ConfigField(
-                "run_config_search_min_token_count",
-                flags=["--run-config-search-min-token-count"],
+                "run_config_search_min_max_token_count",
+                flags=["--run-config-search-min-max-token-count"],
                 field_type=ConfigPrimitive(int),
-                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_TOKEN_COUNT,
-                description="Min token count that run config search should start with.",
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
+                description="Min max_token count that run config search should start with.",
             )
         )
         self._add_config(
             ConfigField(
-                "run_config_search_max_token_count",
-                flags=["--run-config-search-max-token-count"],
+                "run_config_search_max_max_token_count",
+                flags=["--run-config-search-max-max-token-count"],
                 field_type=ConfigPrimitive(int),
-                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_TOKEN_COUNT,
-                description="Max token count that run config search will not go beyond.",
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_MAX_TOKEN_COUNT,
+                description="Max max_token count that run config search will not go beyond.",
             )
         )
 
@@ -1420,50 +1495,35 @@ class ConfigCommandProfile(ConfigCommand):
                 new_model["parameters"] = {
                     "batch_sizes": self.batch_sizes,
                     "concurrency": self.concurrency,
+                    "periodic_concurrency": self.periodic_concurrency,
                     "request_rate": self.request_rate,
+                    "request_period": self.request_period,
                     "text_input_length": self.text_input_length,
                     "max_token_count": self.max_token_count,
                 }
             else:
                 new_model["parameters"] = {}
-                if "batch_sizes" in model.parameters():
-                    new_model["parameters"].update(
-                        {"batch_sizes": model.parameters()["batch_sizes"]}
-                    )
-                else:
-                    new_model["parameters"].update({"batch_sizes": self.batch_sizes})
-
-                if "concurrency" in model.parameters():
-                    new_model["parameters"].update(
-                        {"concurrency": model.parameters()["concurrency"]}
-                    )
-                else:
-                    new_model["parameters"].update({"concurrency": self.concurrency})
-
-                if "request_rate" in model.parameters():
-                    new_model["parameters"].update(
-                        {"request_rate": model.parameters()["request_rate"]}
-                    )
-                else:
-                    new_model["parameters"].update({"request_rate": self.request_rate})
-
-                if "text_input_length" in model.parameters():
-                    new_model["parameters"].update(
-                        {"text_input_length": model.parameters()["text_input_length"]}
-                    )
-                else:
-                    new_model["parameters"].update(
-                        {"text_input_length": self.text_input_length}
-                    )
-
-                if "max_token_count" in model.parameters():
-                    new_model["max_token_count"].update(
-                        {"max_token_count": model.parameters()["max_token_count"]}
-                    )
-                else:
-                    new_model["parameters"].update(
-                        {"max_token_count": self.text_input_length}
-                    )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "batch_sizes")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "concurrency")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "periodic_concurrency")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "request_rate")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "request_period")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "max_token_count")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "text_input_length")
+                )
 
             if (
                 new_model["parameters"]["request_rate"]
@@ -1505,6 +1565,14 @@ class ConfigCommandProfile(ConfigCommand):
 
             new_profile_models[model.model_name()] = new_model
         self._fields["profile_models"].set_value(new_profile_models)
+
+    def _set_model_parameter(
+        self, model: ConfigModelProfileSpec, parameter_name: str
+    ) -> Dict:
+        if parameter_name in model.parameters():
+            return {parameter_name: model.parameters()[parameter_name]}
+        else:
+            return {parameter_name: getattr(self, parameter_name)}
 
     def _using_request_rate(self) -> bool:
         if self.request_rate or self.request_rate_search_enable:
@@ -1550,16 +1618,26 @@ class ConfigCommandProfile(ConfigCommand):
         """
         Returns true if the user has enabled llm search or set any llm search value
         """
+        config = self.get_config()
+
         return (
             self.llm_search_enable
-            or self.get_config()[
-                "run_config_search_min_text_input_length"
+            or config["run_config_search_min_text_input_length"].is_set_by_user()
+            or config["run_config_search_max_text_input_length"].is_set_by_user()
+            or config["run_config_search_min_max_token_count"].is_set_by_user()
+            or config["run_config_search_max_max_token_count"].is_set_by_user()
+            or config["run_config_search_min_periodic_concurrency"].is_set_by_user()
+            or config["run_config_search_max_periodic_concurrency"].is_set_by_user()
+            or config[
+                "run_config_search_min_periodic_concurrency_step"
             ].is_set_by_user()
-            or self.get_config()[
-                "run_config_search_max_text_input_length"
+            or config[
+                "run_config_search_max_periodic_concurrency_step"
             ].is_set_by_user()
-            or self.get_config()["run_config_search_min_token_count"].is_set_by_user()
-            or self.get_config()["run_config_search_max_token_count"].is_set_by_user()
-            or self.get_config()["text_input_length"].is_set_by_user()
-            or self.get_config()["max_token_count"].is_set_by_user()
+            or config["run_config_search_min_request_period"].is_set_by_user()
+            or config["run_config_search_max_request_period"].is_set_by_user()
+            or config["text_input_length"].is_set_by_user()
+            or config["max_token_count"].is_set_by_user()
+            or config["periodic_concurrency"].is_set_by_user()
+            or config["request_period"].is_set_by_user()
         )

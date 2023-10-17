@@ -108,6 +108,8 @@ class GeneratorUtils:
             The value that the generated list will not exceed
         """
 
+        assert min_value <= max_value
+
         list = []
         val = 1 if min_value == 0 else min_value
         while val <= max_value:
