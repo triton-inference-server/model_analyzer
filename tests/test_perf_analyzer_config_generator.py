@@ -622,11 +622,13 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         periodic_concurrencies = ["16:32:4", "16:32:8", "16:32:16"]
 
         expected_configs = []
-        for _ in text_input_lengths:
+        for til in text_input_lengths:
             for pc in periodic_concurrencies:
                 expected_configs.append(
                     construct_perf_analyzer_config(
-                        llm_search_mode=True, periodic_concurrency=pc
+                        llm_search_mode=True,
+                        periodic_concurrency=pc,
+                        text_input_length=til,
                     )
                 )
 
@@ -1005,6 +1007,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             self.assertEqual(
                 expected_configs[i]._options, perf_analyzer_configs[i]._options
             )
+            self.maxDiff = None
             self.assertEqual(expected_configs[i]._args, perf_analyzer_configs[i]._args)
             self.assertEqual(
                 expected_configs[i]._additive_args,

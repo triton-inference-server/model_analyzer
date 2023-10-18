@@ -121,7 +121,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             utils.generate_parameter_combinations(self._perf_config_parameter_values)
         )
 
-        self._input_json_filename = DEFAULT_INPUT_JSON_PATH + "/input-data.json"
+        self._input_json_base_filename = DEFAULT_INPUT_JSON_PATH + "/input-data-"
 
         self._generate_perf_configs()
 
@@ -377,6 +377,15 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _update_perf_config_based_on_parameter_combination(
         self, perf_config: PerfAnalyzerConfig, parameter_combination: Dict
     ) -> None:
+        if "request-parameter" in parameter_combination:
+            request_parameter = parameter_combination["request-parameter"]
+            max_token_start = request_parameter.find(":")
+            max_token_stop = request_parameter.find(":", max_token_start + 1)
+            max_token = int(request_parameter[max_token_start + 1 : max_token_stop])
+            parameter_combination["request-period"] = (
+                max_token if max_token < 10 else 10
+            )
+
         perf_config.update_config(parameter_combination)
 
     def _update_perf_config_based_on_perf_analyzer_flags(
@@ -389,6 +398,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     ) -> None:
         if self._cli_config.is_llm_model():
             perf_config.update_config({"periodic-concurrency-range": inference_load})
+            perf_config.update_config({"streaming": "True"})
         elif self._cli_config.is_request_rate_specified(self._model_parameters):
             perf_config.update_config({"request-rate-range": inference_load})
         else:
@@ -400,21 +410,28 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if not self._cli_config.is_llm_model():
             return
 
+        input_json_filename = (
+            self._input_json_base_filename + f"{text_input_length}.json"
+        )
         modified_input_dict = self._modify_text_in_input_dict(text_input_length)
-        self._write_modified_input_dict_to_file(modified_input_dict)
+        self._write_modified_input_dict_to_file(
+            modified_input_dict, input_json_filename
+        )
 
-        perf_config.update_config({"input-data": self._input_json_filename})
+        perf_config.update_config({"input-data": input_json_filename})
 
     def _modify_text_in_input_dict(self, text_input_length: int) -> Dict:
         modified_text = " ".join(repeat("Hello", text_input_length))
 
         modified_input_dict = {k: v for k, v in self._llm_input_dict.items()}
-        modified_input_dict["data"][0]["text-input"] = modified_text
+        modified_input_dict["data"][0]["PROMPT"] = [modified_text]
 
         return modified_input_dict
 
-    def _write_modified_input_dict_to_file(self, modified_input_dict: Dict) -> None:
-        with open(self._input_json_filename, "w") as f:
+    def _write_modified_input_dict_to_file(
+        self, modified_input_dict: Dict, input_json_filename: str
+    ) -> None:
+        with open(input_json_filename, "w") as f:
             json.dump(modified_input_dict, f)
 
     def _create_parameter_perf_config_values(self) -> dict:
@@ -424,7 +441,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         if self._cli_config.is_llm_model():
             perf_config_values["request-parameter"] = [
-                "max_token:" + str(mtc) + ":int" for mtc in self._max_token_counts
+                "max_tokens:" + str(mtc) + ":int" for mtc in self._max_token_counts
             ]
             perf_config_values["text-input-length"] = self._text_input_lengths
 

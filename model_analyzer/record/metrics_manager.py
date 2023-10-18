@@ -572,8 +572,11 @@ class MetricsManager:
             self._handle_unsuccessful_perf_analyzer_run(perf_analyzer)
             return (None, None)
 
+        # FIXME: PA does not return a latency report file if an export report file is specified
         perf_records = (
-            perf_analyzer.get_perf_records() + perf_analyzer.get_llm_records()
+            perf_analyzer.get_llm_records()
+            if self._config.is_llm_model()
+            else perf_analyzer.get_perf_records()
         )
         gpu_records = perf_analyzer.get_gpu_records()
 

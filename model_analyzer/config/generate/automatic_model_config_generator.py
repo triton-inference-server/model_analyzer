@@ -88,7 +88,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
         self._reset_max_batch_size()
 
-        if not self._early_exit_enable:
+        if not self._early_exit_enable and not self._config.is_llm_model():
             raise TritonModelAnalyzerException(
                 "Early exit disable is not supported in automatic model config generator"
             )

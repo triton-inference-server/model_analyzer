@@ -99,7 +99,7 @@ class PerfAnalyzer:
     ]
 
     llm_metric_table = [
-        ["avg_first_latency",          None,                    AvgFirstTokenLatency,     "1000"],
+        ["avg_first_token_latency",    None,                    AvgFirstTokenLatency,     "1000"],
         ["avg_token_to_token_latency", None,                    AvgTokenToTokenLatency,   "1000"]
     ]
     # yapf: enable
@@ -285,6 +285,14 @@ class PerfAnalyzer:
         if self._is_multi_model():
             cmd += ["--enable-mpi"]
         cmd += self._get_pa_cli_command(index).replace("=", " ").split()
+
+        # OPTME: There should be a more elegant way of determining how to add EOS
+        #        We have to do it here because we use a dictionary to create the PA command
+        #        and it already contains `--request-parameter`
+        if "--periodic-concurrency-range" in cmd:
+            cmd.append("--request-parameter")
+            cmd.append("ignore_eos:true:bool")
+
         return cmd
 
     def _get_pa_cli_command(self, index):
@@ -539,7 +547,7 @@ class PerfAnalyzer:
                 request["response_timestamps"][0] - request["timestamp"]
             )
 
-        avg_first_token_latency = mean(total_first_token_latencies)
+        avg_first_token_latency = float(mean(total_first_token_latencies))
 
         return avg_first_token_latency
 
@@ -554,7 +562,7 @@ class PerfAnalyzer:
 
             token_to_token_latencies.append(mean(response_to_response_latencies))
 
-        avg_token_to_token_latency = mean(token_to_token_latencies)
+        avg_token_to_token_latency = float(mean(token_to_token_latencies))
 
         return avg_token_to_token_latency
 
