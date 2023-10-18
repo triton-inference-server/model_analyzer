@@ -305,15 +305,15 @@ def construct_perf_analyzer_config(
         pa_config._args["concurrency-range"] = concurrency
 
     if llm_search_mode:
-        pa_config._args["request-parameter"] = (
-            "max_tokens:" + str(max_token_count) + ":int"
-        )
+        pa_config._args["request-parameter"] = f"max_tokens:{str(max_token_count)}:int"
+
         pa_config._args["request-period"] = (
             max_token_count if max_token_count < 10 else 10
         )
-        pa_config._args["input-data"] = (
-            DEFAULT_INPUT_JSON_PATH + "/input-data-" + str(text_input_length) + ".json"
-        )
+        pa_config._args[
+            "input-data"
+        ] = f"{DEFAULT_INPUT_JSON_PATH}/input-data-{str(text_input_length)}.json"
+
         pa_config._args["streaming"] = "True"
 
     pa_config._args["measurement-mode"] = DEFAULT_MEASUREMENT_MODE
