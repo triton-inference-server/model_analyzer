@@ -498,7 +498,7 @@ class ConfigCommandProfile(ConfigCommand):
                             schema={
                                 "batch_sizes": ConfigListNumeric(type_=int),
                                 "concurrency": ConfigListNumeric(type_=int),
-                                "periodic_concurrency": ConfigListNumeric(type_=int),
+                                "periodic_concurrency": ConfigListString(),
                                 "request_rate": ConfigListNumeric(type_=int),
                                 "request_period": ConfigListNumeric(type_=int),
                                 "text_input_length": ConfigListNumeric(type_=int),
@@ -569,9 +569,8 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 "periodic_concurrency",
                 flags=["--periodic-concurrency"],
-                field_type=ConfigListNumeric(int),
-                description="Comma-delimited list of periodic concurrency values or ranges <start:end:step>"
-                " to be used during profiling",
+                field_type=ConfigListString(),
+                description="A list of ranges <start:end:step> to be used during profiling",
             )
         )
         self._add_config(

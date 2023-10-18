@@ -29,7 +29,7 @@ from model_analyzer.config.input.config_defaults import (
     DEFAULT_OUTPUT_MODEL_REPOSITORY,
     DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
     DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
-    DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY,
+    DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY,
     DEFAULT_TRITON_GRPC_ENDPOINT,
     DEFAULT_TRITON_HTTP_ENDPOINT,
     DEFAULT_TRITON_INSTALL_PATH,
@@ -241,7 +241,7 @@ def construct_perf_analyzer_config(
     export_file_name="my-model-results.json",
     batch_size=DEFAULT_BATCH_SIZES,
     concurrency=DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
-    periodic_concurrency=DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY,
+    periodic_concurrency=DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY,
     request_rate=None,
     max_token_count=DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
     launch_mode=DEFAULT_TRITON_LAUNCH_MODE,
@@ -264,7 +264,7 @@ def construct_perf_analyzer_config(
         The batch size for this PA configuration
     concurrency: int
         The concurrency value for this PA configuration
-    periodic_concurrency:
+    periodic_concurrency: list
         The periodic concurrency value for this PA configuration
     request_rate: int
         The request rate value for this PA configuration
