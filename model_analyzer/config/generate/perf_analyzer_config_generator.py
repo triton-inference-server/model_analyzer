@@ -448,7 +448,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         if self._cli_config.is_llm_model():
             perf_config_values["request-parameter"] = [
-                "max_tokens:" + str(mtc) + ":int" for mtc in self._max_token_counts
+                f"max_tokens:{str(mtc)}:int" for mtc in self._max_token_counts
             ]
             perf_config_values["text-input-length"] = self._text_input_lengths
 
