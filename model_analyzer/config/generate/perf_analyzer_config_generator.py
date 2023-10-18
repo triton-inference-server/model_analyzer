@@ -379,14 +379,21 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     ) -> None:
         if "request-parameter" in parameter_combination:
             request_parameter = parameter_combination["request-parameter"]
-            max_token_start = request_parameter.find(":")
-            max_token_stop = request_parameter.find(":", max_token_start + 1)
-            max_token = int(request_parameter[max_token_start + 1 : max_token_stop])
+            max_token = self._extract_max_token_from_request_parameter(
+                request_parameter
+            )
             parameter_combination["request-period"] = (
                 max_token if max_token < 10 else 10
             )
 
         perf_config.update_config(parameter_combination)
+
+    def _extract_max_token_from_request_parameter(self, request_parameter: str) -> int:
+        max_token_start = request_parameter.find(":")
+        max_token_stop = request_parameter.find(":", max_token_start + 1)
+        max_token = int(request_parameter[max_token_start + 1 : max_token_stop])
+
+        return max_token
 
     def _update_perf_config_based_on_perf_analyzer_flags(
         self, perf_config: PerfAnalyzerConfig

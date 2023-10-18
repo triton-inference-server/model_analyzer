@@ -1007,7 +1007,6 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             self.assertEqual(
                 expected_configs[i]._options, perf_analyzer_configs[i]._options
             )
-            self.maxDiff = None
             self.assertEqual(expected_configs[i]._args, perf_analyzer_configs[i]._args)
             self.assertEqual(
                 expected_configs[i]._additive_args,
