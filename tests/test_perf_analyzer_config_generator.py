@@ -596,6 +596,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             "32",
             "--run-config-search-max-text-input-length",
             "1",
+            "--run-config-search-max-request-period",
+            "1",
         ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args
@@ -638,6 +640,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             "32",
             "--run-config-search-max-max-token-count",
             "1",
+            "--run-config-search-max-request-period",
+            "1",
         ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args
@@ -674,6 +678,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             "--run-config-search-max-max-token-count",
             "1",
             "--run-config-search-max-text-input-length",
+            "1",
+            "--run-config-search-max-request-period",
             "1",
         ]
         self._run_and_test_perf_analyzer_config_generator(
@@ -724,6 +730,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             "64",
             "--run-config-search-min-periodic-concurrency-step",
             "8",
+            "--run-config-search-max-request-period",
+            "1",
         ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args

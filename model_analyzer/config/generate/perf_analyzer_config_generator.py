@@ -24,6 +24,7 @@ from model_analyzer.config.input.config_defaults import (
     DEFAULT_INPUT_JSON_PATH,
     DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
     DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
+    DEFAULT_RUN_CONFIG_MIN_REQUEST_PERIOD,
     DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
     DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH,
     DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY,
@@ -115,6 +116,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._batch_sizes = sorted(model_parameters["batch_sizes"])
         self._text_input_lengths = self._create_text_input_length_list()
         self._max_token_counts = self._create_max_token_count_list()
+        self._request_periods = self._create_request_period_list()
 
         self._perf_config_parameter_values = self._create_parameter_perf_config_values()
         self._parameter_count = len(
@@ -321,6 +323,20 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 self._cli_config.run_config_search_max_max_token_count,
             )
 
+    def _create_request_period_list(self) -> List[int]:
+        if not self._cli_config.is_llm_model():
+            return []
+
+        if self._model_parameters["request_period"]:
+            return sorted(self._model_parameters["period"])
+        elif self._cli_config.run_config_search_disable:
+            return [DEFAULT_RUN_CONFIG_MIN_REQUEST_PERIOD]
+        else:
+            return utils.generate_doubled_list(
+                self._cli_config.run_config_search_min_request_period,
+                self._cli_config.run_config_search_max_request_period,
+            )
+
     def _generate_perf_configs(self) -> None:
         parameter_combinations = utils.generate_parameter_combinations(
             self._perf_config_parameter_values
@@ -383,7 +399,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 request_parameter
             )
             parameter_combination["request-period"] = (
-                max_tokens if max_tokens < 10 else 10
+                max_tokens
+                if max_tokens < parameter_combination["request-period"]
+                else parameter_combination["request-period"]
             )
 
         perf_config.update_config(parameter_combination)
@@ -429,6 +447,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         modified_text = " ".join(repeat("Hello", text_input_length))
 
         modified_input_dict = {k: v for k, v in self._llm_input_dict.items()}
+        # FIXME: this needs to be updated once tritonserver/PA are updated TMA-1414
         modified_input_dict["data"][0]["PROMPT"] = [modified_text]
 
         return modified_input_dict
@@ -448,6 +467,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             perf_config_values["request-parameter"] = [
                 f"max_tokens:{str(mtc)}:int" for mtc in self._max_token_counts
             ]
+            perf_config_values["request-period"] = self._request_periods
             perf_config_values["text-input-length"] = self._text_input_lengths
 
         return perf_config_values
