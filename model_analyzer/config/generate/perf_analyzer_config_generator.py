@@ -408,7 +408,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _extract_max_tokens_from_request_parameter(self, request_parameter: str) -> int:
         _, max_tokens, _ = request_parameter.split(":")
-
         return int(max_tokens)
 
     def _update_perf_config_based_on_perf_analyzer_flags(
