@@ -142,6 +142,18 @@ DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS = [
     "perf_throughput",
     "perf_latency_p99",
 ]
+DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS = [
+    "model_name",
+    "batch_size",
+    "periodic_concurrency",
+    "request_period",
+    "text_input_length",
+    "max_tokens",
+    "model_config_path",
+    "instance_group",
+    "avg_first_token_latency",
+    "avg_token_to_token_latency",
+]
 DEFAULT_GPU_OUTPUT_FIELDS = [
     "model_name",
     "gpu_uuid",
