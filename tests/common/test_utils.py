@@ -29,6 +29,8 @@ from model_analyzer.config.input.config_defaults import (
     DEFAULT_OUTPUT_MODEL_REPOSITORY,
     DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
     DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
+    DEFAULT_RUN_CONFIG_MIN_REQUEST_PERIOD,
+    DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH,
     DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY,
     DEFAULT_TRITON_GRPC_ENDPOINT,
     DEFAULT_TRITON_HTTP_ENDPOINT,
@@ -244,6 +246,8 @@ def construct_perf_analyzer_config(
     periodic_concurrency=DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY,
     request_rate=None,
     max_token_count=DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
+    text_input_length=DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH,
+    request_period=DEFAULT_RUN_CONFIG_MIN_REQUEST_PERIOD,
     launch_mode=DEFAULT_TRITON_LAUNCH_MODE,
     client_protocol=DEFAULT_CLIENT_PROTOCOL,
     perf_analyzer_flags=None,
@@ -266,6 +270,12 @@ def construct_perf_analyzer_config(
         The concurrency value for this PA configuration
     periodic_concurrency: list
         The periodic concurrency value for this PA configuration
+    max_token_count: int
+        The max token count for this PA configuration
+    text_input_length: int
+        The text input length for this PA configuration
+    request_period: int
+        The request period for this PA configuration
     request_rate: int
         The request rate value for this PA configuration
     launch_mode: str
@@ -299,10 +309,14 @@ def construct_perf_analyzer_config(
         pa_config._args["concurrency-range"] = concurrency
 
     if llm_search_mode:
-        pa_config._args["request-parameter"] = (
-            "max_token:" + str(max_token_count) + ":int"
-        )
-        pa_config._args["input-data"] = DEFAULT_INPUT_JSON_PATH + "/input-data.json"
+        pa_config._args["request-parameter"] = f"max_tokens:{str(max_token_count)}:int"
+
+        pa_config._args["request-period"] = request_period
+        pa_config._args[
+            "input-data"
+        ] = f"{DEFAULT_INPUT_JSON_PATH}/input-data-{str(text_input_length)}.json"
+
+        pa_config._args["streaming"] = "True"
 
     pa_config._args["measurement-mode"] = DEFAULT_MEASUREMENT_MODE
 

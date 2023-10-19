@@ -101,7 +101,7 @@ class Record(metaclass=RecordType):
         Parameters
         ----------
         value : float or int
-            The value of the GPU metrtic
+            The value of the GPU metric
         timestamp : int
             The timestamp for the record in nanoseconds
         """

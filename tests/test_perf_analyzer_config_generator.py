@@ -596,6 +596,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             "32",
             "--run-config-search-max-text-input-length",
             "1",
+            "--run-config-search-max-request-period",
+            "1",
         ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args
@@ -622,11 +624,13 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         periodic_concurrencies = ["16:32:4", "16:32:8", "16:32:16"]
 
         expected_configs = []
-        for _ in text_input_lengths:
+        for til in text_input_lengths:
             for pc in periodic_concurrencies:
                 expected_configs.append(
                     construct_perf_analyzer_config(
-                        llm_search_mode=True, periodic_concurrency=pc
+                        llm_search_mode=True,
+                        periodic_concurrency=pc,
+                        text_input_length=til,
                     )
                 )
 
@@ -635,6 +639,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             "--run-config-search-max-periodic-concurrency",
             "32",
             "--run-config-search-max-max-token-count",
+            "1",
+            "--run-config-search-max-request-period",
             "1",
         ]
         self._run_and_test_perf_analyzer_config_generator(
@@ -672,6 +678,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             "--run-config-search-max-max-token-count",
             "1",
             "--run-config-search-max-text-input-length",
+            "1",
+            "--run-config-search-max-request-period",
             "1",
         ]
         self._run_and_test_perf_analyzer_config_generator(
@@ -722,6 +730,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             "64",
             "--run-config-search-min-periodic-concurrency-step",
             "8",
+            "--run-config-search-max-request-period",
+            "1",
         ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args

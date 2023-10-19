@@ -116,7 +116,11 @@ class BrutePlusBinarySearchRunConfigGenerator(ConfigGeneratorInterface):
 
     def _can_binary_search_top_results(self) -> bool:
         for model in self._models:
-            if model.parameters()["concurrency"] or model.parameters()["request_rate"]:
+            if (
+                model.parameters()["concurrency"]
+                or model.parameters()["request_rate"]
+                or self._config.is_llm_model()
+            ):
                 return False
 
         return True
