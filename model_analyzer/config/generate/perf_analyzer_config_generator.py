@@ -395,9 +395,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     ) -> None:
         if "request-parameter" in parameter_combination:
             request_parameter = parameter_combination["request-parameter"]
-            max_tokens = utils.extract_max_tokens_from_request_parameter(
-                request_parameter
-            )
+            max_tokens = utils.extract_value_from_request_parameter(request_parameter)
             parameter_combination["request-period"] = (
                 max_tokens
                 if max_tokens < parameter_combination["request-period"]

@@ -39,7 +39,7 @@ class ResultTableManager:
         "concurrency": "Concurrency",
         "periodic_concurrency": "Periodic Concurrency",
         "text_input_length": "Text Input Length",
-        "max_tokens": "Max Token Count",
+        "max_tokens": "Max Tokens",
         "request_period": "Request Period",
         "request_rate": "Request Rate",
         "model_config_path": "Model Config Path",

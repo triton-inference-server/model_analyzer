@@ -118,11 +118,13 @@ class GeneratorUtils:
         return list
 
     @staticmethod
-    def extract_max_tokens_from_request_parameter(request_parameter: str) -> int:
-        # format is max_tokens:<num>:int
-        _, max_tokens, _ = request_parameter.split(":")
+    def extract_value_from_request_parameter(request_parameter: str) -> int:
+        # Format is: <parameter>:<value>:<type>
+        # Example: max_tokens:10:int
 
-        return int(max_tokens)
+        _, value, _ = request_parameter.split(":")
+
+        return int(value)
 
     @staticmethod
     def extract_text_input_length_from_input_data(input_data: str) -> int:

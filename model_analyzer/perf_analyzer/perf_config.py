@@ -284,7 +284,7 @@ class PerfAnalyzerConfig:
             "concurrency-range": self._args["concurrency-range"],
             "request-rate-range": self._args["request-rate-range"],
             "periodic-concurrency-range": self._args["periodic-concurrency-range"],
-            "max-tokens": utils.extract_max_tokens_from_request_parameter(
+            "max-tokens": utils.extract_value_from_request_parameter(
                 self._args["request-parameter"]
             ),
             "request-period": self._args["request-period"],
