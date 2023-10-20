@@ -57,7 +57,7 @@ class AvgFirstTokenLatency(DecreasingRecord):
             metric.
         """
 
-        return "avg first token-to-token latency (ms)"
+        return "Avg First Token latency (ms)"
 
     def __eq__(self, other):
         """

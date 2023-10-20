@@ -1419,9 +1419,14 @@ class ConfigCommandProfile(ConfigCommand):
                     {"perf_throughput": {"min": self.min_throughput}}
                 )
 
-        # Switch default output fields if request rate is being used
+        # Switch default output fields if LLM model or request rate is being used
         # and the user didn't specify a custom output field
-        if self._using_request_rate():
+        if self.is_llm_model():
+            if not self._fields["inference_output_fields"].is_set_by_user():
+                self.inference_output_fields = (
+                    config_defaults.DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS
+                )
+        elif self._using_request_rate():
             if not self._fields["inference_output_fields"].is_set_by_user():
                 self.inference_output_fields = (
                     config_defaults.DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS

@@ -80,8 +80,8 @@ class GeneratorUtils:
     @staticmethod
     def generate_parameter_combinations(params: Dict) -> List[Dict]:
         """
-        Generate a list of all possible subdictionaries
-        from given dictionary. The subdictionaries will
+        Generate a list of all possible sub-dictionaries
+        from given dictionary. The sub-dictionaries will
         have all the same keys, but only one value from
         each key.
 
@@ -116,3 +116,20 @@ class GeneratorUtils:
             list.append(val)
             val *= 2
         return list
+
+    @staticmethod
+    def extract_value_from_request_parameter(request_parameter: str) -> int:
+        # Format is: <parameter>:<value>:<type>
+        # Example: max_tokens:10:int
+
+        _, value, _ = request_parameter.split(":")
+
+        return int(value)
+
+    @staticmethod
+    def extract_text_input_length_from_input_data(input_data: str) -> int:
+        # format is input-data-<num>.json
+        _, _, text_input_length = input_data.split("-")
+        text_input_length, _ = text_input_length.split(".")
+
+        return int(text_input_length)

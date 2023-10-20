@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
 from model_analyzer.constants import SECONDS_TO_MILLISECONDS_MULTIPLIER
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -283,7 +284,13 @@ class PerfAnalyzerConfig:
             "concurrency-range": self._args["concurrency-range"],
             "request-rate-range": self._args["request-rate-range"],
             "periodic-concurrency-range": self._args["periodic-concurrency-range"],
-            "max-tokens": self._args["request-parameter"],
+            "max-tokens": utils.extract_value_from_request_parameter(
+                self._args["request-parameter"]
+            ),
+            "request-period": self._args["request-period"],
+            "text-input-length": utils.extract_text_input_length_from_input_data(
+                self._args["input-data"]
+            ),
         }
 
     @classmethod

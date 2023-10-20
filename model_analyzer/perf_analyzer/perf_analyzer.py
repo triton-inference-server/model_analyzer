@@ -99,8 +99,8 @@ class PerfAnalyzer:
     ]
 
     llm_metric_table = [
-        ["avg_first_token_latency",    None,                    AvgFirstTokenLatency,     "1000"],
-        ["avg_token_to_token_latency", None,                    AvgTokenToTokenLatency,   "1000"]
+        ["avg_first_token_latency",    None,                    AvgFirstTokenLatency,     "1000000"],
+        ["avg_token_to_token_latency", None,                    AvgTokenToTokenLatency,   "1000000"]
     ]
     # yapf: enable
 
@@ -548,8 +548,11 @@ class PerfAnalyzer:
             )
 
         avg_first_token_latency = float(mean(total_first_token_latencies))
+        reduction_factor = float(
+            PerfAnalyzer.llm_metric_table[0][PerfAnalyzer.REDUCTION_FACTOR]  # type: ignore
+        )
 
-        return avg_first_token_latency
+        return avg_first_token_latency / reduction_factor
 
     def _calculate_avg_token_to_token_latency(self, llm_output: Dict) -> float:
         token_to_token_latencies = []
@@ -563,8 +566,11 @@ class PerfAnalyzer:
             token_to_token_latencies.append(mean(response_to_response_latencies))
 
         avg_token_to_token_latency = float(mean(token_to_token_latencies))
+        reduction_factor = float(
+            PerfAnalyzer.llm_metric_table[1][PerfAnalyzer.REDUCTION_FACTOR]  # type: ignore
+        )
 
-        return avg_token_to_token_latency
+        return avg_token_to_token_latency / reduction_factor
 
     def _extract_perf_records_from_row(
         self, requested_metrics: List[Record], row_metrics: Dict[str, str]
