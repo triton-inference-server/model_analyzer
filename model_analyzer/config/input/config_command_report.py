@@ -209,6 +209,10 @@ class ConfigCommandReport(ConfigCommand):
 
         super().set_config_values(args)
 
+    # TODO TMA-1443: Update this when adding support for detailed reporting
+    def is_llm_model(self) -> bool:
+        return False
+
     def _preprocess_and_verify_arguments(self):
         """
         Enforces some rules on the config.

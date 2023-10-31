@@ -2340,6 +2340,80 @@ profile_models:
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(args, yaml_content)
 
+    def test_llm_mode_rcs(self):
+        """
+        Test RCS options for an LLM model
+        """
+        yaml_content = ""
+
+        self._test_llm_mode_case(
+            yaml_content,
+            ["--run-config-search-mode", "brute"],
+            is_legal=True,
+            use_value=False,
+            use_list=False,
+        )
+        self._test_llm_mode_case(
+            yaml_content,
+            ["--run-config-search-mode", "quick"],
+            use_value=False,
+            use_list=False,
+        )
+
+        self._test_llm_mode_case(
+            yaml_content, ["--run-config-search-min-model-batch-size"]
+        )
+        self._test_llm_mode_case(
+            yaml_content, ["--run-config-search-max-model-batch-size"]
+        )
+        self._test_llm_mode_case(yaml_content, ["--run-config-search-min-concurrency"])
+        self._test_llm_mode_case(yaml_content, ["--run-config-search-max-concurrency"])
+        self._test_llm_mode_case(yaml_content, ["--run-config-search-min-request-rate"])
+        self._test_llm_mode_case(yaml_content, ["--run-config-search-max-request-rate"])
+        self._test_llm_mode_case(
+            yaml_content,
+            ["--request-rate-search-enable"],
+            use_value=False,
+            use_list=False,
+        )
+        self._test_llm_mode_case(yaml_content, ["--concurrency"])
+        self._test_llm_mode_case(yaml_content, ["--latency-budget"])
+        self._test_llm_mode_case(yaml_content, ["--min-throughput"])
+
+    def _test_llm_mode_case(
+        self,
+        yaml_content: Optional[Dict[str, List]],
+        options_string: str,
+        is_legal: bool = False,
+        use_value: bool = True,
+        use_list: bool = True,
+    ) -> None:
+        """
+        Tests that options raise exceptions in LLM mode
+        """
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli-repository",
+            "--profile-models",
+            "test_llm_modelA",
+            "--llm-search-enable",
+        ]
+
+        args.extend(options_string)
+
+        if use_value:
+            args.append("1")
+        elif use_list:
+            args.append(["1", "2", "4"])
+
+        if is_legal:
+            self._evaluate_config(args, yaml_content, subcommand="profile")
+        else:
+            with self.assertRaises(TritonModelAnalyzerException):
+                self._evaluate_config(args, yaml_content, subcommand="profile")
+
 
 if __name__ == "__main__":
     unittest.main()

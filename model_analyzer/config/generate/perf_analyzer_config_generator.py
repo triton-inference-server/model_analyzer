@@ -328,7 +328,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             return []
 
         if self._model_parameters["request_period"]:
-            return sorted(self._model_parameters["period"])
+            return sorted(self._model_parameters["request_period"])
         elif self._cli_config.run_config_search_disable:
             return [DEFAULT_RUN_CONFIG_MIN_REQUEST_PERIOD]
         else:
