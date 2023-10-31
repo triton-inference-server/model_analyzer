@@ -136,9 +136,12 @@ class Analyzer:
 
         if not self._config.skip_summary_reports:
             self._create_summary_tables(verbose)
-            self._create_summary_reports(mode)
 
-            # FIXME: need to figure out detailed reporting for LLMs
+            # TODO TMA-1401: need to figure out summary reporting for LLMs
+            if not self._config.is_llm_model():
+                self._create_summary_reports(mode)
+
+            # TODO TMA-1443: need to figure out detailed reporting for LLMs
             if not self._config.is_llm_model():
                 self._create_detailed_reports(mode)
 

@@ -16,6 +16,7 @@
 
 import logging
 import os
+import shutil
 import time
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
@@ -27,6 +28,7 @@ from prometheus_client.parser import text_string_to_metric_families
 from model_analyzer.config.generate.base_model_config_generator import (
     BaseModelConfigGenerator,
 )
+from model_analyzer.config.input.config_defaults import DEFAULT_INPUT_JSON_PATH
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -308,6 +310,9 @@ class MetricsManager:
 
     def finalize(self):
         self._server.stop()
+
+        if os.path.exists(DEFAULT_INPUT_JSON_PATH):
+            shutil.rmtree(DEFAULT_INPUT_JSON_PATH)
 
     def _create_model_variants(self, run_config: RunConfig) -> None:
         """
