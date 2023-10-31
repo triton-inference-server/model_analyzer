@@ -16,6 +16,7 @@
 
 import json
 import logging
+import os
 from itertools import repeat
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
@@ -448,6 +449,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _write_modified_input_dict_to_file(
         self, modified_input_dict: Dict, input_json_filename: str
     ) -> None:
+        if not os.path.exists(DEFAULT_INPUT_JSON_PATH):
+            os.makedirs(DEFAULT_INPUT_JSON_PATH)
+
         with open(input_json_filename, "w") as f:
             json.dump(modified_input_dict, f)
 

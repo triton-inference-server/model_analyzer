@@ -1294,7 +1294,9 @@ class TestModelManager(trc.TestResultCollector):
             MagicMock(),
         )
 
-        model_manager.run_models([config.profile_models[0]])
+        with patch("shutil.rmtree"):
+            model_manager.run_models([config.profile_models[0]])
+
         self.mock_model_config.stop()
 
         self._check_results(model_manager, expected_ranges)
