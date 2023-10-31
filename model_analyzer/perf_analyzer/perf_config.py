@@ -101,6 +101,8 @@ class PerfAnalyzerConfig:
         "collect-metrics",
     ]
 
+    llm_args = ["text-input-length", "max-tokens"]
+
     def __init__(self):
         """
         Construct a PerfAnalyzerConfig
@@ -152,7 +154,12 @@ class PerfAnalyzerConfig:
             passed into perf_analyzer
         """
 
-        return cls.perf_analyzer_args + cls.input_to_options + cls.input_to_verbose
+        return (
+            cls.perf_analyzer_args
+            + cls.input_to_options
+            + cls.input_to_verbose
+            + cls.llm_args
+        )
 
     @classmethod
     def additive_keys(cls):
