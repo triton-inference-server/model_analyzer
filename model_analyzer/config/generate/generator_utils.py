@@ -126,6 +126,12 @@ class GeneratorUtils:
         # Example: max_tokens:10:int
         _, value, _ = request_parameter.split(":")
 
+        # this catches the case for non-LLM models where the user has specified request parameters
+        try:
+            int(value)
+        except ValueError as _:
+            return 0
+
         return int(value)
 
     @staticmethod
@@ -136,5 +142,11 @@ class GeneratorUtils:
         # format is input-data-<num>.json
         _, _, text_input_length = input_data.split("-")
         text_input_length, _ = text_input_length.split(".")
+
+        # this catches the case for non-LLM models where the user has specified input data
+        try:
+            int(text_input_length)
+        except ValueError as _:
+            return 0
 
         return int(text_input_length)
