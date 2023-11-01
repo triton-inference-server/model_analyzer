@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from itertools import product
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 class GeneratorUtils:
@@ -118,16 +118,21 @@ class GeneratorUtils:
         return list
 
     @staticmethod
-    def extract_value_from_request_parameter(request_parameter: str) -> int:
+    def extract_value_from_request_parameter(request_parameter: Optional[str]) -> int:
+        if not request_parameter:
+            return 0
+
         # Format is: <parameter>:<value>:<type>
         # Example: max_tokens:10:int
-
         _, value, _ = request_parameter.split(":")
 
         return int(value)
 
     @staticmethod
-    def extract_text_input_length_from_input_data(input_data: str) -> int:
+    def extract_text_input_length_from_input_data(input_data: Optional[str]) -> int:
+        if not input_data:
+            return 0
+
         # format is input-data-<num>.json
         _, _, text_input_length = input_data.split("-")
         text_input_length, _ = text_input_length.split(".")
