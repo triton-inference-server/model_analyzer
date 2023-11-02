@@ -347,35 +347,74 @@ class MetricsManager:
         repository and fills directory with config
         """
 
-        variant_name = variant_config.variant_name
         if self._config.triton_launch_mode != "remote":
-            model_repository = self._config.model_repository
+            self._create_non_remote_mode_model_variant(
+                original_name, variant_config, ignore_first_config_variant
+            )
+        else:
+            self._create_remote_mode_model_variant(original_name, variant_config)
 
-            original_model_dir = os.path.join(model_repository, original_name)
-            new_model_dir = os.path.join(self._output_model_repo_path, variant_name)
-            try:
-                # Create the directory for the new model
-                os.makedirs(new_model_dir, exist_ok=True)
-                self._first_config_variant.setdefault(original_name, None)
+    def _create_non_remote_mode_model_variant(
+        self,
+        original_name: str,
+        variant_config: ModelConfigVariant,
+        ignore_first_config_variant: bool = False,
+    ) -> None:
+        """
+        Creates a directory for the model config variant in the output model
+        repository and fills directory with config
+        """
+        variant_name = variant_config.variant_name
+        model_repository = self._config.model_repository
 
-                if ignore_first_config_variant:
-                    variant_config.model_config.write_config_to_file(
-                        new_model_dir, original_model_dir, None
-                    )
-                else:
-                    variant_config.model_config.write_config_to_file(
-                        new_model_dir,
-                        original_model_dir,
-                        self._first_config_variant[original_name],
-                    )
+        original_model_dir = os.path.join(model_repository, original_name)
+        new_model_dir = os.path.join(self._output_model_repo_path, variant_name)
+        try:
+            # Create the directory for the new model
+            os.makedirs(new_model_dir, exist_ok=True)
+            self._first_config_variant.setdefault(original_name, None)
 
-                if self._first_config_variant[original_name] is None:
-                    self._first_config_variant[original_name] = os.path.join(
-                        self._output_model_repo_path, variant_name
-                    )
-            except FileExistsError:
-                # Ignore if the file already exists
-                pass
+            if ignore_first_config_variant:
+                variant_config.model_config.write_config_to_file(
+                    new_model_dir, original_model_dir, None
+                )
+            else:
+                variant_config.model_config.write_config_to_file(
+                    new_model_dir,
+                    original_model_dir,
+                    self._first_config_variant[original_name],
+                )
+
+            if self._first_config_variant[original_name] is None:
+                self._first_config_variant[original_name] = os.path.join(
+                    self._output_model_repo_path, variant_name
+                )
+        except FileExistsError:
+            # Ignore if the file already exists
+            pass
+
+    def _create_remote_mode_model_variant(
+        self,
+        original_name: str,
+        variant_config: ModelConfigVariant,
+    ) -> None:
+        """
+        Creates a directory for the model config variant in the output model
+        repository and fills directory with only the config.pbtxt
+        """
+        variant_name = variant_config.variant_name
+        new_model_dir = os.path.join(self._output_model_repo_path, variant_name)
+        try:
+            os.makedirs(new_model_dir, exist_ok=False)
+            self._first_config_variant.setdefault(original_name, None)
+            variant_config.model_config.write_config_to_file(
+                model_path=new_model_dir,
+                src_model_path=new_model_dir,
+                first_variant_model_path=None,
+            )
+        except FileExistsError:
+            # Ignore if the dir already exists
+            pass
 
     def _load_model_variants(self, run_config):
         """
