@@ -16,6 +16,7 @@
 
 import csv
 import glob
+import json
 import logging
 import os
 import re
@@ -25,6 +26,7 @@ from subprocess import STDOUT, Popen
 from typing import Dict, List
 
 import psutil
+from numpy import mean
 
 from model_analyzer.constants import (
     INTERVAL_SLEEP_TIME,
@@ -36,6 +38,10 @@ from model_analyzer.constants import (
 )
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.record.record import Record
+from model_analyzer.record.types.avg_first_token_latency import AvgFirstTokenLatency
+from model_analyzer.record.types.avg_token_to_token_latency import (
+    AvgTokenToTokenLatency,
+)
 from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
 from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
 from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
@@ -91,6 +97,11 @@ class PerfAnalyzer:
         ["gpu_used_memory",            "Max GPU Memory Usage",  GPUUsedMemory,        "1000000"],
         ["gpu_free_memory",            "Total GPU Memory",      GPUFreeMemory,        "1000000"]
     ]
+
+    llm_metric_table = [
+        ["avg_first_token_latency",    None,                    AvgFirstTokenLatency,     "1000000"],
+        ["avg_token_to_token_latency", None,                    AvgTokenToTokenLatency,   "1000000"]
+    ]
     # yapf: enable
 
     @staticmethod
@@ -108,6 +119,14 @@ class PerfAnalyzer:
             for gpu_metric in PerfAnalyzer.gpu_metric_table
         ]
         return gpu_metrics
+
+    @staticmethod
+    def get_llm_metrics():
+        llm_metrics = [
+            llm_metric[PerfAnalyzer.RECORD_CLASS]
+            for llm_metric in PerfAnalyzer.llm_metric_table
+        ]
+        return llm_metrics
 
     def __init__(self, path, config, max_retries, timeout, max_cpu_util):
         """
@@ -134,6 +153,7 @@ class PerfAnalyzer:
         self._output = ""
         self._perf_records = {}
         self._gpu_records = []
+        self._llm_records = {}
         self._max_cpu_util = max_cpu_util
 
     def run(self, metrics, env=None):
@@ -207,6 +227,19 @@ class PerfAnalyzer:
 
         return self._gpu_records
 
+    def get_llm_records(self):
+        """
+        Returns
+        -------
+        The LLM records from the last perf_analyzer run
+        """
+
+        if self._llm_records:
+            return self._llm_records
+        raise TritonModelAnalyzerException(
+            "Attempted to get perf_analyzer results without calling run first."
+        )
+
     def output(self):
         """
         Returns
@@ -252,6 +285,14 @@ class PerfAnalyzer:
         if self._is_multi_model():
             cmd += ["--enable-mpi"]
         cmd += self._get_pa_cli_command(index).replace("=", " ").split()
+
+        # OPTME: There should be a more elegant way of determining how to add EOS
+        #        We have to do it here because we use a dictionary to create the PA command
+        #        and it already contains `--request-parameter`
+        if "--periodic-concurrency-range" in cmd:
+            cmd.append("--request-parameter")
+            cmd.append("ignore_eos:true:bool")
+
         return cmd
 
     def _get_pa_cli_command(self, index):
@@ -448,21 +489,88 @@ class PerfAnalyzer:
             logger.debug(
                 f"Reading PA results from {perf_config['latency-report-file']}"
             )
-            with open(perf_config["latency-report-file"], mode="r") as f:
-                csv_reader = csv.DictReader(f, delimiter=",")
-
-                for row in csv_reader:
-                    self._perf_records[
-                        perf_config["model-name"]
-                    ] = self._extract_perf_records_from_row(metrics, row)
-                    self._gpu_records = self._extract_gpu_records_from_row(metrics, row)
+            self._extract_gpu_records(perf_config, metrics)
+            self._extract_llm_records(perf_config, metrics)
 
         for perf_config in [
             mrc.perf_config() for mrc in self._config.model_run_configs()
         ]:
-            # Remove the latency file and all associated composing model latency files
+            # Remove the latency/profile export files and all associated composing model latency files
             for f in glob.glob(f"*{perf_config['latency-report-file']}"):
                 os.remove(f)
+            for f in glob.glob(f"*{perf_config['profile-export-file']}"):
+                os.remove(f)
+
+    def _extract_gpu_records(self, perf_config, metrics):
+        if perf_config["profile-export-file"]:
+            return
+
+        with open(perf_config["latency-report-file"], mode="r") as f:
+            csv_reader = csv.DictReader(f, delimiter=",")
+
+            for row in csv_reader:
+                self._perf_records[
+                    perf_config["model-name"]
+                ] = self._extract_perf_records_from_row(metrics, row)
+                self._gpu_records = self._extract_gpu_records_from_row(metrics, row)
+
+    def _extract_llm_records(self, perf_config, metrics):
+        if not perf_config["profile-export-file"]:
+            return
+
+        self._llm_records[perf_config["model-name"]] = []
+
+        with open(perf_config["profile-export-file"], mode="r") as f:
+            llm_output = json.load(f)
+
+            avg_first_token_latency = self._calculate_avg_first_token_latency(
+                llm_output
+            )
+            record = PerfAnalyzer.llm_metric_table[0][PerfAnalyzer.RECORD_CLASS](
+                value=avg_first_token_latency
+            )  # type: ignore
+
+            self._llm_records[perf_config["model-name"]].append(record)
+
+            avg_token_to_token_latency = self._calculate_avg_token_to_token_latency(
+                llm_output
+            )
+            record = PerfAnalyzer.llm_metric_table[1][PerfAnalyzer.RECORD_CLASS](
+                value=avg_token_to_token_latency
+            )  # type: ignore
+            self._llm_records[perf_config["model-name"]].append(record)
+
+    def _calculate_avg_first_token_latency(self, llm_output: Dict) -> float:
+        total_first_token_latencies = []
+        for request in llm_output["experiments"][0]["requests"]:
+            total_first_token_latencies.append(
+                request["response_timestamps"][0] - request["timestamp"]
+            )
+
+        avg_first_token_latency = float(mean(total_first_token_latencies))
+        reduction_factor = float(
+            PerfAnalyzer.llm_metric_table[0][PerfAnalyzer.REDUCTION_FACTOR]  # type: ignore
+        )
+
+        return avg_first_token_latency / reduction_factor
+
+    def _calculate_avg_token_to_token_latency(self, llm_output: Dict) -> float:
+        token_to_token_latencies = []
+        for request in llm_output["experiments"][0]["requests"]:
+            response_to_response_latencies = []
+            prev_response = request["response_timestamps"][0]
+            for response in request["response_timestamps"][1:]:
+                response_to_response_latencies.append(response - prev_response)
+                prev_response = response
+
+            token_to_token_latencies.append(mean(response_to_response_latencies))
+
+        avg_token_to_token_latency = float(mean(token_to_token_latencies))
+        reduction_factor = float(
+            PerfAnalyzer.llm_metric_table[1][PerfAnalyzer.REDUCTION_FACTOR]  # type: ignore
+        )
+
+        return avg_token_to_token_latency / reduction_factor
 
     def _extract_perf_records_from_row(
         self, requested_metrics: List[Record], row_metrics: Dict[str, str]

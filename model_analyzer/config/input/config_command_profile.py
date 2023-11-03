@@ -17,12 +17,14 @@
 import argparse
 import logging
 import os
+from typing import Dict
 
 import numba.cuda
 import psutil
 from google.protobuf.descriptor import FieldDescriptor
 from tritonclient.grpc.model_config_pb2 import ModelConfig
 
+import model_analyzer.config.input.config_defaults as config_defaults
 from model_analyzer.config.input.config_utils import (
     binary_path_validator,
     file_path_validator,
@@ -36,62 +38,6 @@ from model_analyzer.record.record import RecordType
 from model_analyzer.triton.server.server_config import TritonServerConfig
 
 from .config_command import ConfigCommand
-from .config_defaults import (
-    DEFAULT_ALWAYS_REPORT_GPU_METRICS,
-    DEFAULT_BATCH_SIZES,
-    DEFAULT_CHECKPOINT_DIRECTORY,
-    DEFAULT_CLIENT_PROTOCOL,
-    DEFAULT_COLLECT_CPU_METRICS,
-    DEFAULT_DURATION_SECONDS,
-    DEFAULT_EXPORT_PATH,
-    DEFAULT_FILENAME_MODEL_GPU,
-    DEFAULT_FILENAME_MODEL_INFERENCE,
-    DEFAULT_FILENAME_SERVER_ONLY,
-    DEFAULT_GPU_OUTPUT_FIELDS,
-    DEFAULT_GPUS,
-    DEFAULT_INFERENCE_OUTPUT_FIELDS,
-    DEFAULT_MAX_RETRIES,
-    DEFAULT_MODEL_WEIGHTING,
-    DEFAULT_MONITORING_INTERVAL,
-    DEFAULT_NUM_CONFIGS_PER_MODEL,
-    DEFAULT_NUM_TOP_MODEL_CONFIGS,
-    DEFAULT_OFFLINE_OBJECTIVES,
-    DEFAULT_OFFLINE_PLOTS,
-    DEFAULT_ONLINE_OBJECTIVES,
-    DEFAULT_ONLINE_PLOTS,
-    DEFAULT_OUTPUT_MODEL_REPOSITORY,
-    DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG,
-    DEFAULT_PERF_ANALYZER_CPU_UTIL,
-    DEFAULT_PERF_ANALYZER_PATH,
-    DEFAULT_PERF_ANALYZER_TIMEOUT,
-    DEFAULT_PERF_MAX_AUTO_ADJUSTS,
-    DEFAULT_PERF_OUTPUT_FLAG,
-    DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS,
-    DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS,
-    DEFAULT_REQUEST_RATE_SEARCH_ENABLE,
-    DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS,
-    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY,
-    DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT,
-    DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE,
-    DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE,
-    DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
-    DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT,
-    DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE,
-    DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
-    DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE,
-    DEFAULT_RUN_CONFIG_SEARCH_DISABLE,
-    DEFAULT_RUN_CONFIG_SEARCH_MODE,
-    DEFAULT_SERVER_OUTPUT_FIELDS,
-    DEFAULT_SKIP_DETAILED_REPORTS,
-    DEFAULT_SKIP_SUMMARY_REPORTS,
-    DEFAULT_TRITON_DOCKER_IMAGE,
-    DEFAULT_TRITON_GRPC_ENDPOINT,
-    DEFAULT_TRITON_HTTP_ENDPOINT,
-    DEFAULT_TRITON_INSTALL_PATH,
-    DEFAULT_TRITON_LAUNCH_MODE,
-    DEFAULT_TRITON_METRICS_URL,
-    DEFAULT_TRITON_SERVER_PATH,
-)
 from .config_enum import ConfigEnum
 from .config_field import ConfigField
 from .config_list_generic import ConfigListGeneric
@@ -224,7 +170,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 "checkpoint_directory",
                 flags=["-s", "--checkpoint-directory"],
-                default_value=DEFAULT_CHECKPOINT_DIRECTORY,
+                default_value=config_defaults.DEFAULT_CHECKPOINT_DIRECTORY,
                 field_type=ConfigPrimitive(str, validator=parent_path_validator),
                 description="Full path to directory to which to read and write checkpoints and profile data.",
             )
@@ -234,7 +180,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "monitoring_interval",
                 flags=["-i", "--monitoring-interval"],
                 field_type=ConfigPrimitive(float),
-                default_value=DEFAULT_MONITORING_INTERVAL,
+                default_value=config_defaults.DEFAULT_MONITORING_INTERVAL,
                 description="Interval of time between metrics measurements in seconds",
             )
         )
@@ -243,7 +189,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "duration_seconds",
                 field_type=ConfigPrimitive(int),
                 flags=["-d", "--duration-seconds"],
-                default_value=DEFAULT_DURATION_SECONDS,
+                default_value=config_defaults.DEFAULT_DURATION_SECONDS,
                 description="Specifies how long (seconds) to gather server-only metrics",
             )
         )
@@ -253,7 +199,7 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(bool),
                 flags=["--collect-cpu-metrics"],
                 parser_args={"action": "store_true"},
-                default_value=DEFAULT_COLLECT_CPU_METRICS,
+                default_value=config_defaults.DEFAULT_COLLECT_CPU_METRICS,
                 description="Specify whether CPU metrics are collected or not",
             )
         )
@@ -262,7 +208,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "gpus",
                 flags=["--gpus"],
                 field_type=ConfigListString(),
-                default_value=DEFAULT_GPUS,
+                default_value=config_defaults.DEFAULT_GPUS,
                 description="List of GPU UUIDs to be used for the profiling. "
                 "Use 'all' to profile all the GPUs visible by CUDA.",
             )
@@ -273,7 +219,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--always-report-gpu-metrics"],
                 field_type=ConfigPrimitive(bool),
                 parser_args={"action": "store_true"},
-                default_value=DEFAULT_ALWAYS_REPORT_GPU_METRICS,
+                default_value=config_defaults.DEFAULT_ALWAYS_REPORT_GPU_METRICS,
                 description="Report GPU metrics, even when the model is `cpu_only`.",
             )
         )
@@ -283,7 +229,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--skip-summary-reports"],
                 field_type=ConfigPrimitive(bool),
                 parser_args={"action": "store_true"},
-                default_value=DEFAULT_SKIP_SUMMARY_REPORTS,
+                default_value=config_defaults.DEFAULT_SKIP_SUMMARY_REPORTS,
                 description="Skips the generation of analysis summary reports and tables.",
             )
         )
@@ -293,7 +239,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--skip-detailed-reports"],
                 field_type=ConfigPrimitive(bool),
                 parser_args={"action": "store_true"},
-                default_value=DEFAULT_SKIP_DETAILED_REPORTS,
+                default_value=config_defaults.DEFAULT_SKIP_DETAILED_REPORTS,
                 description="Skips the generation of detailed summary reports and tables.",
             )
         )
@@ -325,7 +271,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 "output_model_repository_path",
                 field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_OUTPUT_MODEL_REPOSITORY,
+                default_value=config_defaults.DEFAULT_OUTPUT_MODEL_REPOSITORY,
                 flags=["--output-model-repository-path"],
                 description="Output model repository path used by Model Analyzer."
                 " This is the directory that will contain all the generated model configurations",
@@ -336,7 +282,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "override_output_model_repository",
                 field_type=ConfigPrimitive(bool),
                 parser_args={"action": "store_true"},
-                default_value=DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG,
+                default_value=config_defaults.DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG,
                 flags=["--override-output-model-repository"],
                 description="Will override the contents of the output model repository"
                 " and replace it with the new results.",
@@ -520,7 +466,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 "objectives",
                 field_type=objectives_scheme,
-                default_value=DEFAULT_OFFLINE_OBJECTIVES,
+                default_value=config_defaults.DEFAULT_OFFLINE_OBJECTIVES,
                 description="Model Analyzer uses the objectives described here to find the best configuration for each model.",
             )
         )
@@ -552,7 +498,11 @@ class ConfigCommandProfile(ConfigCommand):
                             schema={
                                 "batch_sizes": ConfigListNumeric(type_=int),
                                 "concurrency": ConfigListNumeric(type_=int),
+                                "periodic_concurrency": ConfigListString(),
                                 "request_rate": ConfigListNumeric(type_=int),
+                                "request_period": ConfigListNumeric(type_=int),
+                                "text_input_length": ConfigListNumeric(type_=int),
+                                "max_token_count": ConfigListNumeric(type_=int),
                             }
                         ),
                         "objectives": objectives_scheme,
@@ -602,7 +552,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "batch_sizes",
                 flags=["-b", "--batch-sizes"],
                 field_type=ConfigListNumeric(int),
-                default_value=DEFAULT_BATCH_SIZES,
+                default_value=config_defaults.DEFAULT_BATCH_SIZES,
                 description="Comma-delimited list of batch sizes to use for the profiling",
             )
         )
@@ -617,11 +567,46 @@ class ConfigCommandProfile(ConfigCommand):
         )
         self._add_config(
             ConfigField(
+                "periodic_concurrency",
+                flags=["--periodic-concurrency"],
+                field_type=ConfigListString(),
+                description="A list of ranges <start:end:step> to be used during profiling",
+            )
+        )
+        self._add_config(
+            ConfigField(
                 "request_rate",
                 flags=["--request-rate"],
                 field_type=ConfigListNumeric(int),
                 description="Comma-delimited list of request rate values or ranges <start:end:step>"
                 " to be used during profiling",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "request_period",
+                flags=["--request-period"],
+                field_type=ConfigListNumeric(int),
+                description="Comma-delimited list of request period values or ranges <start:end:step>"
+                " to be used during profiling",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "text_input_length",
+                flags=["--text-input-length"],
+                field_type=ConfigListNumeric(int),
+                description="Comma-delimited list of text input length values or ranges <start:end:step>"
+                " to be used during profiling LLMs",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "max_token_count",
+                flags=["--max-token-count"],
+                field_type=ConfigListNumeric(int),
+                description="Comma-delimited list of max token values or ranges <start:end:step>"
+                " to be used during profiling LLMs",
             )
         )
         self._add_config(
@@ -685,7 +670,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "client_max_retries",
                 flags=["-r", "--client-max-retries"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_MAX_RETRIES,
+                default_value=config_defaults.DEFAULT_MAX_RETRIES,
                 description="Specifies the max number of retries for any requests to Triton server.",
             )
         )
@@ -695,7 +680,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--client-protocol"],
                 choices=["http", "grpc"],
                 field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_CLIENT_PROTOCOL,
+                default_value=config_defaults.DEFAULT_CLIENT_PROTOCOL,
                 description="The protocol used to communicate with the Triton Inference Server",
             )
         )
@@ -721,8 +706,8 @@ class ConfigCommandProfile(ConfigCommand):
                 "run_config_search_max_concurrency",
                 flags=["--run-config-search-max-concurrency"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_RUN_CONFIG_MAX_CONCURRENCY,
-                description="Max concurrency value that run config search should not go beyond that.",
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_CONCURRENCY,
+                description="Max concurrency value that run config search should not go beyond.",
             )
         )
         self._add_config(
@@ -730,8 +715,44 @@ class ConfigCommandProfile(ConfigCommand):
                 "run_config_search_min_concurrency",
                 flags=["--run-config-search-min-concurrency"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
                 description="Min concurrency value that run config search should start with.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_max_periodic_concurrency",
+                flags=["--run-config-search-max-periodic-concurrency"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_PERIODIC_CONCURRENCY,
+                description="Max periodic concurrency value that run config search should not go beyond.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_min_periodic_concurrency",
+                flags=["--run-config-search-min-periodic-concurrency"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY,
+                description="Min periodic concurrency value that run config search should start with.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_max_periodic_concurrency_step",
+                flags=["--run-config-search-max-periodic-concurrency-step"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_PERIODIC_CONCURRENCY_STEP,
+                description="Max periodic concurrency step value that run config search should not go beyond.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_min_periodic_concurrency_step",
+                flags=["--run-config-search-min-periodic-concurrency-step"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY_STEP,
+                description="Min periodic concurrency step value that run config search should start with.",
             )
         )
         self._add_config(
@@ -739,8 +760,8 @@ class ConfigCommandProfile(ConfigCommand):
                 "run_config_search_max_request_rate",
                 flags=["--run-config-search-max-request-rate"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE,
-                description="Max request rate value that run config search should not go beyond that.",
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE,
+                description="Max request rate value that run config search should not go beyond.",
             )
         )
         self._add_config(
@@ -748,8 +769,26 @@ class ConfigCommandProfile(ConfigCommand):
                 "run_config_search_min_request_rate",
                 flags=["--run-config-search-min-request-rate"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
                 description="Min request rate value that run config search should start with.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_max_request_period",
+                flags=["--run-config-search-max-request-period"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_REQUEST_PERIOD,
+                description="Max request period value that run config search should not go beyond.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_min_request_period",
+                flags=["--run-config-search-min-request-period"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_REQUEST_PERIOD,
+                description="Min request period value that run config search should start with.",
             )
         )
         self._add_config(
@@ -757,8 +796,8 @@ class ConfigCommandProfile(ConfigCommand):
                 "run_config_search_max_instance_count",
                 flags=["--run-config-search-max-instance-count"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT,
-                description="Max instance count value that run config search should not go beyond that.",
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT,
+                description="Max instance count value that run config search should not go beyond.",
             )
         )
         self._add_config(
@@ -766,7 +805,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "run_config_search_min_instance_count",
                 flags=["--run-config-search-min-instance-count"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT,
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT,
                 description="Min instance count value that run config search should start with.",
             )
         )
@@ -775,7 +814,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "run_config_search_max_model_batch_size",
                 flags=["--run-config-search-max-model-batch-size"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE,
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE,
                 description="Value for the model's max_batch_size that run config search will not go beyond.",
             )
         )
@@ -784,7 +823,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "run_config_search_min_model_batch_size",
                 flags=["--run-config-search-min-model-batch-size"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE,
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE,
                 description="Value for the model's max_batch_size that run config search will start from.",
             )
         )
@@ -793,7 +832,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "run_config_search_max_binary_search_steps",
                 flags=["--run-config-search-max-binary-search-steps"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS,
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS,
                 description="Maximum number of steps take during the binary concurrency search.",
             )
         )
@@ -803,7 +842,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--run-config-search-mode"],
                 choices=["brute", "quick"],
                 field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_RUN_CONFIG_SEARCH_MODE,
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_SEARCH_MODE,
                 description="The search mode for Model Analyzer to find and evaluate"
                 " model configurations. 'brute' will brute force all combinations of"
                 " configuration options.  'quick' will attempt to find a near-optimal"
@@ -817,7 +856,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--run-config-search-disable"],
                 field_type=ConfigPrimitive(bool),
                 parser_args={"action": "store_true"},
-                default_value=DEFAULT_RUN_CONFIG_SEARCH_DISABLE,
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_SEARCH_DISABLE,
                 description="Disable run config search.",
             )
         )
@@ -827,7 +866,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--run-config-profile-models-concurrently-enable"],
                 field_type=ConfigPrimitive(bool),
                 parser_args={"action": "store_true"},
-                default_value=DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE,
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE,
                 description="Enable the profiling of all supplied models concurrently.",
             )
         )
@@ -837,8 +876,54 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--request-rate-search-enable"],
                 field_type=ConfigPrimitive(bool),
                 parser_args={"action": "store_true"},
-                default_value=DEFAULT_REQUEST_RATE_SEARCH_ENABLE,
+                default_value=config_defaults.DEFAULT_REQUEST_RATE_SEARCH_ENABLE,
                 description="Enables the searching of request rate (instead of concurrency).",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "llm_search_enable",
+                flags=["--llm-search-enable"],
+                field_type=ConfigPrimitive(bool),
+                parser_args={"action": "store_true"},
+                default_value=config_defaults.DEFAULT_LLM_SEARCH_ENABLE,
+                description="Enables searching values are important to LLMs: text input length, max token, etc...",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_min_text_input_length",
+                flags=["--run-config-search-min-text-input-length"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH,
+                description="Min text input length that run config search should start with.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_max_text_input_length",
+                flags=["--run-config-search-max-text-input-length"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_TEXT_INPUT_LENGTH,
+                description="Max text input length that run config search will not go beyond.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_min_max_token_count",
+                flags=["--run-config-search-min-max-token-count"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
+                description="Min max_token count that run config search should start with.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_max_max_token_count",
+                flags=["--run-config-search-max-max-token-count"],
+                field_type=ConfigPrimitive(int),
+                default_value=config_defaults.DEFAULT_RUN_CONFIG_MAX_MAX_TOKEN_COUNT,
+                description="Max max_token count that run config search will not go beyond.",
             )
         )
 
@@ -853,7 +938,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "triton_launch_mode",
                 field_type=ConfigPrimitive(str),
                 flags=["--triton-launch-mode"],
-                default_value=DEFAULT_TRITON_LAUNCH_MODE,
+                default_value=config_defaults.DEFAULT_TRITON_LAUNCH_MODE,
                 choices=["local", "docker", "remote", "c_api"],
                 description="The method by which to launch Triton Server. "
                 "'local' assumes tritonserver binary is available locally. "
@@ -869,7 +954,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "triton_docker_image",
                 flags=["--triton-docker-image"],
                 field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_TRITON_DOCKER_IMAGE,
+                default_value=config_defaults.DEFAULT_TRITON_DOCKER_IMAGE,
                 description="Triton Server Docker image tag",
             )
         )
@@ -878,7 +963,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "triton_http_endpoint",
                 flags=["--triton-http-endpoint"],
                 field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_TRITON_HTTP_ENDPOINT,
+                default_value=config_defaults.DEFAULT_TRITON_HTTP_ENDPOINT,
                 description="Triton Server HTTP endpoint url used by Model Analyzer client.",
             )
         )
@@ -887,7 +972,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "triton_grpc_endpoint",
                 flags=["--triton-grpc-endpoint"],
                 field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_TRITON_GRPC_ENDPOINT,
+                default_value=config_defaults.DEFAULT_TRITON_GRPC_ENDPOINT,
                 description="Triton Server HTTP endpoint url used by Model Analyzer client.",
             )
         )
@@ -896,7 +981,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "triton_metrics_url",
                 field_type=ConfigPrimitive(str),
                 flags=["--triton-metrics-url"],
-                default_value=DEFAULT_TRITON_METRICS_URL,
+                default_value=config_defaults.DEFAULT_TRITON_METRICS_URL,
                 description="Triton Server Metrics endpoint url. ",
             )
         )
@@ -905,7 +990,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "triton_server_path",
                 field_type=ConfigPrimitive(str),
                 flags=["--triton-server-path"],
-                default_value=DEFAULT_TRITON_SERVER_PATH,
+                default_value=config_defaults.DEFAULT_TRITON_SERVER_PATH,
                 description="The full path to the tritonserver binary executable",
             )
         )
@@ -953,7 +1038,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 "triton_install_path",
                 field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_TRITON_INSTALL_PATH,
+                default_value=config_defaults.DEFAULT_TRITON_INSTALL_PATH,
                 flags=["--triton-install-path"],
                 description=(
                     "Path to Triton install directory i.e. the parent directory of 'lib/libtritonserver.so'."
@@ -973,7 +1058,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "perf_analyzer_timeout",
                 flags=["--perf-analyzer-timeout"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_PERF_ANALYZER_TIMEOUT,
+                default_value=config_defaults.DEFAULT_PERF_ANALYZER_TIMEOUT,
                 description="Perf analyzer timeout value in seconds.",
             )
         )
@@ -982,7 +1067,8 @@ class ConfigCommandProfile(ConfigCommand):
                 "perf_analyzer_cpu_util",
                 flags=["--perf-analyzer-cpu-util"],
                 field_type=ConfigPrimitive(float),
-                default_value=psutil.cpu_count() * DEFAULT_PERF_ANALYZER_CPU_UTIL,
+                default_value=psutil.cpu_count()
+                * config_defaults.DEFAULT_PERF_ANALYZER_CPU_UTIL,
                 description="Maximum CPU utilization value allowed for the perf_analyzer.",
             )
         )
@@ -991,7 +1077,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "perf_analyzer_path",
                 flags=["--perf-analyzer-path"],
                 field_type=ConfigPrimitive(str, validator=binary_path_validator),
-                default_value=DEFAULT_PERF_ANALYZER_PATH,
+                default_value=config_defaults.DEFAULT_PERF_ANALYZER_PATH,
                 description="The full path to the perf_analyzer binary executable",
             )
         )
@@ -1001,7 +1087,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--perf-output"],
                 parser_args={"action": "store_true"},
                 field_type=ConfigPrimitive(bool),
-                default_value=DEFAULT_PERF_OUTPUT_FLAG,
+                default_value=config_defaults.DEFAULT_PERF_OUTPUT_FLAG,
                 description="Enables the output from the perf_analyzer to a file specified by"
                 " perf_output_path. If perf_output_path is None, output will be"
                 " written to stdout.",
@@ -1020,7 +1106,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "perf_analyzer_max_auto_adjusts",
                 flags=["--perf-analyzer-max-auto-adjusts"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_PERF_MAX_AUTO_ADJUSTS,
+                default_value=config_defaults.DEFAULT_PERF_MAX_AUTO_ADJUSTS,
                 description="Maximum number of times perf_analyzer is "
                 "launched with auto adjusted parameters in an attempt to profile a model. ",
             )
@@ -1034,7 +1120,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 "export_path",
                 flags=["-e", "--export-path"],
-                default_value=DEFAULT_EXPORT_PATH,
+                default_value=config_defaults.DEFAULT_EXPORT_PATH,
                 field_type=ConfigPrimitive(str, validator=parent_path_validator),
                 description="Full path to directory in which to store the results",
             )
@@ -1043,7 +1129,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 "filename_model_inference",
                 flags=["--filename-model-inference"],
-                default_value=DEFAULT_FILENAME_MODEL_INFERENCE,
+                default_value=config_defaults.DEFAULT_FILENAME_MODEL_INFERENCE,
                 field_type=ConfigPrimitive(str),
                 description="Specifies filename for storing model inference metrics",
             )
@@ -1053,7 +1139,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "filename_model_gpu",
                 flags=["--filename-model-gpu"],
                 field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_FILENAME_MODEL_GPU,
+                default_value=config_defaults.DEFAULT_FILENAME_MODEL_GPU,
                 description="Specifies filename for storing model GPU metrics",
             )
         )
@@ -1062,7 +1148,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "filename_server_only",
                 flags=["--filename-server-only"],
                 field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_FILENAME_SERVER_ONLY,
+                default_value=config_defaults.DEFAULT_FILENAME_SERVER_ONLY,
                 description="Specifies filename for server-only metrics",
             )
         )
@@ -1076,7 +1162,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "num_configs_per_model",
                 flags=["--num-configs-per-model"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_NUM_CONFIGS_PER_MODEL,
+                default_value=config_defaults.DEFAULT_NUM_CONFIGS_PER_MODEL,
                 description="The number of configurations to plot per model in the summary.",
             )
         )
@@ -1085,7 +1171,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "num_top_model_configs",
                 flags=["--num-top-model-configs"],
                 field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_NUM_TOP_MODEL_CONFIGS,
+                default_value=config_defaults.DEFAULT_NUM_TOP_MODEL_CONFIGS,
                 description="Model Analyzer will compare this many of the top models configs across all models.",
             )
         )
@@ -1100,7 +1186,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "inference_output_fields",
                 flags=["--inference-output-fields"],
                 field_type=ConfigListString(),
-                default_value=DEFAULT_INFERENCE_OUTPUT_FIELDS,
+                default_value=config_defaults.DEFAULT_INFERENCE_OUTPUT_FIELDS,
                 description="Specifies column keys for model inference metrics table",
             )
         )
@@ -1109,7 +1195,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "gpu_output_fields",
                 flags=["--gpu-output-fields"],
                 field_type=ConfigListString(),
-                default_value=DEFAULT_GPU_OUTPUT_FIELDS,
+                default_value=config_defaults.DEFAULT_GPU_OUTPUT_FIELDS,
                 description="Specifies column keys for model gpu metrics table",
             )
         )
@@ -1118,7 +1204,7 @@ class ConfigCommandProfile(ConfigCommand):
                 "server_output_fields",
                 flags=["--server-output-fields"],
                 field_type=ConfigListString(),
-                default_value=DEFAULT_SERVER_OUTPUT_FIELDS,
+                default_value=config_defaults.DEFAULT_SERVER_OUTPUT_FIELDS,
                 description="Specifies column keys for server-only metrics table",
             )
         )
@@ -1163,7 +1249,9 @@ class ConfigCommandProfile(ConfigCommand):
             this exception
         """
         if args.mode == "online" and "latency_budget" not in args:
-            self._fields["objectives"].set_default_value(DEFAULT_ONLINE_OBJECTIVES)
+            self._fields["objectives"].set_default_value(
+                config_defaults.DEFAULT_ONLINE_OBJECTIVES
+            )
 
         super().set_config_values(args)
 
@@ -1171,9 +1259,9 @@ class ConfigCommandProfile(ConfigCommand):
         # able to edit these plots.
         self._add_plot_configs()
         if args.mode == "online":
-            self._fields["plots"].set_value(DEFAULT_ONLINE_PLOTS)
+            self._fields["plots"].set_value(config_defaults.DEFAULT_ONLINE_PLOTS)
         elif args.mode == "offline":
-            self._fields["plots"].set_value(DEFAULT_OFFLINE_PLOTS)
+            self._fields["plots"].set_value(config_defaults.DEFAULT_OFFLINE_PLOTS)
 
     def _add_plot_configs(self):
         """
@@ -1331,16 +1419,23 @@ class ConfigCommandProfile(ConfigCommand):
                     {"perf_throughput": {"min": self.min_throughput}}
                 )
 
-        # Switch default output fields if request rate is being used
+        # Switch default output fields if LLM model or request rate is being used
         # and the user didn't specify a custom output field
-        if self._using_request_rate():
+        if self.is_llm_model():
             if not self._fields["inference_output_fields"].is_set_by_user():
                 self.inference_output_fields = (
-                    DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS
+                    config_defaults.DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS
+                )
+        elif self._using_request_rate():
+            if not self._fields["inference_output_fields"].is_set_by_user():
+                self.inference_output_fields = (
+                    config_defaults.DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS
                 )
 
             if not self._fields["gpu_output_fields"].is_set_by_user():
-                self.gpu_output_fields = DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS
+                self.gpu_output_fields = (
+                    config_defaults.DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS
+                )
 
         new_profile_models = {}
         for i, model in enumerate(self.profile_models):
@@ -1369,7 +1464,7 @@ class ConfigCommandProfile(ConfigCommand):
                         "Weighting can not be specified as a global parameter. Please make this a model parameter."
                     )
                 else:
-                    new_model["weighting"] = DEFAULT_MODEL_WEIGHTING
+                    new_model["weighting"] = config_defaults.DEFAULT_MODEL_WEIGHTING
             else:
                 new_model["weighting"] = model.weighting()
 
@@ -1404,30 +1499,35 @@ class ConfigCommandProfile(ConfigCommand):
                 new_model["parameters"] = {
                     "batch_sizes": self.batch_sizes,
                     "concurrency": self.concurrency,
+                    "periodic_concurrency": self.periodic_concurrency,
                     "request_rate": self.request_rate,
+                    "request_period": self.request_period,
+                    "text_input_length": self.text_input_length,
+                    "max_token_count": self.max_token_count,
                 }
             else:
                 new_model["parameters"] = {}
-                if "batch_sizes" in model.parameters():
-                    new_model["parameters"].update(
-                        {"batch_sizes": model.parameters()["batch_sizes"]}
-                    )
-                else:
-                    new_model["parameters"].update({"batch_sizes": self.batch_sizes})
-
-                if "concurrency" in model.parameters():
-                    new_model["parameters"].update(
-                        {"concurrency": model.parameters()["concurrency"]}
-                    )
-                else:
-                    new_model["parameters"].update({"concurrency": self.concurrency})
-
-                if "request_rate" in model.parameters():
-                    new_model["parameters"].update(
-                        {"request_rate": model.parameters()["request_rate"]}
-                    )
-                else:
-                    new_model["parameters"].update({"request_rate": self.request_rate})
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "batch_sizes")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "concurrency")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "periodic_concurrency")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "request_rate")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "request_period")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "max_token_count")
+                )
+                new_model["parameters"].update(
+                    self._set_model_parameter(model, "text_input_length")
+                )
 
             if (
                 new_model["parameters"]["request_rate"]
@@ -1470,6 +1570,14 @@ class ConfigCommandProfile(ConfigCommand):
             new_profile_models[model.model_name()] = new_model
         self._fields["profile_models"].set_value(new_profile_models)
 
+    def _set_model_parameter(
+        self, model: ConfigModelProfileSpec, parameter_name: str
+    ) -> Dict:
+        if parameter_name in model.parameters():
+            return {parameter_name: model.parameters()[parameter_name]}
+        else:
+            return {parameter_name: getattr(self, parameter_name)}
+
     def _using_request_rate(self) -> bool:
         if self.request_rate or self.request_rate_search_enable:
             return True
@@ -1508,4 +1616,32 @@ class ConfigCommandProfile(ConfigCommand):
             or self.request_rate_search_enable
             or self.get_config()["run_config_search_min_request_rate"].is_set_by_user()
             or self.get_config()["run_config_search_max_request_rate"].is_set_by_user()
+        )
+
+    def is_llm_model(self) -> bool:
+        """
+        Returns true if the user has enabled llm search or set any llm search value
+        """
+        config = self.get_config()
+
+        return (
+            self.llm_search_enable
+            or config["run_config_search_min_text_input_length"].is_set_by_user()
+            or config["run_config_search_max_text_input_length"].is_set_by_user()
+            or config["run_config_search_min_max_token_count"].is_set_by_user()
+            or config["run_config_search_max_max_token_count"].is_set_by_user()
+            or config["run_config_search_min_periodic_concurrency"].is_set_by_user()
+            or config["run_config_search_max_periodic_concurrency"].is_set_by_user()
+            or config[
+                "run_config_search_min_periodic_concurrency_step"
+            ].is_set_by_user()
+            or config[
+                "run_config_search_max_periodic_concurrency_step"
+            ].is_set_by_user()
+            or config["run_config_search_min_request_period"].is_set_by_user()
+            or config["run_config_search_max_request_period"].is_set_by_user()
+            or config["text_input_length"].is_set_by_user()
+            or config["max_token_count"].is_set_by_user()
+            or config["periodic_concurrency"].is_set_by_user()
+            or config["request_period"].is_set_by_user()
         )

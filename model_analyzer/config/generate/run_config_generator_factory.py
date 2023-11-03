@@ -31,8 +31,8 @@ from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
 
-from .brute_plus_binary_parameter_search_run_config_generator import (
-    BrutePlusBinaryParameterSearchRunConfigGenerator,
+from .brute_plus_binary_search_run_config_generator import (
+    BrutePlusBinarySearchRunConfigGenerator,
 )
 from .config_generator_interface import ConfigGeneratorInterface
 from .quick_plus_concurrency_sweep_run_config_generator import (
@@ -96,7 +96,7 @@ class RunConfigGeneratorFactory:
                 model_variant_name_manager=model_variant_name_manager,
             )
         elif command_config.run_config_search_mode == "brute":
-            return RunConfigGeneratorFactory._create_brute_plus_binary_parameter_search_run_config_generator(
+            return RunConfigGeneratorFactory._create_brute_plus_binary_search_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=new_models,
@@ -110,7 +110,7 @@ class RunConfigGeneratorFactory:
             )
 
     @staticmethod
-    def _create_brute_plus_binary_parameter_search_run_config_generator(
+    def _create_brute_plus_binary_search_run_config_generator(
         command_config: ConfigCommandProfile,
         gpus: List[GPUDevice],
         models: List[ModelProfileSpec],
@@ -118,7 +118,7 @@ class RunConfigGeneratorFactory:
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
     ) -> ConfigGeneratorInterface:
-        return BrutePlusBinaryParameterSearchRunConfigGenerator(
+        return BrutePlusBinarySearchRunConfigGenerator(
             config=command_config,
             gpus=gpus,
             models=models,

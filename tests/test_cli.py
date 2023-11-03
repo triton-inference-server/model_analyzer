@@ -30,10 +30,10 @@ from unittest.mock import MagicMock, patch
 
 import psutil
 
+import model_analyzer.config.input.config_defaults as config_defaults
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
-from model_analyzer.config.input.config_defaults import DEFAULT_TRITON_DOCKER_IMAGE
 from model_analyzer.config.input.config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_SUCCESS
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -60,6 +60,7 @@ def get_test_options():
         OptionStruct("bool", "profile","--run-config-search-disable"),
         OptionStruct("bool", "profile","--run-config-profile-models-concurrently-enable"),
         OptionStruct("bool", "profile","--request-rate-search-enable"),
+        OptionStruct("bool", "profile","--llm-search-enable"),
         OptionStruct("bool", "profile","--reload-model-disable"),
         OptionStruct("bool", "profile","--early-exit-enable"),
         OptionStruct("bool", "profile","--skip-summary-reports"),
@@ -71,23 +72,33 @@ def get_test_options():
         # The following options can be None:
         #   short_option
         #   expected_default_value
-        OptionStruct("int", "profile", "--client-max-retries", "-r", "125", "50"),
-        OptionStruct("int", "profile", "--duration-seconds", "-d", "10", "3"),
-        OptionStruct("int", "profile", "--perf-analyzer-timeout", None, "100", "600"),
-        OptionStruct("int", "profile", "--perf-analyzer-max-auto-adjusts", None, "100", "10"),
-        OptionStruct("int", "profile", "--run-config-search-min-concurrency", None, "2", "1"),
-        OptionStruct("int", "profile", "--run-config-search-max-concurrency", None, "100", "1024"),
-        OptionStruct("int", "profile", "--run-config-search-min-request-rate", None, "2", "16"),
-        OptionStruct("int", "profile", "--run-config-search-max-request-rate", None, "100", "8192"),
-        OptionStruct("int", "profile", "--run-config-search-min-model-batch-size", None, "100", "1"),
-        OptionStruct("int", "profile", "--run-config-search-max-model-batch-size", None, "100", "128"),
-        OptionStruct("int", "profile", "--run-config-search-min-instance-count", None, "2", "1"),
-        OptionStruct("int", "profile", "--run-config-search-max-instance-count", None, "10", "5"),
-        OptionStruct("int", "profile", "--run-config-search-max-binary-search-steps", None, "10", "5"),
-        OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", "1.0"),
-        OptionStruct("float", "profile", "--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0)),
-        OptionStruct("int", "profile", "--num-configs-per-model", None, "10", "3"),
-        OptionStruct("int", "profile", "--num-top-model-configs", None, "10", "0"),
+        OptionStruct("int", "profile", "--client-max-retries", "-r", "125", str(config_defaults.DEFAULT_MAX_RETRIES)),
+        OptionStruct("int", "profile", "--duration-seconds", "-d", "10", str(config_defaults.DEFAULT_DURATION_SECONDS)),
+        OptionStruct("int", "profile", "--perf-analyzer-timeout", None, "100", str(config_defaults.DEFAULT_PERF_ANALYZER_TIMEOUT)),
+        OptionStruct("int", "profile", "--perf-analyzer-max-auto-adjusts", None, "100", str(config_defaults.DEFAULT_PERF_MAX_AUTO_ADJUSTS)),
+        OptionStruct("int", "profile", "--run-config-search-min-concurrency", None, "2", str(config_defaults.DEFAULT_RUN_CONFIG_MIN_CONCURRENCY)),
+        OptionStruct("int", "profile", "--run-config-search-max-concurrency", None, "100", str(config_defaults.DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)),
+        OptionStruct("int", "profile", "--run-config-search-min-periodic-concurrency", None, "2", str(config_defaults.DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY)),
+        OptionStruct("int", "profile", "--run-config-search-max-periodic-concurrency", None, "100", str(config_defaults.DEFAULT_RUN_CONFIG_MAX_PERIODIC_CONCURRENCY)),
+        OptionStruct("int", "profile", "--run-config-search-min-periodic-concurrency-step", None, "2", str(config_defaults.DEFAULT_RUN_CONFIG_MIN_PERIODIC_CONCURRENCY_STEP)),
+        OptionStruct("int", "profile", "--run-config-search-max-periodic-concurrency-step", None, "100", str(config_defaults.DEFAULT_RUN_CONFIG_MAX_PERIODIC_CONCURRENCY_STEP)),
+        OptionStruct("int", "profile", "--run-config-search-min-request-period", None, "2", str(config_defaults.DEFAULT_RUN_CONFIG_MIN_REQUEST_PERIOD)),
+        OptionStruct("int", "profile", "--run-config-search-max-request-period", None, "100", str(config_defaults.DEFAULT_RUN_CONFIG_MAX_REQUEST_PERIOD)),
+        OptionStruct("int", "profile", "--run-config-search-min-request-rate", None, "2", str(config_defaults.DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE)),
+        OptionStruct("int", "profile", "--run-config-search-max-request-rate", None, "100", str(config_defaults.DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE)),
+        OptionStruct("int", "profile", "--run-config-search-min-model-batch-size", None, "100", str(config_defaults.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE)),
+        OptionStruct("int", "profile", "--run-config-search-max-model-batch-size", None, "100", str(config_defaults.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE)),
+        OptionStruct("int", "profile", "--run-config-search-min-instance-count", None, "2", str(config_defaults.DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT)),
+        OptionStruct("int", "profile", "--run-config-search-max-instance-count", None, "10", str(config_defaults.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT)),
+        OptionStruct("int", "profile", "--run-config-search-max-binary-search-steps", None, "10", str(config_defaults.DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS)),
+        OptionStruct("int", "profile", "--run-config-search-min-text-input-length", None, "10", str(config_defaults.DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH)),
+        OptionStruct("int", "profile", "--run-config-search-max-text-input-length", None, "10", str(config_defaults.DEFAULT_RUN_CONFIG_MAX_TEXT_INPUT_LENGTH)),
+        OptionStruct("int", "profile", "--run-config-search-min-max-token-count", None, "10", str(config_defaults.DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT)),
+        OptionStruct("int", "profile", "--run-config-search-max-max-token-count", None, "10", str(config_defaults.DEFAULT_RUN_CONFIG_MAX_MAX_TOKEN_COUNT)),
+        OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", str(config_defaults.DEFAULT_MONITORING_INTERVAL)),
+        OptionStruct("float", "profile", "--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * config_defaults.DEFAULT_PERF_ANALYZER_CPU_UTIL)),
+        OptionStruct("int", "profile", "--num-configs-per-model", None, "10", str(config_defaults.DEFAULT_NUM_CONFIGS_PER_MODEL)),
+        OptionStruct("int", "profile", "--num-top-model-configs", None, "10", str(config_defaults.DEFAULT_NUM_TOP_MODEL_CONFIGS)),
         OptionStruct("int", "profile", "--latency-budget", None, "200", None),
         OptionStruct("int", "profile", "--min-throughput", None, "300", None),
 
@@ -105,7 +116,7 @@ def get_test_options():
         OptionStruct("string", "profile", "--client-protocol", None, ["http", "grpc"], "grpc", "SHOULD_FAIL"),
         OptionStruct("string", "profile", "--perf-analyzer-path", None, ".", "perf_analyzer", None),
         OptionStruct("string", "profile", "--perf-output-path", None, ".", None, None),
-        OptionStruct("string", "profile", "--triton-docker-image", None, "test_image", DEFAULT_TRITON_DOCKER_IMAGE, None),
+        OptionStruct("string", "profile", "--triton-docker-image", None, "test_image", config_defaults.DEFAULT_TRITON_DOCKER_IMAGE, None),
         OptionStruct("string", "profile", "--triton-http-endpoint", None, "localhost:4000", "localhost:8000", None),
         OptionStruct("string", "profile", "--triton-grpc-endpoint", None, "localhost:4001", "localhost:8001", None),
         OptionStruct("string", "profile", "--triton-metrics-url", None, "localhost:4002", "http://localhost:8002/metrics", None),
@@ -134,7 +145,11 @@ def get_test_options():
         #   expected_default_value
         OptionStruct("intlist", "profile", "--batch-sizes", "-b", "2, 4, 6", "1"),
         OptionStruct("intlist", "profile", "--concurrency", "-c", "1, 2, 3", None),
+        OptionStruct("stringlist", "profile", "--periodic-concurrency", None, '"5:50:5", "10:100:10"', None, None),
         OptionStruct("intlist", "profile", "--request-rate", None, "1, 2, 3", None),
+        OptionStruct("intlist", "profile", "--request-period", None, "1, 2, 3", None),
+        OptionStruct("intlist", "profile", "--text-input-length", None, "1, 2, 3", None),
+        OptionStruct("intlist", "profile", "--max-token-count", None, "1, 2, 3", None),
         OptionStruct("stringlist", "profile", "--triton-docker-mounts", None, "a:b:c, d:e:f", None, extra_commands=["--triton-launch-mode", "docker"]),
         OptionStruct("stringlist", "profile", "--gpus", None, "a, b, c", "all"),
         OptionStruct("stringlist", "profile", "--inference-output-fields", None, "a, b, c",
@@ -588,9 +603,15 @@ class TestCLI(trc.TestResultCollector):
         return float(number) if "." in number else int(number)
 
     def _convert_string_to_int_list(self, list_values):
-        ret_val = [int(x) for x in list_values.split(",")]
+        if ":" in list_values:
+            ret_val = [int(x) for x in list_values.split(":")]
+            ret_val = list(range(ret_val[0], ret_val[1] + 1, ret_val[2]))
+        else:
+            ret_val = [int(x) for x in list_values.split(",")]
+
         if len(ret_val) == 1:
             return ret_val[0]
+
         return ret_val
 
     def _convert_string_to_string_list(self, list_values):

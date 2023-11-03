@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
 from model_analyzer.constants import SECONDS_TO_MILLISECONDS_MULTIPLIER
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -33,6 +34,7 @@ class PerfAnalyzerConfig:
         "measurement-interval",
         "concurrency-range",
         "request-rate-range",
+        "periodic-concurrency-range",
         "request-distribution",
         "request-intervals",
         "binary-search",
@@ -71,6 +73,8 @@ class PerfAnalyzerConfig:
         "metrics-url",
         "metrics-interval",
         "bls-composing-models",
+        "request-parameter",
+        "request-period",
     ]
 
     input_to_options = [
@@ -80,6 +84,7 @@ class PerfAnalyzerConfig:
         "url",
         "protocol",
         "latency-report-file",
+        "profile-export-file",
         "http-header",
     ]
 
@@ -96,6 +101,8 @@ class PerfAnalyzerConfig:
         "collect-metrics",
     ]
 
+    llm_args = ["text-input-length", "max-tokens"]
+
     def __init__(self):
         """
         Construct a PerfAnalyzerConfig
@@ -110,6 +117,7 @@ class PerfAnalyzerConfig:
             "-u": None,
             "-i": None,
             "-f": None,
+            "--profile-export-file": None,
             "-H": None,
         }
         self._verbose = {"-v": None, "-v -v": None, "--verbose-csv": None}
@@ -121,6 +129,7 @@ class PerfAnalyzerConfig:
             "url": "-u",
             "protocol": "-i",
             "latency-report-file": "-f",
+            "profile-export-file": "--profile-export-file",
             "http-header": "-H",
         }
 
@@ -145,7 +154,12 @@ class PerfAnalyzerConfig:
             passed into perf_analyzer
         """
 
-        return cls.perf_analyzer_args + cls.input_to_options + cls.input_to_verbose
+        return (
+            cls.perf_analyzer_args
+            + cls.input_to_options
+            + cls.input_to_verbose
+            + cls.llm_args
+        )
 
     @classmethod
     def additive_keys(cls):
@@ -190,6 +204,9 @@ class PerfAnalyzerConfig:
             "measurement-mode": DEFAULT_MEASUREMENT_MODE,
             "verbose-csv": "--verbose-csv",
         }
+
+        if profile_config.is_llm_model():
+            params.update({"profile-export-file": model_name + "-results.json"})
 
         if profile_config.triton_launch_mode == "c_api":
             params.update(
@@ -273,6 +290,14 @@ class PerfAnalyzerConfig:
             "batch-size": self._options["-b"],
             "concurrency-range": self._args["concurrency-range"],
             "request-rate-range": self._args["request-rate-range"],
+            "periodic-concurrency-range": self._args["periodic-concurrency-range"],
+            "max-tokens": utils.extract_value_from_request_parameter(
+                self._args["request-parameter"]
+            ),
+            "request-period": self._args["request-period"],
+            "text-input-length": utils.extract_text_input_length_from_input_data(
+                self._args["input-data"]
+            ),
         }
 
     @classmethod
@@ -303,7 +328,7 @@ class PerfAnalyzerConfig:
     @classmethod
     def remove_mrc_from_cli_string(cls, cli_string):
         """
-        utility function strips the measruement request count
+        utility function strips the measurement request count
         from a cli string representation
 
         Parameters

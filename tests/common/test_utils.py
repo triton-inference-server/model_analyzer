@@ -23,9 +23,15 @@ from model_analyzer.config.input.config_command_report import ConfigCommandRepor
 from model_analyzer.config.input.config_defaults import (
     DEFAULT_BATCH_SIZES,
     DEFAULT_CLIENT_PROTOCOL,
+    DEFAULT_INPUT_JSON_PATH,
     DEFAULT_MEASUREMENT_MODE,
     DEFAULT_MONITORING_INTERVAL,
     DEFAULT_OUTPUT_MODEL_REPOSITORY,
+    DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
+    DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
+    DEFAULT_RUN_CONFIG_MIN_REQUEST_PERIOD,
+    DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH,
+    DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY,
     DEFAULT_TRITON_GRPC_ENDPOINT,
     DEFAULT_TRITON_HTTP_ENDPOINT,
     DEFAULT_TRITON_INSTALL_PATH,
@@ -234,12 +240,18 @@ def convert_avg_gpu_metrics_to_data(avg_gpu_metric_values):
 def construct_perf_analyzer_config(
     model_name="my-model",
     output_file_name="my-model-results.csv",
+    export_file_name="my-model-results.json",
     batch_size=DEFAULT_BATCH_SIZES,
-    concurrency=1,
+    concurrency=DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
+    periodic_concurrency=DEFAULT_RUN_CONFIG_PERIODIC_CONCURRENCY,
     request_rate=None,
+    max_token_count=DEFAULT_RUN_CONFIG_MIN_MAX_TOKEN_COUNT,
+    text_input_length=DEFAULT_RUN_CONFIG_MIN_TEXT_INPUT_LENGTH,
+    request_period=DEFAULT_RUN_CONFIG_MIN_REQUEST_PERIOD,
     launch_mode=DEFAULT_TRITON_LAUNCH_MODE,
     client_protocol=DEFAULT_CLIENT_PROTOCOL,
     perf_analyzer_flags=None,
+    llm_search_mode=False,
 ):
     """
     Constructs a Perf Analyzer Config
@@ -250,10 +262,20 @@ def construct_perf_analyzer_config(
         The name of the model
     output_file_name: str
         The name of the output file
+    export_file_name: str
+        The name of the export file
     batch_size: int
         The batch size for this PA configuration
     concurrency: int
         The concurrency value for this PA configuration
+    periodic_concurrency: list
+        The periodic concurrency value for this PA configuration
+    max_token_count: int
+        The max token count for this PA configuration
+    text_input_length: int
+        The text input length for this PA configuration
+    request_period: int
+        The request period for this PA configuration
     request_rate: int
         The request rate value for this PA configuration
     launch_mode: str
@@ -262,6 +284,8 @@ def construct_perf_analyzer_config(
         The client protocol for this PA configuration
     perf_analyzer_flags: dict
         A dict of any additional PA flags to be set
+    llm_search_mode: bool
+        Indicates we should use LLM search parameters
 
     Returns
     -------
@@ -274,10 +298,25 @@ def construct_perf_analyzer_config(
     pa_config._options["-f"] = output_file_name
     pa_config._options["-b"] = batch_size
 
+    if llm_search_mode:
+        pa_config._options["--profile-export-file"] = export_file_name
+
     if request_rate:
         pa_config._args["request-rate-range"] = request_rate
+    elif llm_search_mode:
+        pa_config._args["periodic-concurrency-range"] = periodic_concurrency
     else:
         pa_config._args["concurrency-range"] = concurrency
+
+    if llm_search_mode:
+        pa_config._args["request-parameter"] = f"max_tokens:{str(max_token_count)}:int"
+
+        pa_config._args["request-period"] = request_period
+        pa_config._args[
+            "input-data"
+        ] = f"{DEFAULT_INPUT_JSON_PATH}/input-data-{str(text_input_length)}.json"
+
+        pa_config._args["streaming"] = "True"
 
     pa_config._args["measurement-mode"] = DEFAULT_MEASUREMENT_MODE
 

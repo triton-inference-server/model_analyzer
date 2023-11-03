@@ -79,10 +79,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             logger.info("")
             AutomaticModelConfigGenerator._log_first_run = True
 
-        self._max_instance_count = config.run_config_search_max_instance_count
-        self._min_instance_count = config.run_config_search_min_instance_count
-        self._max_model_batch_size = config.run_config_search_max_model_batch_size
-        self._min_model_batch_size = config.run_config_search_min_model_batch_size
+        self._set_min_max_search_values(config)
 
         self._instance_kind = "KIND_CPU" if self._cpu_only else "KIND_GPU"
 
@@ -91,7 +88,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
         self._reset_max_batch_size()
 
-        if not self._early_exit_enable:
+        if not self._early_exit_enable and not self._config.is_llm_model():
             raise TritonModelAnalyzerException(
                 "Early exit disable is not supported in automatic model config generator"
             )
@@ -162,3 +159,9 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             config["dynamic_batching"] = {}
 
         return config
+
+    def _set_min_max_search_values(self, config: ConfigCommandProfile) -> None:
+        self._max_instance_count = config.run_config_search_max_instance_count
+        self._min_instance_count = config.run_config_search_min_instance_count
+        self._max_model_batch_size = config.run_config_search_max_model_batch_size
+        self._min_model_batch_size = config.run_config_search_min_model_batch_size

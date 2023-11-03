@@ -29,7 +29,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.result.parameter_search import ParameterSearch
+from model_analyzer.result.inference_load_search import InferenceLoadSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.triton.client.client import TritonClient
@@ -39,10 +39,10 @@ from .config_generator_interface import ConfigGeneratorInterface
 logger = logging.getLogger(LOGGER_NAME)
 
 
-class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface):
+class BrutePlusBinarySearchRunConfigGenerator(ConfigGeneratorInterface):
     """
     First run BruteRunConfigGenerator for a brute search, then for
-    automatic searches use ParameterSearch to perform a binary search
+    automatic searches use InferenceLoadSearch to perform a binary search
     """
 
     def __init__(
@@ -116,7 +116,11 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface)
 
     def _can_binary_search_top_results(self) -> bool:
         for model in self._models:
-            if model.parameters()["concurrency"] or model.parameters()["request_rate"]:
+            if (
+                model.parameters()["concurrency"]
+                or model.parameters()["request_rate"]
+                or self._config.is_llm_model()
+            ):
                 return False
 
         return True
@@ -132,17 +136,19 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface)
             for result in top_results:
                 run_config = deepcopy(result.run_config())
                 model_parameters = self._get_model_parameters(model_name)
-                parameter_search = ParameterSearch(
+                inference_load_search = InferenceLoadSearch(
                     config=self._config,
                     model_parameters=model_parameters,
-                    skip_parameter_sweep=True,
+                    skip_inference_load_sweep=True,
                 )
-                for parameter in parameter_search.search_parameters():
-                    run_config = self._set_parameter(
-                        run_config, model_parameters, parameter
+                for inference_load in inference_load_search.search_inference_loads():
+                    run_config = self._set_inference_load(
+                        run_config, model_parameters, inference_load
                     )
                     yield run_config
-                    parameter_search.add_run_config_measurement(self._last_measurement)
+                    inference_load_search.add_run_config_measurement(
+                        self._last_measurement
+                    )
 
     def _get_model_parameters(self, model_name: str) -> Dict:
         for model in self._models:
@@ -151,14 +157,14 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface)
 
         return {}
 
-    def _set_parameter(
-        self, run_config: RunConfig, model_parameters: Dict, parameter: int
+    def _set_inference_load(
+        self, run_config: RunConfig, model_parameters: Dict, inference_load: int
     ) -> RunConfig:
         for model_run_config in run_config.model_run_configs():
             perf_config = model_run_config.perf_config()
             if self._config.is_request_rate_specified(model_parameters):
-                perf_config.update_config({"request-rate-range": parameter})
+                perf_config.update_config({"request-rate-range": inference_load})
             else:
-                perf_config.update_config({"concurrency-range": parameter})
+                perf_config.update_config({"concurrency-range": inference_load})
 
         return run_config

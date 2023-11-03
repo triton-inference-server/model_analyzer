@@ -16,6 +16,7 @@
 
 import logging
 import os
+import shutil
 import time
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
@@ -27,6 +28,7 @@ from prometheus_client.parser import text_string_to_metric_families
 from model_analyzer.config.generate.base_model_config_generator import (
     BaseModelConfigGenerator,
 )
+from model_analyzer.config.input.config_defaults import DEFAULT_INPUT_JSON_PATH
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -69,6 +71,8 @@ class MetricsManager:
         "gpu_power_usage",
         "cpu_available_ram",
         "cpu_used_ram",
+        "avg_first_token_latency",
+        "avg_token_to_token_latency",
     ]
 
     def __init__(self, config, client, server, gpus, result_manager, state_manager):
@@ -116,6 +120,7 @@ class MetricsManager:
             self._gpu_metrics,
             self._perf_metrics,
             self._cpu_metrics,
+            self._llm_metrics,
         ) = self._categorize_metrics(self.metrics, self._config.collect_cpu_metrics)
         self._gpus = gpus
         self._init_state()
@@ -160,21 +165,23 @@ class MetricsManager:
 
         Returns
         -------
-        (list,list,list)
-            tuple of three lists (DCGM, PerfAnalyzer, CPU) metrics
+        (list,list,list,list)
+            tuple of four lists (DCGM, PerfAnalyzer, CPU, LLM) metrics
         """
 
-        gpu_metrics, perf_metrics, cpu_metrics = [], [], []
+        gpu_metrics, perf_metrics, cpu_metrics, llm_metrics = [], [], [], []
         # Separates metrics and objectives into related lists
         for metric in MetricsManager.get_metric_types(metric_tags):
             if metric in PerfAnalyzer.get_gpu_metrics():
                 gpu_metrics.append(metric)
             elif metric in PerfAnalyzer.get_perf_metrics():
                 perf_metrics.append(metric)
+            elif metric in PerfAnalyzer.get_llm_metrics():
+                llm_metrics.append(metric)
             elif collect_cpu_metrics and (metric in CPUMonitor.cpu_metrics):
                 cpu_metrics.append(metric)
 
-        return gpu_metrics, perf_metrics, cpu_metrics
+        return gpu_metrics, perf_metrics, cpu_metrics, llm_metrics
 
     def profile_server(self):
         """
@@ -303,6 +310,9 @@ class MetricsManager:
 
     def finalize(self):
         self._server.stop()
+
+        if os.path.exists(DEFAULT_INPUT_JSON_PATH):
+            shutil.rmtree(DEFAULT_INPUT_JSON_PATH)
 
     def _create_model_variants(self, run_config: RunConfig) -> None:
         """
@@ -595,6 +605,9 @@ class MetricsManager:
         )
 
         metrics_to_gather = self._perf_metrics + self._gpu_metrics
+        if self._config.is_llm_model():
+            metrics_to_gather += self._llm_metrics
+
         status = perf_analyzer.run(metrics_to_gather, env=perf_analyzer_env)
 
         self._write_perf_analyzer_output(perf_output_writer, perf_analyzer)
@@ -603,7 +616,12 @@ class MetricsManager:
             self._handle_unsuccessful_perf_analyzer_run(perf_analyzer)
             return (None, None)
 
-        perf_records = perf_analyzer.get_perf_records()
+        # FIXME: PA does not return a latency report file if an export report file is specified
+        perf_records = (
+            perf_analyzer.get_llm_records()
+            if self._config.is_llm_model()
+            else perf_analyzer.get_perf_records()
+        )
         gpu_records = perf_analyzer.get_gpu_records()
 
         aggregated_perf_records = self._aggregate_perf_records(perf_records)

@@ -80,7 +80,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         self._curr_results: List = [[] for n in range(self._num_models)]
         self._curr_generators: Dict[int, ConfigGeneratorInterface] = {}
 
-        self._skip_default_config = skip_default_config
+        self._skip_default_config = skip_default_config or config.is_llm_model()
 
     def set_last_results(
         self, measurements: List[Optional[RunConfigMeasurement]]
