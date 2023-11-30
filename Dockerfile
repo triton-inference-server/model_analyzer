@@ -76,7 +76,6 @@ RUN python3 -m pip install --upgrade pip && \
 #Other pip packages
 RUN python3 -m pip install coverage
 RUN python3 -m pip install mypy
-RUN python3 -m pip install protobuf
 RUN python3 -m pip install types-PyYAML
 RUN python3 -m pip install types-requests
 RUN python3 -m pip install types-protobuf
