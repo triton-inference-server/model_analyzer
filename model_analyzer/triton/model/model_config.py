@@ -93,6 +93,8 @@ class ModelConfig:
                     config, client, gpus, model_name
                 )
 
+                # An auto-completed triton model config will set preferred_batch_size to a default value. We do not want
+                # to keep and honor that value, so we discard it here
                 if (
                     "dynamic_batching" in config
                     and "preferred_batch_size" in config["dynamic_batching"]
