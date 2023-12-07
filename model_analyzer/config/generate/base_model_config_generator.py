@@ -312,11 +312,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         ret = variant_name
         config_index = variant_name.find("_config_")
 
-        if (config_index != -1):
+        if config_index != -1:
             ret = variant_name[:config_index]
 
         return ret
-
 
     @staticmethod
     def create_original_config_from_variant(variant_config: ModelConfig) -> ModelConfig:

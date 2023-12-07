@@ -809,14 +809,17 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
     def test_extract_model_name_from_variant_name(self):
         input_output_pairs = {}
-        input_output_pairs["onnx_int32_int32_int32_config_default"] = "onnx_int32_int32_int32"
+        input_output_pairs[
+            "onnx_int32_int32_int32_config_default"
+        ] = "onnx_int32_int32_int32"
         input_output_pairs["onnx_int32_int32_int32_config_2"] = "onnx_int32_int32_int32"
         input_output_pairs["onnx_int32_int32_int32"] = "onnx_int32_int32_int32"
-        
-        for input,expected_output in input_output_pairs.items():
-            output = BaseModelConfigGenerator.extract_model_name_from_variant_name(input)
-            self.assertEqual(output, expected_output)
 
+        for input, expected_output in input_output_pairs.items():
+            output = BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                input
+            )
+            self.assertEqual(output, expected_output)
 
     def _run_and_test_model_config_generator(
         self,

@@ -93,7 +93,10 @@ class ModelConfig:
                     config, client, gpus, model_name
                 )
 
-                if ("dynamic_batching" in config and "preferred_batch_size" in config["dynamic_batching"]):
+                if (
+                    "dynamic_batching" in config
+                    and "preferred_batch_size" in config["dynamic_batching"]
+                ):
                     del config["dynamic_batching"]["preferred_batch_size"]
 
             else:
