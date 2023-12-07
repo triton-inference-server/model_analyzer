@@ -192,7 +192,6 @@ class TritonServerFactory:
         triton_config["metrics-port"] = urlparse(config.triton_metrics_url).port
         triton_config["model-control-mode"] = "explicit"
         triton_config["metrics-interval-ms"] = int(config.monitoring_interval * 1e3)
-        #triton_config["log-verbose"] = 2
         logger.info("Starting a local Triton Server")
         server = TritonServerFactory.create_server_local(
             path=config.triton_server_path,
