@@ -309,7 +309,14 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         Removes '_config_#/default' from the variant name and returns
         the model name, eg. model_name_config_10 -> model_name
         """
-        return variant_name[: variant_name.find("_config_")]
+        ret = variant_name
+        config_index = variant_name.find("_config_")
+
+        if (config_index != -1):
+            ret = variant_name[:config_index]
+
+        return ret
+
 
     @staticmethod
     def create_original_config_from_variant(variant_config: ModelConfig) -> ModelConfig:

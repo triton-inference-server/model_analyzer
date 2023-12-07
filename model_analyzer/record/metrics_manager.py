@@ -430,6 +430,7 @@ class MetricsManager:
         """
         Loads all model variants in the client
         """
+        # TODO DLIS-5907: Make BLS and ensemble both load composing variants first once fixed
         for mrc in run_config.model_run_configs():
             if not self._load_model_variant(variant_config=mrc.model_config_variant()):
                 return False
@@ -441,6 +442,20 @@ class MetricsManager:
                         variant_config=composing_config_variant
                     ):
                         return False
+                      
+#
+#
+#        for mrc in run_config.model_run_configs():
+#            # First, load all composing configs if there are any
+#            for composing_config_variant in mrc.composing_config_variants():
+#                if not self._load_model_variant(
+#                    variant_config=composing_config_variant
+#                ):
+#                    return False
+#
+#            # Then, load the actual parent model (or single model if no composing models)
+#            if not self._load_model_variant(variant_config=mrc.model_config_variant()):
+#                return False
 
         return True
 
@@ -468,8 +483,14 @@ class MetricsManager:
         )
 
         model_name = variant_config.model_config.get_field("name")
-        variant_name = variant_config.variant_name
-        config_str = variant_config.model_config.get_config_str()
+
+        # TODO DLIS-5907 - revert once fixed
+        variant_name = ""
+        config_str = None
+        if (self._config.triton_launch_mode != "local"):
+            variant_name = variant_config.variant_name
+            config_str = variant_config.model_config.get_config_str()
+
         if (
             self._client.load_model(
                 model_name=model_name,

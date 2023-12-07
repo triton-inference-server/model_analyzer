@@ -92,9 +92,14 @@ class ModelConfig:
                 config = ModelConfig._get_default_config_from_server(
                     config, client, gpus, model_name
                 )
+
+                if ("dynamic_batching" in config and "preferred_batch_size" in config["dynamic_batching"]):
+                    del config["dynamic_batching"]["preferred_batch_size"]
+
             else:
                 ModelConfig._check_default_config_exceptions(config, model_path)
 
+        print(f"TKG: FINAL config is {config}")
         ModelConfig._default_config_dict[model_name] = config
         return deepcopy(config)
 
@@ -131,6 +136,7 @@ class ModelConfig:
             num_retries=config.client_max_retries, log_file=server.log_file()
         )
 
+        print(f"TKG: loading D")
         if client.load_model(model_name=model_name) == -1:
             server.stop()
 
