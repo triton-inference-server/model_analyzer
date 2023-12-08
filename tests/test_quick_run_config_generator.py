@@ -225,6 +225,10 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         - dynamic batching should be on
         - existing values from the base model config should persist if they aren't overwritten
         """
+        for mode in ["local", "c_api", "remote", "docker"]:
+            self._test_get_next_run_config_helper(mode)
+
+    def _test_get_next_run_config_helper(self, mode: str):
         args = [
             "model-analyzer",
             "profile",
@@ -232,6 +236,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             "/tmp",
             "--config-file",
             "/tmp/my_config.yml",
+            "--triton-launch-mode",
+            mode,
         ]
 
         yaml_str = """
@@ -282,6 +288,14 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
+        # FIXME
+        expect_to_use_variant_name = mode != "remote"
+
+        expected_model_config_name = (
+            "fake_model_name_config_0"
+            if expect_to_use_variant_name
+            else "fake_model_name"
+        )
         expected_model_config = {
             "dynamicBatching": {},
             "instanceGroup": [
@@ -291,7 +305,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 32,
-            "name": "fake_model_name",
+            "name": expected_model_config_name,
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
             "optimization": {
                 "executionAccelerators": {

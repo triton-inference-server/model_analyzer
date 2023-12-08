@@ -116,6 +116,9 @@ class MetricsManager:
         self._cpu_warning_printed = False
         self._encountered_perf_analyzer_error = False
 
+        # FIXME TMA-1487 - revert to only true if c_api
+        self._use_variant_name = config.triton_launch_mode != "remote"
+
         (
             self._gpu_metrics,
             self._perf_metrics,
@@ -468,15 +471,14 @@ class MetricsManager:
             log_file=self._server.log_file(),
         )
 
-        model_name = variant_config.model_config.get_field("name")
-
-        # TODO TMA-1487 - remove this workaround and go back to always using variant_name and config_str
-        variant_name = ""
-        config_str = None
-        if self._config.triton_launch_mode != "local":
+        if self._use_variant_name:
+            model_name = variant_config.variant_name
+            variant_name = ""
+            config_str = None
+        else:
+            model_name = variant_config.model_config.get_field("name")
             variant_name = variant_config.variant_name
             config_str = variant_config.model_config.get_config_str()
-        # TODO TMA-1487 - end of workaround
 
         if (
             self._client.load_model(

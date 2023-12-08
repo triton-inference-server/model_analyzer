@@ -129,11 +129,11 @@ class TritonServerFactory:
             server = TritonServerFactory._get_remote_server_handle(config)
         elif config.triton_launch_mode == "local":
             server = TritonServerFactory._get_local_server_handle(
-                config, gpus, use_model_repository=True
+                config, gpus, use_model_repository
             )
         elif config.triton_launch_mode == "docker":
             server = TritonServerFactory._get_docker_server_handle(
-                config, gpus, use_model_repository=True
+                config, gpus, use_model_repository
             )
         elif config.triton_launch_mode == "c_api":
             server = TritonServerFactory._get_c_api_server_handle(

@@ -91,7 +91,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(models)
 
-        self._c_api_mode = config.triton_launch_mode == "c_api"
+        # FIXME TMA-1487 - revert to only true if c_api
+        self._use_variant_name = config.triton_launch_mode != "remote"
 
         # This tracks measured results for all coordinates
         self._coordinate_data = CoordinateData()
@@ -427,7 +428,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                 ensemble_composing_model_config_variants=composing_config_variants,
                 model_variant_name_manager=self._model_variant_name_manager,
                 param_combo=param_combo,
-                c_api_mode=self._c_api_mode,
+                use_variant_name=self._use_variant_name,
             )
         )
 
@@ -474,7 +475,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             param_combo=param_combo,
             model=model,
             model_variant_name_manager=self._model_variant_name_manager,
-            c_api_mode=self._c_api_mode,
+            use_variant_name=self._use_variant_name,
         )
 
         return model_config_variant
@@ -486,8 +487,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         model_config_variant: ModelConfigVariant,
         composing_model_config_variants: List[ModelConfigVariant],
     ) -> ModelRunConfig:
+        name_to_pass_to_PA = (
+            model_config_variant.variant_name
+            if self._use_variant_name
+            else model.model_name()
+        )
         perf_analyzer_config = self._get_next_perf_analyzer_config(
-            model.model_name(), model, model_index
+            name_to_pass_to_PA, model, model_index
         )
         model_run_config = ModelRunConfig(
             model.model_name(), model_config_variant, perf_analyzer_config
@@ -628,7 +634,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model=model,
             ensemble_composing_model_config_variants=default_composing_model_config_variants,
             model_variant_name_manager=self._model_variant_name_manager,
-            c_api_mode=self._c_api_mode,
+            use_variant_name=self._use_variant_name,
         )
 
         default_perf_analyzer_config = self._create_default_perf_analyzer_config(
@@ -657,7 +663,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                     param_combo={},
                     model=composing_model,
                     model_variant_name_manager=self._model_variant_name_manager,
-                    c_api_mode=self._c_api_mode,
+                    use_variant_name=self._use_variant_name,
                 )
             )
 
@@ -671,7 +677,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                 param_combo={},
                 model=model,
                 model_variant_name_manager=self._model_variant_name_manager,
-                c_api_mode=self._c_api_mode,
+                use_variant_name=self._use_variant_name,
             )
         )
 
