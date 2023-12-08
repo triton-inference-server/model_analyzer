@@ -14,7 +14,7 @@
 # limitations under the License.
 
 source ../common/util.sh
-create_logs_dir
+create_logs_dir "L0_perf_analyzer"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
