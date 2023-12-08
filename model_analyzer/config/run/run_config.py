@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 
 
@@ -33,7 +35,7 @@ class RunConfig:
         """
 
         self._triton_env = triton_env
-        self._model_run_configs = []
+        self._model_run_configs: List[ModelRunConfig] = []
 
     def add_model_run_config(self, model_run_config):
         """
@@ -41,7 +43,7 @@ class RunConfig:
         """
         self._model_run_configs.append(model_run_config)
 
-    def model_run_configs(self):
+    def model_run_configs(self) -> List[ModelRunConfig]:
         """
         Returns the list of ModelRunConfigs to run concurrently
         """

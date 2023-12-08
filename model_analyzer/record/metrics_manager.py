@@ -426,10 +426,11 @@ class MetricsManager:
             # Ignore if the dir already exists
             pass
 
-    def _load_model_variants(self, run_config):
+    def _load_model_variants(self, run_config: RunConfig):
         """
         Loads all model variants in the client
         """
+        # TODO TMA-1487: Make BLS and ensemble both load all composing model variants first
         for mrc in run_config.model_run_configs():
             if not self._load_model_variant(variant_config=mrc.model_config_variant()):
                 return False
@@ -444,7 +445,7 @@ class MetricsManager:
 
         return True
 
-    def _load_model_variant(self, variant_config):
+    def _load_model_variant(self, variant_config: ModelConfigVariant):
         """
         Conditionally loads a model variant in the client
         """
@@ -458,7 +459,7 @@ class MetricsManager:
             retval = self._do_load_model_variant(variant_config)
         return retval
 
-    def _do_load_model_variant(self, variant_config):
+    def _do_load_model_variant(self, variant_config: ModelConfigVariant):
         """
         Loads a model variant in the client
         """
