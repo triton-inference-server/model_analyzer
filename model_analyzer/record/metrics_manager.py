@@ -426,7 +426,7 @@ class MetricsManager:
             # Ignore if the dir already exists
             pass
 
-    def _load_model_variants(self, run_config: RunConfig):
+    def _load_model_variants(self, run_config: RunConfig) -> bool:
         """
         Loads all model variants in the client
         """
@@ -445,7 +445,7 @@ class MetricsManager:
 
         return True
 
-    def _load_model_variant(self, variant_config: ModelConfigVariant):
+    def _load_model_variant(self, variant_config: ModelConfigVariant) -> bool:
         """
         Conditionally loads a model variant in the client
         """
@@ -459,7 +459,7 @@ class MetricsManager:
             retval = self._do_load_model_variant(variant_config)
         return retval
 
-    def _do_load_model_variant(self, variant_config: ModelConfigVariant):
+    def _do_load_model_variant(self, variant_config: ModelConfigVariant) -> bool:
         """
         Loads a model variant in the client
         """
