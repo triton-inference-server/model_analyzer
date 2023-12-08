@@ -19,6 +19,7 @@ import os
 import shutil
 import time
 from collections import defaultdict
+from copy import deepcopy
 from typing import Dict, List, Optional, Tuple
 
 import numba
@@ -327,6 +328,7 @@ class MetricsManager:
                 variant_config=mrc.model_config_variant(),
             )
 
+            # FIXME -- look here?
             for composing_config_variant in mrc.composing_config_variants():
                 variant_name = composing_config_variant.variant_name
                 original_name = (
@@ -441,14 +443,19 @@ class MetricsManager:
             # Composing configs for BLS models are not automatically loaded by the top-level model
             if mrc.is_bls_model():
                 for composing_config_variant in mrc.composing_config_variants():
-                    if not self._load_model_variant(
-                        variant_config=composing_config_variant
-                    ):
+                    if self._use_variant_name:
+                        # FIXME not sure the right way to fix this
+                        config_to_use = deepcopy(composing_config_variant)
+                        # BaseModelConfigGenerator.create_original_config_from_variant(composing_config_variant.model_config)
+                    else:
+                        config_to_use = composing_config_variant
+
+                    if not self._load_model_variant(variant_config=config_to_use):
                         return False
 
         return True
 
-    def _load_model_variant(self, variant_config):
+    def _load_model_variant(self, variant_config: ModelConfigVariant):
         """
         Conditionally loads a model variant in the client
         """
@@ -462,7 +469,7 @@ class MetricsManager:
             retval = self._do_load_model_variant(variant_config)
         return retval
 
-    def _do_load_model_variant(self, variant_config):
+    def _do_load_model_variant(self, variant_config: ModelConfigVariant):
         """
         Loads a model variant in the client
         """
