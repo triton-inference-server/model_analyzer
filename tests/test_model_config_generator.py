@@ -807,6 +807,20 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                       early_exit_enable=True)
         # yapf: enable
 
+    def test_extract_model_name_from_variant_name(self):
+        input_output_pairs = {}
+        input_output_pairs[
+            "onnx_int32_int32_int32_config_default"
+        ] = "onnx_int32_int32_int32"
+        input_output_pairs["onnx_int32_int32_int32_config_2"] = "onnx_int32_int32_int32"
+        input_output_pairs["onnx_int32_int32_int32"] = "onnx_int32_int32_int32"
+
+        for variant_name, expected_model_name in input_output_pairs.items():
+            model_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                variant_name
+            )
+            self.assertEqual(model_name, expected_model_name)
+
     def _run_and_test_model_config_generator(
         self,
         yaml_str,
