@@ -16,6 +16,7 @@ cryptography>=3.3.2
 distro>=1.5.0
 docker>=4.3.1
 gevent>=22.08.0
+grpcio<=1.59.3
 httplib2>=0.19.0
 matplotlib>=3.3.4
 numba>=0.51.2
