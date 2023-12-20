@@ -513,7 +513,14 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         concurrency = self._calculate_concurrency(dimension_values)
 
-        batch_sizes = model.parameters().get("batch_sizes", [1])
+        # FIXME -- this path isn't catching the default config
+
+        model_params = model.parameters()
+        batch_sizes = (
+            model_params.get("batch_sizes", [1])
+            if isinstance(model_params, dict)
+            else [1]
+        )
         assert len(batch_sizes) == 1
 
         perf_config_params = {

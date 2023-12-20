@@ -178,7 +178,13 @@ class RunConfigGeneratorFactory:
 
     @staticmethod
     def _get_dimensions_for_model(model: ModelProfileSpec) -> List[SearchDimension]:
-        batch_sizes = model.parameters().get("batch_sizes", [1])
+        model_params = model.parameters()
+        batch_sizes = (
+            model_params.get("batch_sizes", [1])
+            if isinstance(model_params, dict)
+            else [1]
+        )
+
         assert len(batch_sizes) == 1
         if model.supports_batching():
             return RunConfigGeneratorFactory._get_batching_supported_dimensions(
