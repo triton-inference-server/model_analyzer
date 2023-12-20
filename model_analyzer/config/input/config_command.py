@@ -233,7 +233,9 @@ class ConfigCommand:
         concurrency = self._get_config_value("concurrency", args, yaml_config)
         batch_sizes = self._get_config_value("batch_sizes", args, yaml_config)
 
-        if concurrency or batch_sizes:
+        if concurrency or (
+            batch_sizes and isinstance(batch_sizes, list) and len(batch_sizes) > 1
+        ):
             raise TritonModelAnalyzerException(
                 f"\nProfiling of models in quick search mode is not supported with lists of concurrencies or batch sizes."
                 "\nPlease use brute search mode or remove concurrency/batch sizes list."
@@ -259,9 +261,10 @@ class ConfigCommand:
             if not "parameters" in model:
                 continue
 
-            if (
-                "concurrency" in model["parameters"]
-                or "batch size" in model["parameters"]
+            if "concurrency" in model["parameters"] or (
+                "batch_sizes" in model["parameters"]
+                and isinstance(model["parameters"]["batch_sizes"], list)
+                and len(model["parameters"]["batch_sizes"]) > 1
             ):
                 raise TritonModelAnalyzerException(
                     f"\nProfiling of models in quick search mode is not supported with lists of concurrencies or batch sizes."

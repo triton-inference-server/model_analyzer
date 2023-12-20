@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from math import log2
 from typing import List
 
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
@@ -165,9 +166,7 @@ class RunConfigGeneratorFactory:
             if model.is_ensemble():
                 continue
 
-            dims = RunConfigGeneratorFactory._get_dimensions_for_model(
-                model.supports_batching()
-            )
+            dims = RunConfigGeneratorFactory._get_dimensions_for_model(model)
             dimensions.add_dimensions(index, dims)
             index += 1
 
@@ -178,17 +177,26 @@ class RunConfigGeneratorFactory:
         return search_config
 
     @staticmethod
-    def _get_dimensions_for_model(is_batching_supported: bool) -> List[SearchDimension]:
-        if is_batching_supported:
-            return RunConfigGeneratorFactory._get_batching_supported_dimensions()
+    def _get_dimensions_for_model(model: ModelProfileSpec) -> List[SearchDimension]:
+        batch_sizes = model.parameters().get("batch_sizes", [1])
+        assert len(batch_sizes) == 1
+        if model.supports_batching():
+            return RunConfigGeneratorFactory._get_batching_supported_dimensions(
+                batch_sizes[0]
+            )
         else:
             return RunConfigGeneratorFactory._get_batching_not_supported_dimensions()
 
     @staticmethod
-    def _get_batching_supported_dimensions() -> List[SearchDimension]:
+    def _get_batching_supported_dimensions(
+        client_batch_size: int,
+    ) -> List[SearchDimension]:
+        min_dimension = int(log2(client_batch_size))
         return [
             SearchDimension(
-                f"max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL
+                f"max_batch_size",
+                SearchDimension.DIMENSION_TYPE_EXPONENTIAL,
+                min=min_dimension,
             ),
             SearchDimension(f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR),
         ]
