@@ -49,7 +49,7 @@ git pull origin main
 **1. Pull the SDK container:**
 
 ```
-docker pull nvcr.io/nvidia/tritonserver:23.11-py3-sdk
+docker pull nvcr.io/nvidia/tritonserver:23.12-py3-sdk
 ```
 
 **2. Run the SDK container**
@@ -59,7 +59,7 @@ docker run -it --gpus 1 \
       --shm-size 2G \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
-      --net=host nvcr.io/nvidia/tritonserver:23.11-py3-sdk
+      --net=host nvcr.io/nvidia/tritonserver:23.12-py3-sdk
 ```
 
 **Important:** The example above uses a single GPU. If you are running on multiple GPUs, you may need to increase the shared memory size accordingly<br><br>
