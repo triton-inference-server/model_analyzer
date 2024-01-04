@@ -19,7 +19,7 @@ import unittest
 from argparse import Namespace
 from copy import deepcopy
 from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
