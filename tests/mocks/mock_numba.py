@@ -25,7 +25,7 @@ class MockNumba(MockBase):
     Mocks numba class
     """
 
-    def __init__(self, mock_paths):
+    def __init__(self, mock_paths, is_available=True):
         device = MagicMock()
 
         # Ignore everything after 0
@@ -43,7 +43,10 @@ class MockNumba(MockBase):
         list_devices = MagicMock()
         list_devices.return_value = [device]
 
-        cuda_attrs = {"list_devices": list_devices}
+        cuda_attrs = {
+            "list_devices": list_devices,
+            "is_available": MagicMock(return_value=is_available),
+        }
         numba_attrs = {"cuda": MagicMock(**cuda_attrs)}
         self._mock_paths = mock_paths
         self._patchers_numba = {}

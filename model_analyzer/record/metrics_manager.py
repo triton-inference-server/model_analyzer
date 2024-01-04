@@ -791,7 +791,7 @@ class MetricsManager:
         cpu_only = run_config.cpu_only()
 
         # Inform user CPU metric(s) are not being collected under CPU mode
-        collect_cpu_metrics_expect = cpu_only or len(self._gpus) == 0
+        collect_cpu_metrics_expect = cpu_only
         collect_cpu_metrics_actual = len(self._cpu_metrics) > 0
         if collect_cpu_metrics_expect and not collect_cpu_metrics_actual:
             if not self._cpu_warning_printed:

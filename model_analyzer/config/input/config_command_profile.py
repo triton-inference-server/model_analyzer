@@ -1391,7 +1391,9 @@ class ConfigCommandProfile(ConfigCommand):
         config values.
         """
         cpu_only = False
-        if len(self.gpus) == 0 or not numba.cuda.is_available():
+        if self.triton_launch_mode != "remote" and (
+            len(self.gpus) == 0 or not numba.cuda.is_available()
+        ):
             cpu_only = True
 
         # Set global constraints if latency budget is specified

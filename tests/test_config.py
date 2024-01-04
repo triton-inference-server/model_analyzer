@@ -19,7 +19,7 @@ import unittest
 from argparse import Namespace
 from copy import deepcopy
 from typing import Any, Dict, List, Optional
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
@@ -67,9 +67,12 @@ class TestConfig(trc.TestResultCollector):
             "max_token_count": max_token_count,
         }
 
-    def _evaluate_config(self, args, yaml_content, subcommand="profile"):
+    def _evaluate_config(
+        self, args, yaml_content, subcommand="profile", numba_available=True
+    ):
         mock_numba = MockNumba(
-            mock_paths=["model_analyzer.config.input.config_command_profile"]
+            mock_paths=["model_analyzer.config.input.config_command_profile"],
+            is_available=numba_available,
         )
 
         mock_config = MockConfig(args, yaml_content)
@@ -109,6 +112,7 @@ class TestConfig(trc.TestResultCollector):
         for model_config, expected_model_config in zip(
             model_configs, expected_model_configs
         ):
+            self.assertEqual(expected_model_config.cpu_only(), model_config.cpu_only())
             self.assertEqual(
                 expected_model_config.model_name(), model_config.model_name()
             )
@@ -1383,6 +1387,32 @@ profile_models:
             ),
         ]
         self._assert_equality_of_model_configs(model_configs, expected_model_configs)
+
+        # Test autofill CPU_ONLY. It will only be false if no local gpus are available AND we are not in remote mode
+        yaml_content = """
+profile_models:
+  - vgg_16_graphdef
+"""
+        for launch_mode in ["remote", "c_api", "docker", "local"]:
+            for local_gpus_available in [True, False]:
+                new_args = args.copy()
+                new_args.extend(["--triton-launch-mode", launch_mode])
+                config = self._evaluate_config(
+                    new_args, yaml_content, numba_available=local_gpus_available
+                )
+                model_configs = config.get_all_config()["profile_models"]
+                expected_cpu_only = not local_gpus_available and launch_mode != "remote"
+                expected_model_configs = [
+                    ConfigModelProfileSpec(
+                        "vgg_16_graphdef",
+                        cpu_only=expected_cpu_only,
+                        parameters=self._create_parameters(batch_sizes=[1]),
+                        objectives={"perf_throughput": 10},
+                    )
+                ]
+                self._assert_equality_of_model_configs(
+                    model_configs, expected_model_configs
+                )
 
     def test_config_shorthands(self):
         """
