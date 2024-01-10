@@ -27,3 +27,4 @@ psutil>=5.8.0
 pyyaml>=5.3.1
 requests>=2.24.0
 tritonclient[all]>=2.4.0
+urllib3>=2.0.7
