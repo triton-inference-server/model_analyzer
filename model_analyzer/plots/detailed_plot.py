@@ -72,12 +72,14 @@ class DetailedPlot:
             )
         ]
 
+        # Okabe-Ito guideline colors for colorblind
+        # https://jfly.uni-koeln.de/color/#select
         self._bar_colors = {
-            "perf_server_queue": "#9daecc",
-            "perf_server_compute_input": "#7eb7e8",
-            "perf_server_compute_infer": "#0072ce",
-            "perf_server_compute_output": "#254b87",
-            "perf_throughput": "#5E5E5E",
+            "perf_server_queue": "#e69f00",
+            "perf_server_compute_input": "#56b4e9",
+            "perf_server_compute_infer": "#009e73",
+            "perf_server_compute_output": "#f0e442",
+            "perf_throughput": "#000000",
         }
 
         self._bar_width = bar_width
