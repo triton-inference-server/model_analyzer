@@ -73,6 +73,7 @@ class DetailedPlot:
         ]
 
         # Okabe-Ito guideline colors for colorblind
+        # https://jfly.uni-koeln.de/color/#select
         self._bar_colors = {
             "perf_server_queue": "#e69f00",
             "perf_server_compute_input": "#56b4e9",
