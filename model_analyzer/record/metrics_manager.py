@@ -430,19 +430,15 @@ class MetricsManager:
         """
         Loads all model variants in the client
         """
-        # TODO TMA-1487: Make BLS and ensemble both load all composing model variants first
         for mrc in run_config.model_run_configs():
+            # Load all composing model variants first, and then the parent model
+            for composing_config_variant in mrc.composing_config_variants():
+                if not self._load_model_variant(
+                    variant_config=composing_config_variant
+                ):
+                    return False
             if not self._load_model_variant(variant_config=mrc.model_config_variant()):
                 return False
-
-            # Composing configs for BLS models are not automatically loaded by the top-level model
-            if mrc.is_bls_model():
-                for composing_config_variant in mrc.composing_config_variants():
-                    if not self._load_model_variant(
-                        variant_config=composing_config_variant
-                    ):
-                        return False
-
         return True
 
     def _load_model_variant(self, variant_config: ModelConfigVariant) -> bool:
