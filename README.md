@@ -18,5 +18,5 @@ limitations under the License.
 
 # Triton Model Analyzer
 
-> [!Warning]gi
+> [!Warning]
 > ##### THIS BRANCH IS UNDER ACTIVE DEVELOPMENT AND IS NOT READY FOR USE.
