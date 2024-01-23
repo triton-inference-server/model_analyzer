@@ -47,7 +47,18 @@ from .mocks.mock_os import MockOSMethods
 
 
 class TestConfig(trc.TestResultCollector):
-    def _evaluate_config(self, args, yaml_content, subcommand="profile"):
+    def _create_parameters(
+        self, batch_sizes: List = [], concurrency: List = [], request_rate: List = []
+    ) -> Dict:
+        return {
+            "batch_sizes": batch_sizes,
+            "concurrency": concurrency,
+            "request_rate": request_rate,
+        }
+
+    def _evaluate_config(
+        self, args, yaml_content, subcommand="profile", numba_available=True
+    ):
         mock_numba = MockNumba(
             mock_paths=["model_analyzer.config.input.config_command_profile"],
             is_available=numba_available,
