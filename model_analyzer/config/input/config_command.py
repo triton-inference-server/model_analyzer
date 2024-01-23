@@ -129,7 +129,6 @@ class ConfigCommand:
         self._check_for_bls_incompatibility(args, yaml_config)
         self._check_for_concurrency_rate_request_conflicts(args, yaml_config)
         self._check_for_config_search_rate_request_conflicts(args, yaml_config)
-        self._check_for_llm_incompatibility(args, yaml_config)
 
     def _set_field_values(
         self, args: Namespace, yaml_config: Optional[Dict[str, List]]
@@ -398,53 +397,6 @@ class ConfigCommand:
                 raise TritonModelAnalyzerException(
                     f"\nCannot have both `run-config-search-max-request-rate` and `run-config-search-min/max-concurrency` specified in the config/CLI."
                 )
-
-    def _check_for_llm_incompatibility(
-        self, args: Namespace, yaml_config: Optional[Dict[str, List]]
-    ) -> None:
-        if not self._get_config_value("llm_search_enable", args, yaml_config):
-            return
-
-        if (
-            self._get_config_value("run_config_search_mode", args, yaml_config)
-            == "quick"
-        ):
-            raise TritonModelAnalyzerException(
-                f"\nLLM models are not supported in quick search. Please use brute search mode."
-            )
-
-        self._check_for_illegal_llm_option(
-            args, yaml_config, "run_config_search_min_model_batch_size"
-        )
-        self._check_for_illegal_llm_option(
-            args, yaml_config, "run_config_search_max_model_batch_size"
-        )
-        self._check_for_illegal_llm_option(
-            args, yaml_config, "run_config_search_min_concurrency"
-        )
-        self._check_for_illegal_llm_option(
-            args, yaml_config, "run_config_search_max_concurrency"
-        )
-        self._check_for_illegal_llm_option(
-            args, yaml_config, "run_config_search_min_request_rate"
-        )
-        self._check_for_illegal_llm_option(
-            args, yaml_config, "run_config_search_max_request_rate"
-        )
-        self._check_for_illegal_llm_option(
-            args, yaml_config, "request_rate_search_enable"
-        )
-        self._check_for_illegal_llm_option(args, yaml_config, "concurrency")
-        self._check_for_illegal_llm_option(args, yaml_config, "latency_budget")
-        self._check_for_illegal_llm_option(args, yaml_config, "min_throughput")
-
-    def _check_for_illegal_llm_option(
-        self, args: Namespace, yaml_config: Optional[Dict[str, List]], option: str
-    ) -> None:
-        if self._get_config_value(option, args, yaml_config):
-            raise TritonModelAnalyzerException(
-                f"\nLLM models do not support setting the `{option}` option when profiling."
-            )
 
     def _preprocess_and_verify_arguments(self):
         """

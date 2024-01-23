@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from itertools import product
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 
 class GeneratorUtils:
@@ -80,8 +80,8 @@ class GeneratorUtils:
     @staticmethod
     def generate_parameter_combinations(params: Dict) -> List[Dict]:
         """
-        Generate a list of all possible sub-dictionaries
-        from given dictionary. The sub-dictionaries will
+        Generate a list of all possible subdictionaries
+        from given dictionary. The subdictionaries will
         have all the same keys, but only one value from
         each key.
 
@@ -108,45 +108,9 @@ class GeneratorUtils:
             The value that the generated list will not exceed
         """
 
-        assert min_value <= max_value
-
         list = []
         val = 1 if min_value == 0 else min_value
         while val <= max_value:
             list.append(val)
             val *= 2
         return list
-
-    @staticmethod
-    def extract_value_from_request_parameter(request_parameter: Optional[str]) -> int:
-        if not request_parameter:
-            return 0
-
-        # Format is: <parameter>:<value>:<type>
-        # Example: max_tokens:10:int
-        _, value, _ = request_parameter.split(":")
-
-        # this catches the case for non-LLM models where the user has specified request parameters
-        try:
-            int(value)
-        except ValueError as _:
-            return 0
-
-        return int(value)
-
-    @staticmethod
-    def extract_text_input_length_from_input_data(input_data: Optional[str]) -> int:
-        if not input_data:
-            return 0
-
-        # format is input-data-<num>.json
-        _, _, text_input_length = input_data.split("-")
-        text_input_length, _ = text_input_length.split(".")
-
-        # this catches the case for non-LLM models where the user has specified input data
-        try:
-            int(text_input_length)
-        except ValueError as _:
-            return 0
-
-        return int(text_input_length)

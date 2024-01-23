@@ -30,7 +30,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.result.inference_load_search import InferenceLoadSearch
+from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.triton.client.client import TritonClient
@@ -43,7 +43,7 @@ logger = logging.getLogger(LOGGER_NAME)
 class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     """
     First run QuickRunConfigGenerator for a hill climbing search, then use
-    InferenceLoadSearch for a concurrency sweep + binary search of the default
+    ParameterSearch for a concurrency sweep + binary search of the default
     and Top N results
     """
 
@@ -139,13 +139,11 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
             for result in top_results:
                 run_config = deepcopy(result.run_config())
-                inference_load_search = InferenceLoadSearch(self._config)
-                for concurrency in inference_load_search.search_inference_loads():
+                parameter_search = ParameterSearch(self._config)
+                for concurrency in parameter_search.search_parameters():
                     run_config = self._set_concurrency(run_config, concurrency)
                     yield run_config
-                    inference_load_search.add_run_config_measurement(
-                        self._last_measurement
-                    )
+                    parameter_search.add_run_config_measurement(self._last_measurement)
 
     def _set_concurrency(self, run_config: RunConfig, concurrency: int) -> RunConfig:
         for model_run_config in run_config.model_run_configs():
