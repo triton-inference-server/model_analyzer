@@ -48,23 +48,12 @@ from .mocks.mock_os import MockOSMethods
 
 class TestConfig(trc.TestResultCollector):
     def _create_parameters(
-        self,
-        batch_sizes: List = [],
-        concurrency: List = [],
-        periodic_concurrency: List = [],
-        request_rate: List = [],
-        request_period: List = [],
-        text_input_length: List = [],
-        max_token_count: List = [],
+        self, batch_sizes: List = [], concurrency: List = [], request_rate: List = []
     ) -> Dict:
         return {
             "batch_sizes": batch_sizes,
             "concurrency": concurrency,
-            "periodic_concurrency": periodic_concurrency,
             "request_rate": request_rate,
-            "request_period": request_period,
-            "text_input_length": text_input_length,
-            "max_token_count": max_token_count,
         }
 
     def _evaluate_config(
@@ -312,12 +301,12 @@ class TestConfig(trc.TestResultCollector):
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "model_1",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
             ),
             ConfigModelProfileSpec(
                 "model_2",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
             ),
         ]
@@ -450,14 +439,16 @@ profile_models:
         expected_model_objects = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(
-                    batch_sizes=[1], concurrency=[1, 2, 3, 4]
-                ),
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [1, 2, 3, 4],
+                    "request_rate": [],
+                },
                 objectives={"perf_throughput": 10},
             ),
             ConfigModelProfileSpec(
                 "vgg_19_graphdef",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
             ),
         ]
@@ -507,16 +498,20 @@ profile_models:
         expected_model_objects = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(
-                    batch_sizes=[1], concurrency=[1, 2, 3, 4]
-                ),
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [1, 2, 3, 4],
+                    "request_rate": [],
+                },
                 objectives={"perf_throughput": 10},
             ),
             ConfigModelProfileSpec(
                 "vgg_19_graphdef",
-                parameters=self._create_parameters(
-                    batch_sizes=[2, 4, 6], concurrency=[1, 2, 3, 4]
-                ),
+                parameters={
+                    "concurrency": [1, 2, 3, 4],
+                    "batch_sizes": [2, 4, 6],
+                    "request_rate": [],
+                },
                 objectives={"perf_throughput": 10},
             ),
         ]
@@ -583,9 +578,11 @@ profile_models:
         expected_model_objects = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(
-                    batch_sizes=[1], concurrency=[1, 2, 3, 4]
-                ),
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [1, 2, 3, 4],
+                    "request_rate": [],
+                },
                 objectives={"perf_throughput": 10, "gpu_used_memory": 5},
                 constraints={
                     "gpu_used_memory": {
@@ -595,7 +592,7 @@ profile_models:
             ),
             ConfigModelProfileSpec(
                 "vgg_19_graphdef",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
             ),
         ]
@@ -713,7 +710,7 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "instance_group": [[{"kind": ["KIND_GPU"], "count": [1]}]]
@@ -738,7 +735,7 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "instance_group": [[{"kind": ["KIND_GPU"], "count": [1]}]]
@@ -774,7 +771,7 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "instance_group": [
@@ -817,7 +814,7 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "instance_group": [
@@ -847,7 +844,7 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "input": [
@@ -890,7 +887,7 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
                 perf_analyzer_flags={
                     "measurement-interval": 10000,
@@ -916,7 +913,7 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
                 perf_analyzer_flags={
                     "measurement-interval": 10000,
@@ -1187,7 +1184,7 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(batch_sizes=[1]),
+                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "instance_group": [[{"kind": ["KIND_GPU"], "count": [1]}]]
@@ -1227,9 +1224,11 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(
-                    batch_sizes=[16, 32], concurrency=[2, 4]
-                ),
+                parameters={
+                    "batch_sizes": [16, 32],
+                    "concurrency": [2, 4],
+                    "request_rate": [],
+                },
                 objectives={"perf_throughput": 10, "gpu_used_memory": 5},
                 constraints={
                     "gpu_used_memory": {
@@ -1273,9 +1272,11 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(
-                    batch_sizes=[16, 32], concurrency=[2, 4]
-                ),
+                parameters={
+                    "batch_sizes": [16, 32],
+                    "concurrency": [2, 4],
+                    "request_rate": [],
+                },
                 objectives={"gpu_used_memory": 10},
                 constraints={"perf_latency_p99": {"max": 8000}},
                 model_config_parameters={
@@ -1315,9 +1316,11 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(
-                    batch_sizes=[16, 32], concurrency=[2, 4]
-                ),
+                parameters={
+                    "batch_sizes": [16, 32],
+                    "concurrency": [2, 4],
+                    "request_rate": [],
+                },
                 objectives={"gpu_used_memory": 10},
                 constraints={"perf_latency_p99": {"max": 8000}},
                 model_config_parameters={
@@ -1368,9 +1371,11 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters=self._create_parameters(
-                    batch_sizes=[16, 32], concurrency=[5, 6, 7]
-                ),
+                parameters={
+                    "batch_sizes": [16, 32],
+                    "concurrency": [5, 6, 7],
+                    "request_rate": [],
+                },
                 objectives={"gpu_used_memory": 10},
                 constraints={
                     "perf_latency_p99": {"max": 8000},
@@ -1379,9 +1384,11 @@ profile_models:
             ),
             ConfigModelProfileSpec(
                 "vgg_19_graphdef",
-                parameters=self._create_parameters(
-                    batch_sizes=[1, 2], concurrency=[2, 4]
-                ),
+                parameters={
+                    "batch_sizes": [1, 2],
+                    "concurrency": [2, 4],
+                    "request_rate": [],
+                },
                 objectives={"perf_throughput": 10, "perf_latency_p99": 5},
                 constraints={"perf_latency_p99": {"max": 8000}},
             ),
@@ -2369,80 +2376,6 @@ profile_models:
         args = base_args.copy() + new_args
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(args, yaml_content)
-
-    def test_llm_mode_rcs(self):
-        """
-        Test RCS options for an LLM model
-        """
-        yaml_content = ""
-
-        self._test_llm_mode_case(
-            yaml_content,
-            ["--run-config-search-mode", "brute"],
-            is_legal=True,
-            use_value=False,
-            use_list=False,
-        )
-        self._test_llm_mode_case(
-            yaml_content,
-            ["--run-config-search-mode", "quick"],
-            use_value=False,
-            use_list=False,
-        )
-
-        self._test_llm_mode_case(
-            yaml_content, ["--run-config-search-min-model-batch-size"]
-        )
-        self._test_llm_mode_case(
-            yaml_content, ["--run-config-search-max-model-batch-size"]
-        )
-        self._test_llm_mode_case(yaml_content, ["--run-config-search-min-concurrency"])
-        self._test_llm_mode_case(yaml_content, ["--run-config-search-max-concurrency"])
-        self._test_llm_mode_case(yaml_content, ["--run-config-search-min-request-rate"])
-        self._test_llm_mode_case(yaml_content, ["--run-config-search-max-request-rate"])
-        self._test_llm_mode_case(
-            yaml_content,
-            ["--request-rate-search-enable"],
-            use_value=False,
-            use_list=False,
-        )
-        self._test_llm_mode_case(yaml_content, ["--concurrency"])
-        self._test_llm_mode_case(yaml_content, ["--latency-budget"])
-        self._test_llm_mode_case(yaml_content, ["--min-throughput"])
-
-    def _test_llm_mode_case(
-        self,
-        yaml_content: Optional[Dict[str, List]],
-        options_string: str,
-        is_legal: bool = False,
-        use_value: bool = True,
-        use_list: bool = True,
-    ) -> None:
-        """
-        Tests that options raise exceptions in LLM mode
-        """
-        args = [
-            "model-analyzer",
-            "profile",
-            "--model-repository",
-            "cli-repository",
-            "--profile-models",
-            "test_llm_modelA",
-            "--llm-search-enable",
-        ]
-
-        args.extend(options_string)
-
-        if use_value:
-            args.append("1")
-        elif use_list:
-            args.append(["1", "2", "4"])
-
-        if is_legal:
-            self._evaluate_config(args, yaml_content, subcommand="profile")
-        else:
-            with self.assertRaises(TritonModelAnalyzerException):
-                self._evaluate_config(args, yaml_content, subcommand="profile")
 
 
 if __name__ == "__main__":

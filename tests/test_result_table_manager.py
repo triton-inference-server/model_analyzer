@@ -304,10 +304,6 @@ class TestResultTableManager(trc.TestResultCollector):
             dynamic_batchings=None,
             instance_groups=None,
             max_batch_sizes=None,
-            periodic_concurrencies=None,
-            max_tokens=None,
-            request_period=None,
-            text_input_length=None,
             backend_parameters=backend_parameters,
         )
         self.assertEqual(

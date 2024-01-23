@@ -103,14 +103,7 @@ class ConfigListNumeric(ConfigValue):
         try:
             if self._is_string(value):
                 self._value = []
-                if "," in value:
-                    value = value.split(",")
-                elif ":" in value:
-                    value = value.split(":")
-                    if len(value) == 2:
-                        value = {"start": value[0], "stop": value[1], "step": 1}
-                    else:
-                        value = {"start": value[0], "stop": value[1], "step": value[2]}
+                value = value.split(",")
 
             if self._is_list(value):
                 new_value = self._process_list(value)

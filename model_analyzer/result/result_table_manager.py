@@ -37,10 +37,6 @@ class ResultTableManager:
         "model_name": "Model",
         "batch_size": "Batch",
         "concurrency": "Concurrency",
-        "periodic_concurrency": "Periodic Concurrency",
-        "text_input_length": "Text Input Length",
-        "max_tokens": "Max Tokens",
-        "request_period": "Request Period",
         "request_rate": "Request Rate",
         "model_config_path": "Model Config Path",
         "instance_group": "Instance Group",
@@ -460,10 +456,6 @@ class ResultTableManager:
             batch_sizes,
             concurrencies,
             request_rates,
-            periodic_concurrencies,
-            max_tokens,
-            request_period,
-            text_input_length,
         ) = self._tabulate_measurement_setup(run_config_measurement)
 
         satisfies = "Yes" if passes else "No"
@@ -475,10 +467,6 @@ class ResultTableManager:
             batch_sizes,
             concurrencies,
             request_rates,
-            periodic_concurrencies,
-            max_tokens,
-            request_period,
-            text_input_length,
             satisfies,
             model_name,
             model_config_name,
@@ -506,10 +494,6 @@ class ResultTableManager:
                     batch_sizes,
                     concurrencies,
                     request_rates,
-                    periodic_concurrencies,
-                    max_tokens,
-                    request_period,
-                    text_input_length,
                     satisfies,
                     model_name,
                     model_config_name,
@@ -542,37 +526,8 @@ class ResultTableManager:
             for pa_params in model_specific_pa_params
             if "request-rate-range" in pa_params
         ]
-        periodic_concurrencies = [
-            pa_params["periodic-concurrency-range"]
-            for pa_params in model_specific_pa_params
-            if "periodic-concurrency-range" in pa_params
-        ]
-        max_tokens = [
-            pa_params["max-tokens"]
-            for pa_params in model_specific_pa_params
-            if "max-tokens" in pa_params
-        ]
-        request_periods = [
-            pa_params["request-period"]
-            for pa_params in model_specific_pa_params
-            if "request-period" in pa_params
-        ]
-        text_input_lengths = [
-            pa_params["text-input-length"]
-            for pa_params in model_specific_pa_params
-            if "text-input-length" in pa_params
-        ]
 
-        return (
-            model_specific_pa_params,
-            batch_sizes,
-            concurrencies,
-            request_rates,
-            periodic_concurrencies,
-            max_tokens,
-            request_periods,
-            text_input_lengths,
-        )
+        return model_specific_pa_params, batch_sizes, concurrencies, request_rates
 
     def _populate_inference_rows(
         self, run_config_measurement, inference_fields, inference_row
@@ -619,10 +574,6 @@ class ResultTableManager:
         batch_sizes,
         concurrencies,
         request_rates,
-        periodic_concurrencies,
-        max_tokens,
-        request_period,
-        text_input_length,
         satisfies,
         model_name,
         model_config_path,
@@ -652,30 +603,6 @@ class ResultTableManager:
         request_rate_index = self._find_index_for_field(fields, "request_rate")
         if request_rate_index is not None:
             row[request_rate_index] = format_for_csv(request_rates)
-
-        # Periodic Concurrency
-        periodic_concurrency_index = self._find_index_for_field(
-            fields, "periodic_concurrency"
-        )
-        if periodic_concurrency_index is not None:
-            row[periodic_concurrency_index] = format_for_csv(periodic_concurrencies)
-
-        # Max Tokens
-        max_tokens_index = self._find_index_for_field(fields, "max_tokens")
-        if max_tokens_index is not None:
-            row[max_tokens_index] = format_for_csv(max_tokens)
-
-        # Request Period
-        request_period_index = self._find_index_for_field(fields, "request_period")
-        if request_period_index is not None:
-            row[request_period_index] = format_for_csv(request_period)
-
-        # Text Input Length
-        text_input_length_index = self._find_index_for_field(
-            fields, "text_input_length"
-        )
-        if text_input_length_index is not None:
-            row[text_input_length_index] = format_for_csv(text_input_length)
 
         # Satisfies
         satisfies_constraints_index = self._find_index_for_field(
