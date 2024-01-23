@@ -246,7 +246,7 @@ class MetricsManager:
             else FileWriter(self._config.perf_output_path)
         )
         capture_gpu_metrics = (
-            run_config.cpu_only() and not self._config.always_report_gpu_metrics
+            self._config.always_report_gpu_metrics or not run_config.cpu_only()
         )
 
         self._print_run_config_info(run_config)
