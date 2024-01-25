@@ -33,6 +33,7 @@ from model_analyzer.config.generate.model_variant_name_manager import (
 from model_analyzer.config.generate.neighborhood import Neighborhood
 from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
@@ -704,12 +705,30 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_config.get_field("name"), self._config
         )
 
-        perf_config_params = {"batch-size": 1, "concurrency-range": 1}
+        default_concurrency = self._calculate_default_concurrency(model_config)
+
+        perf_config_params = {
+            "batch-size": DEFAULT_BATCH_SIZES,
+            "concurrency-range": default_concurrency,
+        }
         default_perf_analyzer_config.update_config(perf_config_params)
 
         default_perf_analyzer_config.update_config(model.perf_analyzer_flags())
 
         return default_perf_analyzer_config
+
+    def _calculate_default_concurrency(self, model_config: ModelConfig) -> int:
+        default_max_batch_size = model_config.max_batch_size()
+
+        # string format is: "<count>:GPU"
+        default_instance_count = int(
+            model_config.instance_group_string(system_gpu_count=len(self._gpus)).split(
+                ":"
+            )[0]
+        )
+        default_concurrency = 2 * default_max_batch_size * default_instance_count
+
+        return default_concurrency
 
     def _print_debug_logs(
         self, measurements: List[Union[RunConfigMeasurement, None]]

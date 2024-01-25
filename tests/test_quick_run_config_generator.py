@@ -533,12 +533,16 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
         qrcg = QuickRunConfigGenerator(
-            sc, config, MagicMock(), models, {}, MagicMock(), ModelVariantNameManager()
+            sc, config, ["GPU0"], models, {}, MagicMock(), ModelVariantNameManager()
         )
 
         default_run_config = qrcg._create_default_run_config()
 
         self.assertIn("--percentile=96", default_run_config.representation())
+        self.assertIn(
+            "--concurrency-range=8",
+            default_run_config.model_run_configs()[0].perf_config().representation(),
+        )
 
     def test_default_ensemble_config_generation(self):
         """
