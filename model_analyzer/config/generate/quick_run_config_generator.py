@@ -719,12 +719,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def _calculate_default_concurrency(self, model_config: ModelConfig) -> int:
         default_max_batch_size = model_config.max_batch_size()
-
-        # string format is: "<count>:GPU"
-        default_instance_count = int(
-            model_config.instance_group_string(system_gpu_count=len(self._gpus)).split(
-                ":"
-            )[0]
+        default_instance_count = model_config.instance_group_count(
+            system_gpu_count=len(self._gpus)
         )
         default_concurrency = 2 * default_max_batch_size * default_instance_count
 

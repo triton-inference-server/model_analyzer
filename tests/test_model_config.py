@@ -316,6 +316,47 @@ ensemble_scheduling {
         }
         _test_helper(model_config_dict, "8:GPU + 3:CPU", gpu_count=4)
 
+    def test_instance_group_count(self):
+        """Test out all corner cases of instance_group_count()"""
+
+        def _test_helper(config_dict, expected_result, gpu_count=None):
+            model_config = ModelConfig.create_from_dictionary(config_dict)
+            instance_group_count = model_config.instance_group_count(gpu_count)
+            self.assertEqual(instance_group_count, expected_result)
+
+        # No instance group info in model_config_dict:
+        #  - default to 1 per GPU
+        model_config_dict = {}
+        _test_helper(model_config_dict, 1, gpu_count=1)
+
+        # No instance group info in model_config_dict:
+        #  - 1 per GPU -- if 2 gpus then 2 total
+        model_config_dict = {}
+        _test_helper(model_config_dict, 2, gpu_count=2)
+
+        # 2 per GPU, 3 gpus in the system = 6 total
+        model_config_dict = {
+            "instance_group": [
+                {
+                    "count": 2,
+                    "kind": "KIND_GPU",
+                }
+            ]
+        }
+        _test_helper(model_config_dict, 6, gpu_count=3)
+
+        # 1 on ALL gpus + 2 each on [1 and 3] + 3 more on CPUs
+        # with 4 GPUs in the system:
+        #   8 on GPU and 3 on CPU
+        model_config_dict = {
+            "instance_group": [
+                {"count": 1, "kind": "KIND_GPU"},
+                {"count": 2, "kind": "KIND_GPU", "gpus": [1, 3]},
+                {"count": 3, "kind": "KIND_CPU"},
+            ]
+        }
+        _test_helper(model_config_dict, 11, gpu_count=4)
+
     def test_is_ensemble(self):
         """Test that we recognize if the platform is ensemble"""
 

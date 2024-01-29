@@ -17,6 +17,7 @@
 import json
 import os
 from copy import deepcopy
+from itertools import chain
 from shutil import copytree
 from typing import Any, Dict, List, Optional
 
@@ -485,6 +486,21 @@ class ModelConfig:
             return "Enabled"
         else:
             return "Disabled"
+
+    def instance_group_count(self, system_gpu_count: int) -> int:
+        """
+        Returns:
+            int: The total number of instance groups (cpu + gpu)
+        """
+
+        # format is: "<count>:GPU + <count>:CPU"
+        instance_group_string = self.instance_group_string(system_gpu_count)
+        instance_group_counts = [
+            int(group_count.split(":")[0])
+            for group_count in instance_group_string.split("+")
+        ]
+
+        return sum(instance_group_counts)
 
     def instance_group_string(self, system_gpu_count: int) -> str:
         """
