@@ -492,14 +492,10 @@ class ModelConfig:
             int: The total number of instance groups (cpu + gpu)
         """
 
-        # format is: "<count>:GPU + <count>:CPU"
-        instance_group_string = self.instance_group_string(system_gpu_count)
-        instance_group_counts = [
-            int(group_count.split(":")[0])
-            for group_count in instance_group_string.split("+")
-        ]
+        kind_to_count = self._get_instance_groups(system_gpu_count)
+        instance_group_count = sum([count for count in kind_to_count.values()])
 
-        return sum(instance_group_counts)
+        return instance_group_count
 
     def instance_group_string(self, system_gpu_count: int) -> str:
         """
@@ -508,8 +504,23 @@ class ModelConfig:
         str
             representation of the instance group used
             to generate this result
+
+            Format is "GPU:<count> + CPU:<count>"
         """
 
+        kind_to_count = self._get_instance_groups(system_gpu_count)
+
+        ret_str = ""
+        for k, v in kind_to_count.items():
+            if ret_str != "":
+                ret_str += " + "
+            ret_str += f"{v}:{k}"
+        return ret_str
+
+    def _get_instance_groups(self, system_gpu_count: int) -> Dict[str, int]:
+        """
+        Returns a dictionary with type of instance (GPU/CPU) and its count
+        """
         model_config = self.get_config()
 
         # TODO change when remote mode is fixed
@@ -542,9 +553,4 @@ class ModelConfig:
                 kind_to_count[group_kind] = 0
             kind_to_count[group_kind] += group_total_count
 
-        ret_str = ""
-        for k, v in kind_to_count.items():
-            if ret_str != "":
-                ret_str += " + "
-            ret_str += f"{v}:{k}"
-        return ret_str
+        return kind_to_count
