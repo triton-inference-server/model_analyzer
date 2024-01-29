@@ -17,7 +17,6 @@
 import json
 import os
 from copy import deepcopy
-from itertools import chain
 from shutil import copytree
 from typing import Any, Dict, List, Optional
 
