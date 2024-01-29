@@ -155,7 +155,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         ):
             self._mock_models = [
                 ModelProfileSpec(
-                    ConfigModelProfileSpec(model_name="fake_model_name"),
+                    ConfigModelProfileSpec(
+                        model_name="fake_model_name", perf_analyzer_flags={}
+                    ),
                     MagicMock(),
                     MagicMock(),
                     MagicMock(),

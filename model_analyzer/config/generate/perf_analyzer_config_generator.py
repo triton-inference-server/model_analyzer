@@ -172,7 +172,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         # The two possible parameters are request rate or concurrency
         # Concurrency is the default and will be used unless the user specifies
         # request rate, either as a model parameter or a config option
-        if self._cli_config.is_request_rate_specified(self._model_parameters):
+        if "request-intervals" in self._perf_analyzer_flags:
+            return [self._perf_analyzer_flags["request-intervals"]]
+        elif self._cli_config.is_request_rate_specified(self._model_parameters):
             return self._create_request_rate_list()
         else:
             return self._create_concurrency_list()
@@ -207,6 +209,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         for params in utils.generate_parameter_combinations(
             perf_config_non_parameter_values
         ):
+            # FIXME variable name
             configs_with_concurrency = []
             for parameter in self._parameters:
                 new_perf_config = PerfAnalyzerConfig()
@@ -217,7 +220,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
                 new_perf_config.update_config(params)
 
-                if self._cli_config.is_request_rate_specified(self._model_parameters):
+                if "request-intervals" in self._perf_analyzer_flags:
+                    pass
+                elif self._cli_config.is_request_rate_specified(self._model_parameters):
                     new_perf_config.update_config({"request-rate-range": parameter})
                 else:
                     new_perf_config.update_config({"concurrency-range": parameter})

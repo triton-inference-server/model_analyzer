@@ -89,7 +89,6 @@ class DetailedPlot:
         self._fig.set_figheight(8)
         self._fig.set_figwidth(12)
 
-        self._ax_latency.set_xlabel("Concurrent Client Requests")
         self._ax_latency.set_ylabel(latency_axis_label)
         self._ax_throughput.set_ylabel(throughput_axis_label)
 
@@ -144,6 +143,18 @@ class DetailedPlot:
                 ]
             )
 
+        if (
+            "request-intervals" in run_config_measurement.model_specific_pa_params()[0]
+            and run_config_measurement.model_specific_pa_params()[0][
+                "request-intervals"
+            ]
+        ):
+            self._data["request-intervals"].append(
+                run_config_measurement.model_specific_pa_params()[0][
+                    "request-intervals"
+                ]
+            )
+
         self._data["perf_throughput"].append(
             run_config_measurement.get_non_gpu_metric_value(tag="perf_throughput")
         )
@@ -164,19 +175,20 @@ class DetailedPlot:
         on this plot's Axes object
         """
 
-        # Need to change the default x-axis plot title for request rates
-        if "request_rate" in self._data and self._data["request_rate"][0]:
+        # Update the x-axis plot title
+        if "request-intervals" in self._data and self._data["request-intervals"][0]:
+            self._ax_latency.set_xlabel("Request Intervals File")
+            sort_indices_key = "request-intervals"
+        elif "request_rate" in self._data and self._data["request_rate"][0]:
             self._ax_latency.set_xlabel("Client Request Rate")
-
-        # Sort the data by request rate or concurrency
-        if "request_rate" in self._data and self._data["request_rate"][0]:
-            sort_indices = list(
-                zip(*sorted(enumerate(self._data["request_rate"]), key=lambda x: x[1]))
-            )[0]
+            sort_indices_key = "request_rate"
         else:
-            sort_indices = list(
-                zip(*sorted(enumerate(self._data["concurrency"]), key=lambda x: x[1]))
-            )[0]
+            self._ax_latency.set_xlabel("Concurrent Client Requests")
+            sort_indices_key = "concurrency"
+
+        sort_indices = list(
+            zip(*sorted(enumerate(self._data[sort_indices_key]), key=lambda x: x[1]))
+        )[0]
 
         sorted_data = {
             key: [data_list[i] for i in sort_indices]
@@ -197,10 +209,7 @@ class DetailedPlot:
         )
         bottoms = None
 
-        if "request_rate" in self._data:
-            sorted_data["indices"] = list(map(str, sorted_data["request_rate"]))
-        else:
-            sorted_data["indices"] = list(map(str, sorted_data["concurrency"]))
+        sorted_data["indices"] = list(map(str, sorted_data[sort_indices_key]))
 
         # Plot latency breakdown with concurrency casted as string to make uniform x
         for metric, label in labels.items():
