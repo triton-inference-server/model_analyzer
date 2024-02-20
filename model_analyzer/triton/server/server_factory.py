@@ -163,11 +163,6 @@ class TritonServerFactory:
             ' using the "local" or "docker" mode if you want to accurately'
             " monitor the GPU memory usage for different models."
         )
-        logger.warning(
-            'Config sweep parameters are ignored in the "remote" mode because'
-            " Model Analyzer does not have access to the model repository of"
-            " the remote Triton Server."
-        )
 
         return server
 

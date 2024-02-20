@@ -403,9 +403,13 @@ class Analyzer:
         repository_index = client.get_model_repository_index()
         profile_model_names = [pm.model_name() for pm in self._config.profile_models]
 
-        for model in repository_index:
-            if model["name"] not in profile_model_names:
-                model_name = model["name"]
+        model_names_loaded_on_server = []
+        for repository_item in repository_index:
+            if client.is_model_ready(repository_item["name"]):
+                model_names_loaded_on_server.append(repository_item["name"])
+
+        for model_name in model_names_loaded_on_server:
+            if model_name not in profile_model_names:
                 logger.warning(
                     f"A model not being profiled ({model_name}) is loaded on the remote Tritonserver. "
                     "This could impact the profile results."
