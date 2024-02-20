@@ -99,3 +99,9 @@ class TritonHTTPClient(TritonClient):
         Returns the JSON dict holding the model repository index.
         """
         return self._client.get_model_repository_index()
+
+    def is_model_ready(self, model_name: str) -> bool:
+        """
+        Returns true if the model is loaded on the server
+        """
+        return self._client.is_model_ready(model_name)
