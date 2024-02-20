@@ -24,55 +24,105 @@ class TritonServerConfig:
     """
 
     server_arg_keys = [
+        # Server
+        "id",
+        "exit-timeout-secs",
         # Logging
         "log-verbose",
         "log-info",
         "log-warning",
         "log-error",
-        "id",
+        "log-format",
+        "log-file",
         # Model Repository
         "model-store",
         "model-repository",
-        # Exit
-        "exit-timeout-secs",
         "exit-on-error",
-        # Strictness
-        "strict-model-config",
+        "disable-auto-complete-config",
         "strict-readiness",
-        # API Servers
+        "model-control-mode",
+        "repository-poll-secs",
+        "load-model",
+        "model-load-thread-count",
+        "model-load-retry-count",
+        "model-namespacing",
+        # HTTP
         "allow-http",
+        "http-address",
         "http-port",
+        "reuse-http-port",
+        "http-header-forward-pattern",
         "http-thread-count",
+        "http-restricted-api",
+        # GRPC
         "allow-grpc",
+        "grpc-address",
         "grpc-port",
+        "reuse-grpc-port",
+        "grpc-header-forward-pattern",
         "grpc-infer-allocation-pool-size",
         "grpc-use-ssl",
         "grpc-use-ssl-mutual",
         "grpc-server-cert",
         "grpc-server-key",
         "grpc-root-cert",
+        "grpc-infer-response-compression-level",
+        "grpc-keepalive-time",
+        "grpc-keepalive-timeout",
+        "grpc-keepalive-permit-without-calls",
+        "grpc-http2-max-pings-without-data",
+        "grpc-http2-min-recv-ping-interval-without-data",
+        "grpc-http2-max-ping-strikes",
+        "grpc-max-connection-age",
+        "grpc-max-connection-age-grace",
+        "grpc-restricted-protocol",
+        # Sagemaker
+        "allow-sagemaker",
+        "sagemaker-port",
+        "sagemaker-safe-port-range",
+        "sagemaker-thread-count",
+        # Vertex
+        "allow-vertex-ai",
+        "vertex-ai-port",
+        "vertex-ai-thread-count",
+        "vertex-ai-default-model",
+        # Metrics
         "allow-metrics",
         "allow-gpu-metrics",
-        "metrics-interval-ms",
+        "allow-cpu-metrics",
+        "metrics-address",
         "metrics-port",
+        "metrics-interval-ms",
+        "metrics-config",
         # Tracing
+        "trace-config",
+        # Backend
+        "backend-directory",
+        "backend-config",
+        # Repository Agent
+        "repoagent-directory",
+        # Response Cache
+        "cache-config",
+        "cache-directory",
+        # Rate Limiter
+        "rate-limit",
+        "rate-limit-resource",
+        # Memory/Device Management
+        "pinned-memory-pool-byte-size",
+        "cuda-memory-pool-byte-size",
+        "cuda-virtual-address-size",
+        "min-supported-compute-capability",
+        "buffer-management-thread-count",
+        "host-policy",
+        "model-load-gpu-limit",
+        # DEPRECATED
+        "strict-model-config",
+        "response-cache-byte-size",
         "trace-file",
         "trace-level",
         "trace-rate",
-        # Model control
-        "model-control-mode",
-        "repository-poll-secs",
-        "load-model",
-        # Memory and GPU
-        "pinned-memory-pool-byte-size",
-        "cuda-memory-pool-byte-size",
-        "min-supported-compute-capability",
-        # Backend config
-        "backend-directory",
-        "backend-config",
-        "allow-soft-placement",
-        "gpu-memory-fraction",
-        "tensorflow-version",
+        "trace-count",
+        "trace-log-frequency",
     ]
 
     def __init__(self):
