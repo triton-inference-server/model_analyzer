@@ -75,7 +75,7 @@ class TritonServerConfig:
         "grpc-http2-max-ping-strikes",
         "grpc-max-connection-age",
         "grpc-max-connection-age-grace",
-        "grpc-restricted-protocol"
+        "grpc-restricted-protocol",
         # Sagemaker
         "allow-sagemaker",
         "sagemaker-port",
@@ -103,7 +103,7 @@ class TritonServerConfig:
         "repoagent-directory",
         # Response Cache
         "cache-config",
-        "cache-directory"
+        "cache-directory",
         # Rate Limiter
         "rate-limit",
         "rate-limit-resource",
