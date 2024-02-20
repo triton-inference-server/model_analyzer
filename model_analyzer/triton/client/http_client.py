@@ -104,6 +104,4 @@ class TritonHTTPClient(TritonClient):
         """
         Returns true if the model is loaded on the server
         """
-        foo = self._client.is_model_ready(model_name)
-
-        return foo
+        return self._client.is_model_ready(model_name)
