@@ -21,8 +21,8 @@ limitations under the License.
 > [!Warning]
 > ##### LATEST RELEASE
 > You are currently on the `main` branch which tracks under-development progress towards the next release. <br>
-> The latest release of the Triton Model Analyzer is 1.37.0 and is available on branch
-> [r24.02](https://github.com/triton-inference-server/model_analyzer/tree/r24.02).
+> The latest release of the Triton Model Analyzer is 1.38.0 and is available on branch
+> [r24.03](https://github.com/triton-inference-server/model_analyzer/tree/r24.03).
 
 
 Triton Model Analyzer is a CLI tool which can help you find a more optimal configuration, on a given piece of hardware, for single, multiple, ensemble, or BLS models running on a [Triton Inference Server](https://github.com/triton-inference-server/server/). Model Analyzer will also generate reports to help you better understand the trade-offs of the different configurations along with their compute and memory requirements.
@@ -52,7 +52,7 @@ Triton Model Analyzer is a CLI tool which can help you find a more optimal confi
 - [BLS Model Search](docs/config_search.md#bls-model-search): Model Analyzer can help you find the optimal
   settings when profiling a BLS model, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
 
-- [Multi-Model Search](docs/config_search.md#multi-model-search-mode): **EARLY ACCESS** - Model Analyzer can help you
+- [Multi-Model Search](docs/config_search.md#multi-model-search-mode): Model Analyzer can help you
   find the optimal settings when profiling multiple concurrent models, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
 
 ### Other Features
