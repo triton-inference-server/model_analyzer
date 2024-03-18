@@ -52,7 +52,7 @@ Triton Model Analyzer is a CLI tool which can help you find a more optimal confi
 - [BLS Model Search](docs/config_search.md#bls-model-search): Model Analyzer can help you find the optimal
   settings when profiling a BLS model, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
 
-- [Multi-Model Search](docs/config_search.md#multi-model-search-mode): **EARLY ACCESS** - Model Analyzer can help you
+- [Multi-Model Search](docs/config_search.md#multi-model-search-mode): Model Analyzer can help you
   find the optimal settings when profiling multiple concurrent models, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
 
 ### Other Features
