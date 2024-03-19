@@ -1421,8 +1421,10 @@ class ConfigCommandProfile(ConfigCommand):
                     new_model["parameters"].update(
                         {"concurrency": model.parameters()["concurrency"]}
                     )
-                else:
+                elif not "request_rate" in model.parameters():
                     new_model["parameters"].update({"concurrency": self.concurrency})
+                else:
+                    new_model["parameters"].update({"concurrency": None})
 
                 if "request_rate" in model.parameters():
                     new_model["parameters"].update(
