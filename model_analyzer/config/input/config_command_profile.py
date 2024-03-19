@@ -50,6 +50,7 @@ from .config_defaults import (
     DEFAULT_GPU_OUTPUT_FIELDS,
     DEFAULT_GPUS,
     DEFAULT_INFERENCE_OUTPUT_FIELDS,
+    DEFAULT_LLM_MODE,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MODEL_WEIGHTING,
     DEFAULT_MONITORING_INTERVAL,
@@ -295,6 +296,16 @@ class ConfigCommandProfile(ConfigCommand):
                 parser_args={"action": "store_true"},
                 default_value=DEFAULT_SKIP_DETAILED_REPORTS,
                 description="Skips the generation of detailed summary reports and tables.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "llm_mode",
+                flags=["--llm-mode"],
+                field_type=ConfigPrimitive(bool),
+                parser_args={"action": "store_true"},
+                default_value=DEFAULT_LLM_MODE,
+                description="Informs MA that we are profiling a LLM",
             )
         )
 

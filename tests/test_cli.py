@@ -65,6 +65,7 @@ def get_test_options():
         OptionStruct("bool", "profile","--skip-summary-reports"),
         OptionStruct("bool", "profile","--skip-detailed-reports"),
         OptionStruct("bool", "profile","--always-report-gpu-metrics"),
+        OptionStruct("bool", "profile","--llm-mode"),
         #Int/Float options
         # Options format:
         #   (int/float, MA step, long_option, short_option, test_value, expected_default_value)
