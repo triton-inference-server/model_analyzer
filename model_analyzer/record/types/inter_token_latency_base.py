@@ -16,16 +16,14 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.types.time_to_first_token_base import TimeToFirstTokenBase
+from model_analyzer.record.record import DecreasingRecord
 
 
 @total_ordering
-class TimeToFirstTokenP75(TimeToFirstTokenBase):
+class InterTokenLatencyBase(DecreasingRecord):
     """
-    A record for perf_analyzer Time to first token metric
+    A record for perf_analyzer Inter token latency metric
     """
-
-    tag = "time_to_first_token_p75"
 
     def __init__(self, value, timestamp=0):
         """
@@ -39,22 +37,38 @@ class TimeToFirstTokenP75(TimeToFirstTokenBase):
 
         super().__init__(value, timestamp)
 
-    @classmethod
-    def header(cls, aggregation_tag=False):
+    def __eq__(self, other):
         """
-        Parameters
-        ----------
-        aggregation_tag: bool
-            An optional tag that may be displayed
-            as part of the header indicating that
-            this record has been aggregated using
-            max, min or average etc.
-
-        Returns
-        -------
-        str
-            The full name of the
-            metric.
+        Allows checking for
+        equality between two records
         """
 
-        return "p75 Time To First Token (ms)"
+        return self.value() == other.value()
+
+    def __lt__(self, other):
+        """
+        Allows checking if
+        this record is less than
+        the other
+        """
+
+        return self.value() > other.value()
+
+    def __add__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return self.__class__(value=(self.value() + other.value()))
+
+    def __sub__(self, other):
+        """
+        Allows subbing two records together
+        to produce a brand new record.
+
+        ** Note this does reverse subtraction because
+            of the inverted nature of latency (lower is better)
+        """
+
+        return self.__class__(value=(other.value() - self.value()))

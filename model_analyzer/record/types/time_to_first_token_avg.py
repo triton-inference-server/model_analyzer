@@ -16,11 +16,11 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.record import DecreasingRecord
+from model_analyzer.record.types.time_to_first_token_base import TimeToFirstTokenBase
 
 
 @total_ordering
-class TimeToFirstTokenAvg(DecreasingRecord):
+class TimeToFirstTokenAvg(TimeToFirstTokenBase):
     """
     A record for perf_analyzer Time to first token metric
     """
@@ -58,39 +58,3 @@ class TimeToFirstTokenAvg(DecreasingRecord):
         """
 
         return "Avg Time To First Token (ms)"
-
-    def __eq__(self, other):
-        """
-        Allows checking for
-        equality between two records
-        """
-
-        return self.value() == other.value()
-
-    def __lt__(self, other):
-        """
-        Allows checking if
-        this record is less than
-        the other
-        """
-
-        return self.value() > other.value()
-
-    def __add__(self, other):
-        """
-        Allows adding two records together
-        to produce a brand new record.
-        """
-
-        return self.__class__(value=(self.value() + other.value()))
-
-    def __sub__(self, other):
-        """
-        Allows subbing two records together
-        to produce a brand new record.
-
-        ** Note this does reverse subtraction because
-            of the inverted nature of latency (lower is better)
-        """
-
-        return self.__class__(value=(other.value() - self.value()))
