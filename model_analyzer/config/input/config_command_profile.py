@@ -51,6 +51,7 @@ from .config_defaults import (
     DEFAULT_GPUS,
     DEFAULT_INFERENCE_OUTPUT_FIELDS,
     DEFAULT_MAX_RETRIES,
+    DEFAULT_MODEL_TYPE,
     DEFAULT_MODEL_WEIGHTING,
     DEFAULT_MONITORING_INTERVAL,
     DEFAULT_NUM_CONFIGS_PER_MODEL,
@@ -295,6 +296,15 @@ class ConfigCommandProfile(ConfigCommand):
                 parser_args={"action": "store_true"},
                 default_value=DEFAULT_SKIP_DETAILED_REPORTS,
                 description="Skips the generation of detailed summary reports and tables.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "model_type",
+                flags=["--model-type"],
+                field_type=ConfigPrimitive(str),
+                default_value=DEFAULT_MODEL_TYPE,
+                description="Type of model being profiled: generic or LLM",
             )
         )
 

@@ -68,6 +68,7 @@ DEFAULT_PERF_ANALYZER_PATH = "perf_analyzer"
 DEFAULT_PERF_OUTPUT_FLAG = False
 DEFAULT_PERF_MAX_AUTO_ADJUSTS = 10
 DEFAULT_MEASUREMENT_MODE = "count_windows"
+DEFAULT_MODEL_TYPE = "generic"
 
 DEFAULT_ONLINE_PLOTS = {
     "throughput_v_latency": {

@@ -65,6 +65,7 @@ def get_test_options():
         OptionStruct("bool", "profile","--skip-summary-reports"),
         OptionStruct("bool", "profile","--skip-detailed-reports"),
         OptionStruct("bool", "profile","--always-report-gpu-metrics"),
+
         #Int/Float options
         # Options format:
         #   (int/float, MA step, long_option, short_option, test_value, expected_default_value)
@@ -125,6 +126,7 @@ def get_test_options():
         OptionStruct("string", "report", "--config-file", "-f", "baz", None, None),
         OptionStruct("string", "profile", "--triton-docker-shm-size", None, "1G", None, extra_commands=["--triton-launch-mode", "docker"]),
         OptionStruct("string", "profile","--run-config-search-mode", None, ["quick", "brute"], "brute", "SHOULD_FAIL"),
+        OptionStruct("string", "profile", "--model-type", None, ["generic", "LLM"], "generic", None),
 
         #List Options:
         # Options format:
