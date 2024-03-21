@@ -374,7 +374,7 @@ of the types of constraints allowed:
 | :------------------------ | :-------: | :--------: | :----------------------------------------------------- |
 | `perf_throughput`         | inf / sec |    min     | Specify minimum desired throughput.                    |
 | `perf_latency_p99`        |    ms     |    max     | Specify maximum tolerable latency or latency budget.   |
-| `output_token_throughput` | inf / sec |    min     | Specify minimum desired output token throughput.       |
+| `output_token_throughput` | tok / sec |    min     | Specify minimum desired output token throughput.       |
 | `inter_token_latency_p99` |    ms     |    max     | Specify maximum tolerable input token latency.         |
 | `time_to_first_token_p99` |    ms     |    max     | Specify maximum tolerable time to first token latency. |
 | `gpu_used_memory`         |    MB     |    max     | Specify maximum GPU memory used by model.              |
