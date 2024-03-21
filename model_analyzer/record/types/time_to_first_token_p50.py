@@ -57,4 +57,4 @@ class TimeToFirstTokenP50(TimeToFirstTokenBase):
             metric.
         """
 
-        return "p99 Time To First Token (ms)"
+        return "p50 Time To First Token (ms)"

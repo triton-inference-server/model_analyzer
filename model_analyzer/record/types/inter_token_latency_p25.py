@@ -57,4 +57,4 @@ class InterTokenLatencyP25(InterTokenLatencyBase):
             metric.
         """
 
-        return "p90 Inter Token Latency (ms)"
+        return "p25 Inter Token Latency (ms)"
