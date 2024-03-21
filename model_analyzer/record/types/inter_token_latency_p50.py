@@ -20,12 +20,12 @@ from model_analyzer.record.types.inter_token_latency_base import InterTokenLaten
 
 
 @total_ordering
-class InterTokenLatencyP90(InterTokenLatencyBase):
+class InterTokenLatencyP50(InterTokenLatencyBase):
     """
     A record for perf_analyzer Inter token latency metric
     """
 
-    tag = "inter_token_latency_p90"
+    tag = "inter_token_latency_p50"
 
     def __init__(self, value, timestamp=0):
         """

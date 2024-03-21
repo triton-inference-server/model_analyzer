@@ -16,16 +16,16 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.types.inter_token_latency_base import InterTokenLatencyBase
+from model_analyzer.record.types.time_to_first_token_base import TimeToFirstTokenBase
 
 
 @total_ordering
-class InterTokenLatencyP90(InterTokenLatencyBase):
+class TimeToFirstTokenP50(TimeToFirstTokenBase):
     """
-    A record for perf_analyzer Inter token latency metric
+    A record for perf_analyzer Time to first token metric
     """
 
-    tag = "inter_token_latency_p90"
+    tag = "time_to_first_token_p50"
 
     def __init__(self, value, timestamp=0):
         """
@@ -57,4 +57,4 @@ class InterTokenLatencyP90(InterTokenLatencyBase):
             metric.
         """
 
-        return "p90 Inter Token Latency (ms)"
+        return "p99 Time To First Token (ms)"
