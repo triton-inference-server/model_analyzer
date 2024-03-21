@@ -520,65 +520,141 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Test all Time to first token values
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenAvg], [4238.735]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenAvg],
+            [4238.735],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenMin], [3367.978]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenMin],
+            [3367.978],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenMax], [6702.240]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenMax],
+            [6702.240],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP99], [6371.118]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP99],
+            [6371.118],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP95], [5344.958]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP95],
+            [5344.958],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP90], [5006.259]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP90],
+            [5006.259],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP75], [4841.394]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP75],
+            [4841.394],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP50], [4146.648]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP50],
+            [4146.648],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP25], [3484.484]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP25],
+            [3484.484],
+            is_llm=True,
         )
 
         # Test all Inter token latency values
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyAvg], [27202.264]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyAvg],
+            [27202.264],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyMin], [3849.435]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyMin],
+            [3849.435],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyMax], [138324.924]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyMax],
+            [138324.924],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP99], [28283.424]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP99],
+            [28283.424],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP95], [27737.593]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP95],
+            [27737.593],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP90], [27469.154]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP90],
+            [27469.154],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP75], [27067.290]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP75],
+            [27067.290],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP50], [26979.956]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP50],
+            [26979.956],
+            is_llm=True,
         )
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP25], [26926.962]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP25],
+            [26926.962],
+            is_llm=True,
         )
 
         # Test output token throughput
         self._test_metrics_from_csv(
-            perf_analyzer, pa_llm_csv_mock, [OutputTokenThroughput], [36.37]
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [OutputTokenThroughput],
+            [36.37],
+            is_llm=True,
         )
 
         # Test combination
@@ -587,10 +663,11 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             pa_llm_csv_mock,
             [TimeToFirstTokenP90, InterTokenLatencyP50, OutputTokenThroughput],
             [5006.259, 26979.956, 36.37],
+            is_llm=True,
         )
 
     def _test_metrics_from_csv(
-        self, perf_analyzer, read_data, metrics, expected_values
+        self, perf_analyzer, read_data, metrics, expected_values, is_llm=False
     ):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
@@ -598,7 +675,10 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             perf_analyzer.run(metrics)
 
-        records = perf_analyzer.get_llm_records()
+        if is_llm:
+            records = perf_analyzer.get_llm_records()
+        else:
+            records = perf_analyzer.get_perf_records()
 
         self.assertEqual(len(records[TEST_MODEL_NAME]), len(expected_values))
         for i, expected_value in enumerate(expected_values):

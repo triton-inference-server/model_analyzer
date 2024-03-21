@@ -257,7 +257,7 @@ class PerfAnalyzer:
         if self._perf_records:
             return self._perf_records
         raise TritonModelAnalyzerException(
-            "Attempted to get perf_analyzer results" "without calling run first."
+            "Attempted to get perf_analyzer results without calling run first."
         )
 
     def get_llm_records(self):
@@ -270,7 +270,7 @@ class PerfAnalyzer:
         if self._llm_records:
             return self._llm_records
         raise TritonModelAnalyzerException(
-            "Attempted to get perf_analyzer results" "without calling run first."
+            "Attempted to get perf_analyzer results without calling run first."
         )
 
     def get_gpu_records(self):
