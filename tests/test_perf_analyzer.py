@@ -309,122 +309,40 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 5)
 
-        # Test p90 latency parsing
-        perf_metrics = [PerfLatencyP90]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.7)
-
-        # Test p95 latency parsing
-        perf_metrics = [PerfLatencyP95]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.8)
-
-        # Test p99 latency parsing
-        perf_metrics = [PerfLatencyP99]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.9)
+        # Test latency parsing
+        self._test_metrics_from_csv(perf_analyzer, pa_csv_mock, [PerfLatencyP90], [4.7])
+        self._test_metrics_from_csv(perf_analyzer, pa_csv_mock, [PerfLatencyP95], [4.8])
+        self._test_metrics_from_csv(perf_analyzer, pa_csv_mock, [PerfLatencyP99], [4.9])
 
         # Test throughput parsing
-        perf_metrics = [PerfThroughput]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 46.8)
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfThroughput], [46.8]
+        )
 
         # Test client response wait
-        perf_metrics = [PerfClientResponseWait]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.314)
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfClientResponseWait], [0.314]
+        )
 
         # Test server queue
-        perf_metrics = [PerfServerQueue]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.018)
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfServerQueue], [0.018]
+        )
 
         # Test server compute infer
-        perf_metrics = [PerfServerComputeInfer]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.065)
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfServerComputeInfer], [0.065]
+        )
 
         # Test server compute input
-        perf_metrics = [PerfServerComputeInput]
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfServerComputeInput], [0.034]
+        )
 
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.034)
-
-        # Test server compute infer
-        perf_metrics = [PerfServerComputeOutput]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.016)
+        # Test server compute output
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfServerComputeOutput], [0.016]
+        )
 
         # Test Avg GPU Utilizations. Perf metric is ignored for get_gpu_records()
         gpu_metrics = [GPUUtilization, PerfLatencyAvg]
@@ -601,77 +519,79 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         pa_llm_csv_mock += """Request Throughput (per sec),0.29"""
 
         # Test all Time to first token values
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenAvg], [4238.735]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenMin], [3367.978]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenMax], [6702.240]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP99], [6371.118]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP95], [5344.958]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP90], [5006.259]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP75], [4841.394]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP50], [4146.648]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [TimeToFirstTokenP25], [3484.484]
         )
 
         # Test all Inter token latency values
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyAvg], [27202.264]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyMin], [3849.435]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyMax], [138324.924]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP99], [28283.424]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP95], [27737.593]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP90], [27469.154]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP75], [27067.290]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP50], [26979.956]
         )
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [InterTokenLatencyP25], [26926.962]
         )
 
         # Test output token throughput
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer, pa_llm_csv_mock, [OutputTokenThroughput], [36.37]
         )
 
         # Test combination
-        self._test_csv_output(
+        self._test_metrics_from_csv(
             perf_analyzer,
             pa_llm_csv_mock,
             [TimeToFirstTokenP90, InterTokenLatencyP50, OutputTokenThroughput],
             [5006.259, 26979.956, 36.37],
         )
 
-    def _test_csv_output(self, perf_analyzer, read_data, metrics, expected_values):
+    def _test_metrics_from_csv(
+        self, perf_analyzer, read_data, metrics, expected_values
+    ):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=read_data),

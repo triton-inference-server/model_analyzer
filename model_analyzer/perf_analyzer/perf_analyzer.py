@@ -659,7 +659,7 @@ class PerfAnalyzer:
             f"Did not find {requested_metric.tag} in genai-perf CSV file"
         )
 
-    def _find_corresponding_llm_metric_row(self, metric_string) -> Optional[List]:
+    def _find_corresponding_llm_metric_row(self, metric_string: str) -> Optional[List]:
         for row in PerfAnalyzer.llm_metric_table:
             if metric_string == row[PerfAnalyzer.CSV_STRING]:
                 return row
