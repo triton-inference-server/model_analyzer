@@ -50,6 +50,7 @@ from .config_defaults import (
     DEFAULT_GPU_OUTPUT_FIELDS,
     DEFAULT_GPUS,
     DEFAULT_INFERENCE_OUTPUT_FIELDS,
+    DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MODEL_TYPE,
     DEFAULT_MODEL_WEIGHTING,
@@ -1353,6 +1354,12 @@ class ConfigCommandProfile(ConfigCommand):
 
             if not self._fields["gpu_output_fields"].is_set_by_user():
                 self.gpu_output_fields = DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS
+
+        # Switch default output fields if user specifies model type of LLM
+        # and the user didn't specify a custom output field
+        if self.model_type == "LLM":
+            if not self._fields["inference_output_fields"].is_set_by_user():
+                self.inference_output_fields = DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS
 
         new_profile_models = {}
         for i, model in enumerate(self.profile_models):
