@@ -494,6 +494,11 @@ class ConfigCommandProfile(ConfigCommand):
                         "min": ConfigPrimitive(int),
                     }
                 ),
+                "output_token_throughput": ConfigObject(
+                    schema={
+                        "min": ConfigPrimitive(int),
+                    }
+                ),
                 "perf_latency_avg": ConfigObject(
                     schema={
                         "max": ConfigPrimitive(int),
@@ -520,6 +525,96 @@ class ConfigCommandProfile(ConfigCommand):
                     }
                 ),
                 "gpu_used_memory": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p99": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p95": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p90": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p75": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p50": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p25": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_min": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_max": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_avg": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p99": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p95": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p90": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p75": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p50": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p25": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_min": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_max": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_avg": ConfigObject(
                     schema={
                         "max": ConfigPrimitive(int),
                     }
