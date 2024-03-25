@@ -323,14 +323,33 @@ class PerfAnalyzer:
         return cmd
 
     def _get_single_model_cmd(self, index):
-        cmd = [self.bin_path]
-        if self._is_multi_model():
-            cmd += ["--enable-mpi"]
-        cmd += self._get_pa_cli_command(index).replace("=", " ").split()
+        if self._model_type == "LLM":
+            cmd = [
+                "genai-perf",
+                "-m",
+                self._config.models_name(),
+                "--streaming",
+                "--",
+            ]
+            cmd += (
+                self._get_pa_cli_command(index, exclude_model_name=True)
+                .replace("=", " ")
+                .split()
+            )
+        else:
+            cmd = [self.bin_path]
+            if self._is_multi_model():
+                cmd += ["--enable-mpi"]
+            cmd += self._get_pa_cli_command(index).replace("=", " ").split()
+
         return cmd
 
-    def _get_pa_cli_command(self, index):
-        return self._config.model_run_configs()[index].perf_config().to_cli_string()
+    def _get_pa_cli_command(self, index, exclude_model_name=False):
+        return (
+            self._config.model_run_configs()[index]
+            .perf_config()
+            .to_cli_string(exclude_model_name)
+        )
 
     def _create_env(self, env):
         perf_analyzer_env = os.environ.copy()
@@ -552,16 +571,16 @@ class PerfAnalyzer:
 
         perf_config = self._config.model_run_configs()[0].perf_config()
 
-        logger.debug(f"Reading PA results from {GENAI_PERF_CSV}")
+        logger.debug(f"Reading GENAI-PERF results from {GENAI_PERF_CSV}")
         with open(GENAI_PERF_CSV, mode="r") as f:
-            csv_reader = csv.DictReader(f, delimiter=",")
+            csv_reader = list(csv.DictReader(f, delimiter=","))
 
             # See test_perf_analyzer::test_pa_llm_csv_output() for CSV output example
             self._llm_records[perf_config["model-name"]] = self._extract_llm_records(
                 metrics, csv_reader
             )
 
-            os.remove(f)
+            os.remove(GENAI_PERF_CSV)
 
     def _extract_perf_records_from_row(
         self, requested_metrics: List[Record], row_metrics: Dict[str, str]
@@ -632,13 +651,14 @@ class PerfAnalyzer:
 
         for requested_metric in requested_metrics:
             new_llm_record = self._get_llm_record_from_csv(requested_metric, csv_reader)
-            llm_records.append(new_llm_record)
+            if new_llm_record:
+                llm_records.append(new_llm_record)
 
         return llm_records
 
     def _get_llm_record_from_csv(
         self, requested_metric: Record, csv_reader: DictReader
-    ) -> Record:
+    ) -> Optional[Record]:
         for row in csv_reader:
             for key, value in row.items():
                 metric_string = f"{row['Metric']} {key}"
@@ -655,9 +675,7 @@ class PerfAnalyzer:
                     llm_record = llm_metric[PerfAnalyzer.RECORD_CLASS](adjusted_value)  # type: ignore
                     return llm_record
 
-        raise TritonModelAnalyzerException(
-            f"Did not find {requested_metric.tag} in genai-perf CSV file"
-        )
+        return None
 
     def _find_corresponding_llm_metric_row(self, metric_string: str) -> Optional[List]:
         for row in PerfAnalyzer.llm_metric_table:

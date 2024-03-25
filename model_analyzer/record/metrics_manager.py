@@ -69,6 +69,25 @@ class MetricsManager:
         "gpu_power_usage",
         "cpu_available_ram",
         "cpu_used_ram",
+        "time_to_first_token_avg",
+        "time_to_first_token_min",
+        "time_to_first_token_max",
+        "time_to_first_token_p99",
+        "time_to_first_token_p95",
+        "time_to_first_token_p90",
+        "time_to_first_token_p75",
+        "time_to_first_token_p50",
+        "time_to_first_token_p25",
+        "inter_token_latency_avg",
+        "inter_token_latency_min",
+        "inter_token_latency_max",
+        "inter_token_latency_p99",
+        "inter_token_latency_p95",
+        "inter_token_latency_p90",
+        "inter_token_latency_p75",
+        "inter_token_latency_p50",
+        "inter_token_latency_p25",
+        "output_token_throughput",
     ]
 
     def __init__(self, config, client, server, gpus, result_manager, state_manager):
@@ -115,6 +134,7 @@ class MetricsManager:
         (
             self._gpu_metrics,
             self._perf_metrics,
+            self._llm_metrics,
             self._cpu_metrics,
         ) = self._categorize_metrics(self.metrics, self._config.collect_cpu_metrics)
         self._gpus = gpus
@@ -161,20 +181,22 @@ class MetricsManager:
         Returns
         -------
         (list,list,list)
-            tuple of three lists (DCGM, PerfAnalyzer, CPU) metrics
+            tuple of three lists (DCGM, PerfAnalyzer, LLM, CPU) metrics
         """
 
-        gpu_metrics, perf_metrics, cpu_metrics = [], [], []
+        gpu_metrics, perf_metrics, llm_metrics, cpu_metrics = [], [], [], []
         # Separates metrics and objectives into related lists
         for metric in MetricsManager.get_metric_types(metric_tags):
             if metric in PerfAnalyzer.get_gpu_metrics():
                 gpu_metrics.append(metric)
             elif metric in PerfAnalyzer.get_perf_metrics():
                 perf_metrics.append(metric)
+            elif metric in PerfAnalyzer.get_llm_metrics():
+                llm_metrics.append(metric)
             elif collect_cpu_metrics and (metric in CPUMonitor.cpu_metrics):
                 cpu_metrics.append(metric)
 
-        return gpu_metrics, perf_metrics, cpu_metrics
+        return gpu_metrics, perf_metrics, llm_metrics, cpu_metrics
 
     def profile_server(self):
         """
@@ -589,9 +611,10 @@ class MetricsManager:
             max_retries=self._config.perf_analyzer_max_auto_adjusts,
             timeout=self._config.perf_analyzer_timeout,
             max_cpu_util=self._config.perf_analyzer_cpu_util,
+            model_type=self._config.model_type,
         )
 
-        metrics_to_gather = self._perf_metrics + self._gpu_metrics
+        metrics_to_gather = self._perf_metrics + self._llm_metrics + self._gpu_metrics
         status = perf_analyzer.run(metrics_to_gather, env=perf_analyzer_env)
 
         self._write_perf_analyzer_output(perf_output_writer, perf_analyzer)
@@ -601,6 +624,9 @@ class MetricsManager:
             return (None, None)
 
         perf_records = perf_analyzer.get_perf_records()
+        perf_records[run_config.models_name()].extend(
+            perf_analyzer.get_llm_records()[run_config.models_name()]
+        )
         gpu_records = perf_analyzer.get_gpu_records()
 
         aggregated_perf_records = self._aggregate_perf_records(perf_records)
@@ -823,6 +849,17 @@ class MetricsManager:
         """
         metric = MetricsManager.get_metric_types([tag])[0]
         return metric in PerfAnalyzer.get_perf_metrics()
+
+    @staticmethod
+    def is_llm_metric(tag):
+        """
+        Returns
+        ------
+        True if the given tag is a supported perf_analyzer metric
+        False otherwise
+        """
+        metric = MetricsManager.get_metric_types([tag])[0]
+        return metric in PerfAnalyzer.get_llm_metrics()
 
     @staticmethod
     def is_cpu_metric(tag):
