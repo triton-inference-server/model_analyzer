@@ -119,6 +119,20 @@ DEFAULT_INFERENCE_OUTPUT_FIELDS = [
     "perf_throughput",
     "perf_latency_p99",
 ]
+DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS = [
+    "model_name",
+    "batch_size",
+    "concurrency",
+    "model_config_path",
+    "instance_group",
+    "max_batch_size",
+    "satisfies_constraints",
+    "perf_throughput",
+    "perf_latency_p99",
+    "inter_token_latency_p99",
+    "time_to_first_token_p99",
+    "output_token_throughput",
+]
 DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS = [
     "model_name",
     "batch_size",
