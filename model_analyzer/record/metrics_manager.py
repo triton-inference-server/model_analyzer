@@ -624,9 +624,12 @@ class MetricsManager:
             return (None, None)
 
         perf_records = perf_analyzer.get_perf_records()
-        perf_records[run_config.models_name()].extend(
-            perf_analyzer.get_llm_records()[run_config.models_name()]
-        )
+
+        if self._config.model_type == "LLM":
+            perf_records[run_config.models_name()].extend(
+                perf_analyzer.get_llm_records()[run_config.models_name()]
+            )
+
         gpu_records = perf_analyzer.get_gpu_records()
 
         aggregated_perf_records = self._aggregate_perf_records(perf_records)
