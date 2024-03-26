@@ -679,7 +679,6 @@ class PerfAnalyzer:
 
     def _find_corresponding_llm_metric_row(self, metric_string: str) -> Optional[List]:
         for row in PerfAnalyzer.llm_metric_table:
-            foo = row[PerfAnalyzer.CSV_STRING]
             if metric_string == row[PerfAnalyzer.CSV_STRING]:
                 return row
 
