@@ -115,15 +115,15 @@ class PerfAnalyzer:
     ]
 
     llm_metric_table = [
-        ["time_to_first_token_avg", "Time to First Token (ns) avg",          TimeToFirstTokenAvg, "1000"],
-        ["time_to_first_token_min", "Time to First Token (ns) min",          TimeToFirstTokenMin, "1000"],
-        ["time_to_first_token_max", "Time to First Token (ns) max",          TimeToFirstTokenMax, "1000"],
-        ["time_to_first_token_p99", "Time to First Token (ns) p99",          TimeToFirstTokenP99, "1000"],
-        ["time_to_first_token_p95", "Time to First Token (ns) p95",          TimeToFirstTokenP95, "1000"],
-        ["time_to_first_token_p90", "Time to First Token (ns) p90",          TimeToFirstTokenP90, "1000"],
-        ["time_to_first_token_p75", "Time to First Token (ns) p75",          TimeToFirstTokenP75, "1000"],
-        ["time_to_first_token_p50", "Time to First Token (ns) p50",          TimeToFirstTokenP50, "1000"],
-        ["time_to_first_token_p25", "Time to First Token (ns) p25",          TimeToFirstTokenP25, "1000"],
+        ["time_to_first_token_avg", "Time To First Token (ns) avg",          TimeToFirstTokenAvg, "1000"],
+        ["time_to_first_token_min", "Time To First Token (ns) min",          TimeToFirstTokenMin, "1000"],
+        ["time_to_first_token_max", "Time To First Token (ns) max",          TimeToFirstTokenMax, "1000"],
+        ["time_to_first_token_p99", "Time To First Token (ns) p99",          TimeToFirstTokenP99, "1000"],
+        ["time_to_first_token_p95", "Time To First Token (ns) p95",          TimeToFirstTokenP95, "1000"],
+        ["time_to_first_token_p90", "Time To First Token (ns) p90",          TimeToFirstTokenP90, "1000"],
+        ["time_to_first_token_p75", "Time To First Token (ns) p75",          TimeToFirstTokenP75, "1000"],
+        ["time_to_first_token_p50", "Time To First Token (ns) p50",          TimeToFirstTokenP50, "1000"],
+        ["time_to_first_token_p25", "Time To First Token (ns) p25",          TimeToFirstTokenP25, "1000"],
         ["inter_token_latency_avg", "Inter Token Latency (ns) avg",          InterTokenLatencyAvg, "1000"],
         ["inter_token_latency_min", "Inter Token Latency (ns) min",          InterTokenLatencyMin, "1000"],
         ["inter_token_latency_max", "Inter Token Latency (ns) max",          InterTokenLatencyMax, "1000"],
@@ -679,6 +679,7 @@ class PerfAnalyzer:
 
     def _find_corresponding_llm_metric_row(self, metric_string: str) -> Optional[List]:
         for row in PerfAnalyzer.llm_metric_table:
+            foo = row[PerfAnalyzer.CSV_STRING]
             if metric_string == row[PerfAnalyzer.CSV_STRING]:
                 return row
 

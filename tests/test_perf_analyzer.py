@@ -509,7 +509,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.client.wait_for_server_ready(num_retries=1)
 
         pa_llm_csv_mock = """Metric,avg,min,max,p99,p95,p90,p75,p50,p25\n"""
-        pa_llm_csv_mock += """Time to First Token (ns),4238735,3367978,6702240,6371118,5344958,5006259,4841394,4146648,3484484\n"""
+        pa_llm_csv_mock += """Time To First Token (ns),4238735,3367978,6702240,6371118,5344958,5006259,4841394,4146648,3484484\n"""
         pa_llm_csv_mock += """Inter Token Latency (ns),27202264,3849435,138324924,28283424,27737593,27469154,27067290,26979956,26926962\n"""
         pa_llm_csv_mock += """Request Latency (ns),3363927003,3367978,14238834483,14091273510,13740917508,13692672723,3752510140,4846258,3612270\n"""
         pa_llm_csv_mock += """Num Output Token,126,0,584,562,509,505,135,0,0\n"""

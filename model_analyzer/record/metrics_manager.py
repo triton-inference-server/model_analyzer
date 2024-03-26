@@ -180,8 +180,8 @@ class MetricsManager:
 
         Returns
         -------
-        (list,list,list)
-            tuple of three lists (DCGM, PerfAnalyzer, LLM, CPU) metrics
+        (list,list,list,list)
+            tuple of four lists (DCGM, PerfAnalyzer, LLM, CPU) metrics
         """
 
         gpu_metrics, perf_metrics, llm_metrics, cpu_metrics = [], [], [], []
