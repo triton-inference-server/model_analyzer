@@ -210,8 +210,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         for params in utils.generate_parameter_combinations(
             perf_config_non_parameter_values
         ):
-            # FIXME 1772 variable name
-            configs_with_concurrency = []
+            configs_with_inference_load = []
             for parameter in self._parameters:
                 new_perf_config = PerfAnalyzerConfig()
 
@@ -231,8 +230,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
 
-                configs_with_concurrency.append(new_perf_config)
-            self._configs.append(configs_with_concurrency)
+                configs_with_inference_load.append(new_perf_config)
+            self._configs.append(configs_with_inference_load)
 
     def _create_non_parameter_perf_config_values(self) -> dict:
         perf_config_values = {
