@@ -703,14 +703,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_config.get_field("name"), self._config
         )
 
-        # FIXME 1772 see above comments
-        perf_config_params = {"batch-size": 1}
-
-        if not "request-intervals" in model.perf_analyzer_flags():
+        if not model.is_load_specified():
             default_concurrency = self._calculate_default_concurrency(model_config)
-            perf_config_params["concurrency-range"] = default_concurrency
-
-        default_perf_analyzer_config.update_config(perf_config_params)
+            perf_config_params = {
+                "batch-size": DEFAULT_BATCH_SIZES,
+                "concurrency-range": default_concurrency,
+            }
+            default_perf_analyzer_config.update_config(perf_config_params)
 
         default_perf_analyzer_config.update_config(model.perf_analyzer_flags())
 

@@ -108,7 +108,9 @@ class PerfAnalyzerConfig:
         self._options = {
             "-m": None,
             "-x": None,
-            "-b": None,
+            # Default to batch size of 1. This would be handled by PA if unspecified,
+            # but we want to be explicit so we can properly print/track values
+            "-b": 1,
             "-u": None,
             "-i": None,
             "-f": None,
