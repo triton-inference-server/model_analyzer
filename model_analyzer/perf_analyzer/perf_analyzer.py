@@ -323,6 +323,7 @@ class PerfAnalyzer:
         return cmd
 
     def _get_single_model_cmd(self, index):
+        # TODO: TMA-1771 - hook up the user defined CLI options
         if self._model_type == "LLM":
             cmd = [
                 "genai-perf",
