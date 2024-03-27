@@ -32,7 +32,7 @@ class ConfigModelProfileSpec:
         weighting=None,
         parameters=None,
         model_config_parameters=None,
-        perf_analyzer_flags=None,
+        perf_analyzer_flags={},
         triton_server_flags=None,
         triton_server_environment=None,
         triton_docker_args=None,

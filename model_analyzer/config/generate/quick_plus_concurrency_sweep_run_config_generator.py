@@ -16,7 +16,7 @@
 
 import logging
 from copy import deepcopy
-from typing import Generator, List, Optional
+from typing import Dict, Generator, List, Optional
 
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_variant_name_manager import (
@@ -139,7 +139,10 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
             for result in top_results:
                 run_config = deepcopy(result.run_config())
-                parameter_search = ParameterSearch(self._config)
+                perf_analyzer_flags = self._get_model_perf_analyzer_flags(model_name)
+                parameter_search = ParameterSearch(
+                    self._config, perf_analyzer_flags=perf_analyzer_flags
+                )
                 for concurrency in parameter_search.search_parameters():
                     run_config = self._set_concurrency(run_config, concurrency)
                     yield run_config
@@ -151,3 +154,10 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             perf_config.update_config({"concurrency-range": concurrency})
 
         return run_config
+
+    # FIXME 1772 -- this method is duplicated. Maybe it should be a static method in ModelProfileSpec?
+    def _get_model_perf_analyzer_flags(self, model_name: str) -> Dict:
+        for model in self._models:
+            if model_name == model.model_name():
+                return model.perf_analyzer_flags()
+        return {}

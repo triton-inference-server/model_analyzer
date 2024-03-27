@@ -273,6 +273,7 @@ class PerfAnalyzerConfig:
             "batch-size": self._options["-b"],
             "concurrency-range": self._args["concurrency-range"],
             "request-rate-range": self._args["request-rate-range"],
+            "request-intervals": self._args["request-intervals"],
         }
 
     @classmethod
