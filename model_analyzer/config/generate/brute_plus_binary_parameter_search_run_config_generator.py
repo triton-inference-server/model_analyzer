@@ -132,9 +132,11 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface)
             for result in top_results:
                 run_config = deepcopy(result.run_config())
                 model_parameters = self._get_model_parameters(model_name)
+                perf_analyzer_flags = self._get_model_perf_analyzer_flags(model_name)
                 parameter_search = ParameterSearch(
                     config=self._config,
                     model_parameters=model_parameters,
+                    perf_analyzer_flags=perf_analyzer_flags,
                     skip_parameter_sweep=True,
                 )
                 for parameter in parameter_search.search_parameters():
@@ -149,6 +151,12 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface)
             if model_name == model.model_name():
                 return model.parameters()
 
+        return {}
+
+    def _get_model_perf_analyzer_flags(self, model_name: str) -> Dict:
+        for model in self._models:
+            if model_name == model.model_name():
+                return model.perf_analyzer_flags()
         return {}
 
     def _set_parameter(
