@@ -72,3 +72,14 @@ class ModelProfileSpec(ConfigModelProfileSpec):
     def is_ensemble(self) -> bool:
         """Returns true if the model is an ensemble"""
         return "ensemble_scheduling" in self._default_model_config
+
+    def is_load_specified(self) -> bool:
+        """
+        Returns true if the model's PA config has specified any of the
+        inference load args (such as concurrency). Else returns false
+        """
+        load_args = PerfAnalyzerConfig.get_inference_load_args()
+        pa_flags = self.perf_analyzer_flags()
+        if pa_flags is None:
+            return False
+        return any(e in pa_flags for e in load_args)

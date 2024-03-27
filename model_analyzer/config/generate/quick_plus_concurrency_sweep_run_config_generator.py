@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import logging
-from copy import deepcopy
 from typing import Generator, List, Optional
 
 from model_analyzer.config.generate.concurrency_sweeper import ConcurrencySweeper
@@ -30,7 +29,6 @@ from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
