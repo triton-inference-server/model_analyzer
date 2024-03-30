@@ -98,6 +98,13 @@ class PerfAnalyzerConfig:
         "collect-metrics",
     ]
 
+    # Only one of these args can be sent to PA, as each one controls the inference load in a different way
+    inference_load_args = [
+        "concurrency-range",
+        "request-rate-range",
+        "request-intervals",
+    ]
+
     def __init__(self):
         """
         Construct a PerfAnalyzerConfig
@@ -161,6 +168,16 @@ class PerfAnalyzerConfig:
         """
 
         return cls.additive_args[:]
+
+    @classmethod
+    def get_inference_load_args(cls):
+        """
+        Returns
+        -------
+        list of str
+            The Perf Analyzer args that control the inference load
+        """
+        return cls.inference_load_args
 
     def update_config(self, params=None):
         """

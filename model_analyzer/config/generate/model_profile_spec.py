@@ -22,6 +22,7 @@ from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
 )
 from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
 
