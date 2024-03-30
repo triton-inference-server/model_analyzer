@@ -512,8 +512,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         perf_analyzer_config.update_config_from_profile_config(model_name, self._config)
 
-        # FIXME 1772 -- use new method in perf_config
-        if not "request-intervals" in model.perf_analyzer_flags():
+        if not model.is_load_specified():
             concurrency = self._calculate_concurrency(dimension_values)
             perf_config_params = {"concurrency-range": concurrency}
             perf_analyzer_config.update_config(perf_config_params)
