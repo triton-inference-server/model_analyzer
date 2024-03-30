@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 from matplotlib import patches as mpatches
 
 from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.record.metrics_manager import MetricsManager
 
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
@@ -119,42 +120,15 @@ class DetailedPlot:
         """
 
         # TODO-TMA-568: This needs to be updated because there will be multiple model configs
-        if (
-            "concurrency-range" in run_config_measurement.model_specific_pa_params()[0]
-            and run_config_measurement.model_specific_pa_params()[0][
-                "concurrency-range"
-            ]
-        ):
-            self._data["concurrency"].append(
-                run_config_measurement.model_specific_pa_params()[0][
-                    "concurrency-range"
-                ]
-            )
-
-        if (
-            "request-rate-range" in run_config_measurement.model_specific_pa_params()[0]
-            and run_config_measurement.model_specific_pa_params()[0][
-                "request-rate-range"
-            ]
-        ):
-            self._data["request_rate"].append(
-                run_config_measurement.model_specific_pa_params()[0][
-                    "request-rate-range"
-                ]
-            )
-
-        # FIXME 1772 -- clean this up??
-        if (
-            "request-intervals" in run_config_measurement.model_specific_pa_params()[0]
-            and run_config_measurement.model_specific_pa_params()[0][
-                "request-intervals"
-            ]
-        ):
-            self._data["request-intervals"].append(
-                run_config_measurement.model_specific_pa_params()[0][
-                    "request-intervals"
-                ]
-            )
+        for load_arg in PerfAnalyzerConfig.get_inference_load_args():
+            if (
+                load_arg in run_config_measurement.model_specific_pa_params()[0]
+                and run_config_measurement.model_specific_pa_params()[0][load_arg]
+            ):
+                data_key = self._get_data_key_from_load_arg(load_arg)
+                self._data[data_key].append(
+                    run_config_measurement.model_specific_pa_params()[0][load_arg]
+                )
 
         self._data["perf_throughput"].append(
             run_config_measurement.get_non_gpu_metric_value(tag="perf_throughput")
@@ -177,9 +151,9 @@ class DetailedPlot:
         """
 
         # Update the x-axis plot title
-        if "request-intervals" in self._data and self._data["request-intervals"][0]:
+        if "request_intervals" in self._data and self._data["request_intervals"][0]:
             self._ax_latency.set_xlabel("Request Intervals File")
-            sort_indices_key = "request-intervals"
+            sort_indices_key = "request_intervals"
         elif "request_rate" in self._data and self._data["request_rate"][0]:
             self._ax_latency.set_xlabel("Client Request Rate")
             sort_indices_key = "request_rate"
@@ -274,3 +248,18 @@ class DetailedPlot:
         """
 
         self._fig.savefig(os.path.join(filepath, self._name))
+
+    def _get_data_key_from_load_arg(self, load_arg):
+        """
+        Gets the key into _data corresponding with the input load arg
+
+        For example, the load arg "request-rate-range" has the key "request_rate"
+        """
+        # Check if '-range' exists at the end of the input string and remove it
+        if load_arg.endswith("-range"):
+            load_arg = load_arg[:-6]
+
+        # Replace any '-' with '_' in the remaining string
+        data_key = load_arg.replace("-", "_")
+
+        return data_key
