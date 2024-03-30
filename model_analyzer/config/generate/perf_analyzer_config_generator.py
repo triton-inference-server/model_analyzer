@@ -169,10 +169,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._parameter_results.extend(measurement)
 
     def _create_parameter_list(self) -> List[int]:
-        # FIXME 1772 comment this
-        # The two possible parameters are request rate or concurrency
-        # Concurrency is the default and will be used unless the user specifies
-        # request rate, either as a model parameter or a config option
+        # Determines the inference load (concurrency or request-rate or request-intervals)
+        # and creates the list of values to use. If nothing is specified by the user, then
+        # concurrency will be used.
         if "request-intervals" in self._perf_analyzer_flags:
             return [self._perf_analyzer_flags["request-intervals"]]
         elif self._cli_config.is_request_rate_specified(self._model_parameters):
