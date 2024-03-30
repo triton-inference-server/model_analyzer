@@ -179,23 +179,23 @@ class TestResults(trc.TestResultCollector):
         self._measurements = []
         self._measurements.append(
             {
-                "model_config_0 -m key_A": "1",
-                "model_config_0 -m key_B": "2",
-                "model_config_0 -m key_C": "3",
+                "model_config_0 -m key_A -b 1": "1",
+                "model_config_0 -m key_B -b 1": "2",
+                "model_config_0 -m key_C -b 1": "3",
             }
         )
         self._measurements.append(
             {
-                "model_config_1 -m key_D": "4",
-                "model_config_1 -m key_E": "5",
-                "model_config_1 -m key_F": "6",
+                "model_config_1 -m key_D -b 1": "4",
+                "model_config_1 -m key_E -b 1": "5",
+                "model_config_1 -m key_F -b 1": "6",
             }
         )
         self._measurements.append(
             {
-                "model_config_2 -m key_G": "7",
-                "model_config_2 -m key_H": "8",
-                "model_config_2 -m key_I": "9",
+                "model_config_2 -m key_G -b 1": "7",
+                "model_config_2 -m key_H -b 1": "8",
+                "model_config_2 -m key_I -b 1": "9",
             }
         )
 
