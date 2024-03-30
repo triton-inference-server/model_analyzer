@@ -155,7 +155,6 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
         return run_config
 
-    # FIXME 1772 -- this method is duplicated. Maybe it should be a static method in ModelProfileSpec?
     def _get_model_perf_analyzer_flags(self, model_name: str) -> Dict:
         for model in self._models:
             if model_name == model.model_name():
