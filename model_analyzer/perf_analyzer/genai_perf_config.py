@@ -40,8 +40,6 @@ class GenaiPerfConfig:
         "tokenizer",
     ]
 
-    # boolean_args = ["streaming"]
-
     def __init__(self):
         """
         Construct a GenaiPerfConfig
@@ -96,8 +94,6 @@ class GenaiPerfConfig:
             if a previous (checkpointed) run can be used
         """
         cli_string = self.to_cli_string()
-        # cli_string = PerfAnalyzerConfig.remove_url_from_cli_string(cli_string)
-        # cli_string = PerfAnalyzerConfig.remove_mrc_from_cli_string(cli_string)
 
         return cli_string
 
@@ -126,24 +122,9 @@ class GenaiPerfConfig:
         """
         temp_args = []
         for key, value in self._args.items():
-            # if key in self.boolean_args:
-            #     temp_args = self._parse_boolean_args(key, value, temp_args)
-            # elif value:
             if value:
                 temp_args.append(f"--{key}={value}")
         return temp_args
-
-    # def _parse_boolean_args(self, key, value, temp_args):
-    #     """
-    #     Parse genai perf args that should not add a value to the cli string
-    #     """
-    #     assert type(value) in [
-    #         str,
-    #         type(None),
-    #     ], f"Data type for arg {key} must be a (boolean) string instead of {type(value)}"
-    #     if value != None and value.lower() == "true":
-    #         temp_args.append(f"--{key}")
-    #     return temp_args
 
     def __getitem__(self, key):
         """
