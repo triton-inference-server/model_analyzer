@@ -33,6 +33,7 @@ class ConfigModelProfileSpec:
         parameters=None,
         model_config_parameters=None,
         perf_analyzer_flags=None,
+        genai_perf_flags=None,
         triton_server_flags=None,
         triton_server_environment=None,
         triton_docker_args=None,
@@ -58,6 +59,9 @@ class ConfigModelProfileSpec:
         perf_analyzer_flags : dict
             The custom perf analyzer configuration
             for this model
+        genai_perf_flags : dict
+            The custom GenAI perf configuration
+            for this model
         triton_server_flags : dict
             The configuration for the triton server instance launched
             for this model
@@ -78,6 +82,7 @@ class ConfigModelProfileSpec:
         self._parameters = parameters
         self._model_config_parameters = model_config_parameters
         self._perf_analyzer_flags = perf_analyzer_flags
+        self._genai_perf_flags = genai_perf_flags
         self._triton_server_flags = triton_server_flags
         self._triton_server_environment = triton_server_environment
         self._triton_docker_args = triton_docker_args
@@ -161,6 +166,16 @@ class ConfigModelProfileSpec:
         """
 
         return self._perf_analyzer_flags
+
+    def genai_perf_flags(self):
+        """
+        Returns
+        -------
+        dict:
+             the genai_perf_flags
+        """
+
+        return self._genai_perf_flags
 
     def triton_server_flags(self):
         """
@@ -303,5 +318,8 @@ class ConfigModelProfileSpec:
 
         if self._perf_analyzer_flags:
             model_object["perf_analyzer_flags"] = self._perf_analyzer_flags
+
+        if self._genai_perf_flags:
+            model_object["genai_perf_flags"] = self._genai_perf_flags
 
         return str(model_object)

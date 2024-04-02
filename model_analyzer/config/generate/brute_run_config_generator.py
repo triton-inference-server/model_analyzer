@@ -129,7 +129,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
             self._send_results_to_generator(index)
 
     def _make_run_config(self) -> RunConfig:
-        run_config = RunConfig(self._triton_env)
+        run_config = RunConfig(self._triton_env, self._models[0].genai_perf_flags())
         for index in range(len(self._models)):
             run_config.add_model_run_config(self._curr_model_run_configs[index])
         return run_config

@@ -31,6 +31,7 @@ from model_analyzer.config.input.config_utils import (
 )
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.perf_analyzer.genai_perf_config import GenaiPerfConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.record.record import RecordType
 from model_analyzer.triton.server.server_config import TritonServerConfig
@@ -375,6 +376,10 @@ class ConfigCommandProfile(ConfigCommand):
             }
         )
 
+        genai_perf_flags_scheme = ConfigObject(
+            schema={k: ConfigPrimitive(str) for k in GenaiPerfConfig.allowed_keys()}
+        )
+
         triton_server_environment_scheme = ConfigObject(
             schema={"*": ConfigPrimitive(str)}
         )
@@ -453,6 +458,13 @@ class ConfigCommandProfile(ConfigCommand):
                 "perf_analyzer_flags",
                 field_type=perf_analyzer_flags_scheme,
                 description="Allows custom configuration of the perf analyzer instances used by model analyzer.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "genai_perf_flags",
+                field_type=genai_perf_flags_scheme,
+                description="Allows custom configuration of the GenAI Perf instances used by model analyzer.",
             )
         )
         self._add_config(
@@ -666,6 +678,7 @@ class ConfigCommandProfile(ConfigCommand):
                         "weighting": ConfigPrimitive(type_=int),
                         "model_config_parameters": model_config_fields,
                         "perf_analyzer_flags": perf_analyzer_flags_scheme,
+                        "genai_perf_flags": genai_perf_flags_scheme,
                         "triton_server_flags": triton_server_flags_scheme,
                         "triton_server_environment": triton_server_environment_scheme,
                         "triton_docker_args": triton_docker_args_scheme,
@@ -1556,6 +1569,12 @@ class ConfigCommandProfile(ConfigCommand):
                 new_model["perf_analyzer_flags"] = self.perf_analyzer_flags
             else:
                 new_model["perf_analyzer_flags"] = model.perf_analyzer_flags()
+
+            # GenAI Perf flags
+            if not model.genai_perf_flags():
+                new_model["genai_perf_flags"] = self.genai_perf_flags
+            else:
+                new_model["genai_perf_flags"] = model.genai_perf_flags()
 
             # triton server flags
             if not model.triton_server_flags():

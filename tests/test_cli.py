@@ -165,6 +165,7 @@ def get_test_options():
         OptionStruct("noop", "yaml_profile", "weighting"),
         OptionStruct("noop", "yaml_profile", "triton_server_flags"),
         OptionStruct("noop", "yaml_profile", "perf_analyzer_flags"),
+        OptionStruct("noop", "yaml_profile", "genai_perf_flags"),
         OptionStruct("noop", "yaml_profile", "triton_docker_labels"),
         OptionStruct("noop", "yaml_profile", "triton_server_environment"),
         OptionStruct("noop", "yaml_profile", "triton_docker_args"),
