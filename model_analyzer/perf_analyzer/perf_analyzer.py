@@ -29,6 +29,7 @@ import psutil
 
 from model_analyzer.config.input.config_defaults import DEFAULT_MODEL_TYPE
 from model_analyzer.constants import (
+    GENAI_PERF_COLLATERAL,
     GENAI_PERF_CSV,
     INTERVAL_SLEEP_TIME,
     LOGGER_NAME,
@@ -580,8 +581,8 @@ class PerfAnalyzer:
             )
 
             os.remove(GENAI_PERF_CSV)
-            os.remove("llm_inputs.json")
-            os.remove("profile_export.json")
+            for filename in GENAI_PERF_COLLATERAL:
+                os.remove(filename)
 
     def _extract_perf_records_from_row(
         self, requested_metrics: List[Record], row_metrics: Dict[str, str]
