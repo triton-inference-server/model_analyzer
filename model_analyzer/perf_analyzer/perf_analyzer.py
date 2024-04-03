@@ -29,6 +29,7 @@ import psutil
 
 from model_analyzer.config.input.config_defaults import DEFAULT_MODEL_TYPE
 from model_analyzer.constants import (
+    GENAI_PERF_COLLATERAL,
     GENAI_PERF_CSV,
     INTERVAL_SLEEP_TIME,
     LOGGER_NAME,
@@ -323,15 +324,10 @@ class PerfAnalyzer:
         return cmd
 
     def _get_single_model_cmd(self, index):
-        # TODO: TMA-1771 - hook up the user defined CLI options
         if self._model_type == "LLM":
-            cmd = [
-                "genai-perf",
-                "-m",
-                self._config.models_name(),
-                "--streaming",
-                "--",
-            ]
+            cmd = ["genai-perf", "-m", self._config.models_name()]
+            cmd += self._get_genai_perf_cli_command(index).replace("=", " ").split()
+            cmd += ["--"]
             cmd += (
                 self._get_pa_cli_command(index, exclude_model_name=True)
                 .replace("=", " ")
@@ -351,6 +347,9 @@ class PerfAnalyzer:
             .perf_config()
             .to_cli_string(exclude_model_name)
         )
+
+    def _get_genai_perf_cli_command(self, index):
+        return self._config.genai_perf_config().to_cli_string()
 
     def _create_env(self, env):
         perf_analyzer_env = os.environ.copy()
@@ -582,6 +581,8 @@ class PerfAnalyzer:
             )
 
             os.remove(GENAI_PERF_CSV)
+            for filename in GENAI_PERF_COLLATERAL:
+                os.remove(filename)
 
     def _extract_perf_records_from_row(
         self, requested_metrics: List[Record], row_metrics: Dict[str, str]

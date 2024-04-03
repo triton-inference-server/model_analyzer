@@ -71,5 +71,6 @@ INVALID_MEASUREMENT_THRESHOLD = 2
 # Model analyzer package name
 PACKAGE_NAME = "triton-model-analyzer"
 
-# GENAI-PERF CSV
+# GENAI-PERF
 GENAI_PERF_CSV = "profile_export_genai_perf.csv"
+GENAI_PERF_COLLATERAL = ["llm_inputs.json", "profile_export.json"]

@@ -17,6 +17,7 @@
 from typing import List
 
 from model_analyzer.config.run.model_run_config import ModelRunConfig
+from model_analyzer.perf_analyzer.genai_perf_config import GenaiPerfConfig
 
 
 class RunConfig:
@@ -25,16 +26,21 @@ class RunConfig:
     at the same time in Perf Analyzer
     """
 
-    def __init__(self, triton_env):
+    def __init__(self, triton_env, genai_perf_flags=None):
         """
         Parameters
         ----------
         triton_env : dict
             A dictionary of environment variables to set
             when launching tritonserver
+
+        genai_perf_flags: dict
+            The set of flags used when calling genai_perf for LLM models
         """
 
         self._triton_env = triton_env
+        self._genai_perf_config = GenaiPerfConfig()
+        self._genai_perf_config.update_config(genai_perf_flags)
         self._model_run_configs: List[ModelRunConfig] = []
 
     def add_model_run_config(self, model_run_config):
@@ -102,6 +108,9 @@ class RunConfig:
         """
 
         return self._triton_env
+
+    def genai_perf_config(self):
+        return self._genai_perf_config
 
     def models_name(self):
         """Returns a single comma-joined name of the original model names"""
