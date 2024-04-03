@@ -35,8 +35,11 @@ class GenaiPerfConfig:
         "input-type",
         "num-of-output-prompts",
         "random-seed",
+        "streaming",
         "tokenizer",
     ]
+
+    boolean_args = ["streaming"]
 
     def __init__(self):
         """
@@ -120,8 +123,22 @@ class GenaiPerfConfig:
         """
         temp_args = []
         for key, value in self._args.items():
-            if value:
+            if key in self.boolean_args:
+                temp_args = self._parse_boolean_args(key, value, temp_args)
+            elif value:
                 temp_args.append(f"--{key}={value}")
+        return temp_args
+
+    def _parse_boolean_args(self, key, value, temp_args):
+        """
+        Parse genai perf args that should not add a value to the cli string
+        """
+        assert type(value) in [
+            str,
+            type(None),
+        ], f"Data type for arg {key} must be a (boolean) string instead of {type(value)}"
+        if value != None and value.lower() == "true":
+            temp_args.append(f"--{key}")
         return temp_args
 
     def __getitem__(self, key):
