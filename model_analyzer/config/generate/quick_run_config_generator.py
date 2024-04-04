@@ -512,10 +512,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         perf_analyzer_config.update_config_from_profile_config(model_name, self._config)
 
-        concurrency = self._calculate_concurrency(dimension_values)
-
-        perf_config_params = {"batch-size": 1, "concurrency-range": concurrency}
-        perf_analyzer_config.update_config(perf_config_params)
+        if not model.is_load_specified():
+            concurrency = self._calculate_concurrency(dimension_values)
+            perf_config_params = {"concurrency-range": concurrency}
+            perf_analyzer_config.update_config(perf_config_params)
 
         perf_analyzer_config.update_config(model.perf_analyzer_flags())
         return perf_analyzer_config
@@ -705,13 +705,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_config.get_field("name"), self._config
         )
 
-        default_concurrency = self._calculate_default_concurrency(model_config)
-
-        perf_config_params = {
-            "batch-size": DEFAULT_BATCH_SIZES,
-            "concurrency-range": default_concurrency,
-        }
-        default_perf_analyzer_config.update_config(perf_config_params)
+        if not "request-intervals" in model.perf_analyzer_flags():
+            default_concurrency = self._calculate_default_concurrency(model_config)
+            perf_config_params = {"concurrency-range": default_concurrency}
+            default_perf_analyzer_config.update_config(perf_config_params)
 
         default_perf_analyzer_config.update_config(model.perf_analyzer_flags())
 

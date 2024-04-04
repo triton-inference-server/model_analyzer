@@ -91,7 +91,7 @@ class TestRunConfig(trc.TestResultCollector):
             "model1", ModelConfigVariant(MagicMock(), "model1_config_0"), pc
         )
 
-        expected_representation = "model1_config_0 -m TestModel1"
+        expected_representation = "model1_config_0 -m TestModel1 -b 1"
         self.assertEqual(mrc.representation(), expected_representation)
 
     def test_cpu_only(self):
