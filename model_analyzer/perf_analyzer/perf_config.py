@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
 from model_analyzer.constants import SECONDS_TO_MILLISECONDS_MULTIPLIER
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -325,7 +327,7 @@ class PerfAnalyzerConfig:
 
         return " ".join(perf_str_tokens)
 
-    def to_cli_string(self):
+    def to_cli_string(self, exclude_model_name: bool = False) -> str:
         """
         Utility function to convert a config into a
         string of arguments to the perf_analyzer with CLI.
@@ -340,19 +342,22 @@ class PerfAnalyzerConfig:
 
         # single dashed options, then verbose flags, then main args
         args = []
-        args.extend(self._parse_short_options())
+        args.extend(self._parse_short_options(exclude_model_name))
         args.extend(self._parse_verbose_options())
         args.extend(self._parse_long_options())
 
         return " ".join(args)
 
-    def _parse_short_options(self):
+    def _parse_short_options(self, exclude_model_name: bool = False) -> List:
         """
         Parse the perf analyzer single dash options
         """
         temp_args = []
         for key, value in self._options.items():
             if value:
+                if exclude_model_name and key == "-m":
+                    continue
+
                 if key in self._additive_args:
                     for additive_value in value:
                         temp_args.append(f"{key} {additive_value}")

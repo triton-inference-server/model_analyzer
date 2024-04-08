@@ -24,6 +24,9 @@ from unittest.mock import patch
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
+from model_analyzer.config.input.config_defaults import (
+    DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS,
+)
 from model_analyzer.config.input.config_enum import ConfigEnum
 from model_analyzer.config.input.config_list_generic import ConfigListGeneric
 from model_analyzer.config.input.config_list_numeric import ConfigListNumeric
@@ -2355,6 +2358,28 @@ profile_models:
 
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(args, yaml_content, subcommand="profile")
+
+    def test_model_type_llm(self):
+        """
+        Test that model type of LLM chooses the correct inference outputs
+        """
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli-repository",
+            "--profile-models",
+            "modelA",
+            "--model-type",
+            "LLM",
+        ]
+        yaml_content = ""
+
+        config = self._evaluate_config(args, yaml_content)
+
+        self.assertEqual(
+            config.inference_output_fields, DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS
+        )
 
     def _test_request_rate_config_conflicts(
         self, base_args: List[Any], yaml_content: str

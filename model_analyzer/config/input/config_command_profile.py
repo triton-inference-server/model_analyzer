@@ -31,6 +31,7 @@ from model_analyzer.config.input.config_utils import (
 )
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.perf_analyzer.genai_perf_config import GenaiPerfConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.record.record import RecordType
 from model_analyzer.triton.server.server_config import TritonServerConfig
@@ -50,7 +51,9 @@ from .config_defaults import (
     DEFAULT_GPU_OUTPUT_FIELDS,
     DEFAULT_GPUS,
     DEFAULT_INFERENCE_OUTPUT_FIELDS,
+    DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS,
     DEFAULT_MAX_RETRIES,
+    DEFAULT_MODEL_TYPE,
     DEFAULT_MODEL_WEIGHTING,
     DEFAULT_MONITORING_INTERVAL,
     DEFAULT_NUM_CONFIGS_PER_MODEL,
@@ -297,6 +300,15 @@ class ConfigCommandProfile(ConfigCommand):
                 description="Skips the generation of detailed summary reports and tables.",
             )
         )
+        self._add_config(
+            ConfigField(
+                "model_type",
+                flags=["--model-type"],
+                field_type=ConfigPrimitive(str),
+                default_value=DEFAULT_MODEL_TYPE,
+                description="Type of model being profiled: generic or LLM",
+            )
+        )
 
         self._add_repository_configs()
         self._add_client_configs()
@@ -362,6 +374,10 @@ class ConfigCommandProfile(ConfigCommand):
                 )
                 for k in PerfAnalyzerConfig.allowed_keys()
             }
+        )
+
+        genai_perf_flags_scheme = ConfigObject(
+            schema={k: ConfigPrimitive(str) for k in GenaiPerfConfig.allowed_keys()}
         )
 
         triton_server_environment_scheme = ConfigObject(
@@ -446,6 +462,13 @@ class ConfigCommandProfile(ConfigCommand):
         )
         self._add_config(
             ConfigField(
+                "genai_perf_flags",
+                field_type=genai_perf_flags_scheme,
+                description="Allows custom configuration of the GenAI Perf instances used by model analyzer.",
+            )
+        )
+        self._add_config(
+            ConfigField(
                 "triton_server_flags",
                 field_type=triton_server_flags_scheme,
                 description="Allows custom configuration of the triton instances used by model analyzer.",
@@ -484,6 +507,11 @@ class ConfigCommandProfile(ConfigCommand):
                         "min": ConfigPrimitive(int),
                     }
                 ),
+                "output_token_throughput": ConfigObject(
+                    schema={
+                        "min": ConfigPrimitive(int),
+                    }
+                ),
                 "perf_latency_avg": ConfigObject(
                     schema={
                         "max": ConfigPrimitive(int),
@@ -510,6 +538,96 @@ class ConfigCommandProfile(ConfigCommand):
                     }
                 ),
                 "gpu_used_memory": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p99": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p95": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p90": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p75": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p50": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_p25": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_min": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_max": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "inter_token_latency_avg": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p99": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p95": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p90": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p75": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p50": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_p25": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_min": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_max": ConfigObject(
+                    schema={
+                        "max": ConfigPrimitive(int),
+                    }
+                ),
+                "time_to_first_token_avg": ConfigObject(
                     schema={
                         "max": ConfigPrimitive(int),
                     }
@@ -560,6 +678,7 @@ class ConfigCommandProfile(ConfigCommand):
                         "weighting": ConfigPrimitive(type_=int),
                         "model_config_parameters": model_config_fields,
                         "perf_analyzer_flags": perf_analyzer_flags_scheme,
+                        "genai_perf_flags": genai_perf_flags_scheme,
                         "triton_server_flags": triton_server_flags_scheme,
                         "triton_server_environment": triton_server_environment_scheme,
                         "triton_docker_args": triton_docker_args_scheme,
@@ -1344,6 +1463,12 @@ class ConfigCommandProfile(ConfigCommand):
             if not self._fields["gpu_output_fields"].is_set_by_user():
                 self.gpu_output_fields = DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS
 
+        # Switch default output fields if user specifies model type of LLM
+        # and the user didn't specify a custom output field
+        if self.model_type == "LLM":
+            if not self._fields["inference_output_fields"].is_set_by_user():
+                self.inference_output_fields = DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS
+
         new_profile_models = {}
         for i, model in enumerate(self.profile_models):
             new_model = {"cpu_only": (model.cpu_only() or cpu_only)}
@@ -1446,6 +1571,12 @@ class ConfigCommandProfile(ConfigCommand):
                 new_model["perf_analyzer_flags"] = self.perf_analyzer_flags
             else:
                 new_model["perf_analyzer_flags"] = model.perf_analyzer_flags()
+
+            # GenAI Perf flags
+            if not model.genai_perf_flags():
+                new_model["genai_perf_flags"] = self.genai_perf_flags
+            else:
+                new_model["genai_perf_flags"] = model.genai_perf_flags()
 
             # triton server flags
             if not model.triton_server_flags():

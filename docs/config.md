@@ -236,6 +236,9 @@ cpu_only_composing_models: <comma-delimited-string-list>
 # Skips the generation of detailed reports and tables
 [ skip_detailed_reports: <bool> | default: false]
 
+# Type of model being profiled: generic or LLM
+[ model_type: <string> | default: generic]
+
 # Number of top configs to show in summary plots
 [ num_configs_per_model: <int> | default: 3]
 
@@ -364,14 +367,17 @@ Before proceeding, it will be helpful to see the documentation on [Model Analyze
 
 ### `<constraint>`
 
-A constraint, specifies the bounds that determine a successful run. There are
-three constraints allowed:
+A constraint, specifies the bounds that determine a successful run. The table below shows examples
+of the types of constraints allowed:
 
-| Option Name        |   Units   | Constraint | Description                                          |
-| :----------------- | :-------: | :--------: | :--------------------------------------------------- |
-| `perf_throughput`  | inf / sec |    min     | Specify minimum desired throughput.                  |
-| `perf_latency_p99` |    ms     |    max     | Specify maximum tolerable latency or latency budget. |
-| `gpu_used_memory`  |    MB     |    max     | Specify maximum GPU memory used by model.            |
+| Option Name               |   Units   | Constraint | Description                                            |
+| :------------------------ | :-------: | :--------: | :----------------------------------------------------- |
+| `perf_throughput`         | inf / sec |    min     | Specify minimum desired throughput.                    |
+| `perf_latency_p99`        |    ms     |    max     | Specify maximum tolerable latency or latency budget.   |
+| `output_token_throughput` | tok / sec |    min     | Specify minimum desired output token throughput.       |
+| `inter_token_latency_p99` |    ms     |    max     | Specify maximum tolerable input token latency.         |
+| `time_to_first_token_p99` |    ms     |    max     | Specify maximum tolerable time to first token latency. |
+| `gpu_used_memory`         |    MB     |    max     | Specify maximum GPU memory used by model.              |
 
 <br>
 

@@ -68,6 +68,7 @@ DEFAULT_PERF_ANALYZER_PATH = "perf_analyzer"
 DEFAULT_PERF_OUTPUT_FLAG = False
 DEFAULT_PERF_MAX_AUTO_ADJUSTS = 10
 DEFAULT_MEASUREMENT_MODE = "count_windows"
+DEFAULT_MODEL_TYPE = "generic"
 
 DEFAULT_ONLINE_PLOTS = {
     "throughput_v_latency": {
@@ -117,6 +118,20 @@ DEFAULT_INFERENCE_OUTPUT_FIELDS = [
     "satisfies_constraints",
     "perf_throughput",
     "perf_latency_p99",
+]
+DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS = [
+    "model_name",
+    "batch_size",
+    "concurrency",
+    "model_config_path",
+    "instance_group",
+    "max_batch_size",
+    "satisfies_constraints",
+    "perf_throughput",
+    "perf_latency_p99",
+    "inter_token_latency_p99",
+    "time_to_first_token_p99",
+    "output_token_throughput",
 ]
 DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS = [
     "model_name",

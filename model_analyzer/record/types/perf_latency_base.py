@@ -16,16 +16,14 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.types.perf_latency_base import PerfLatencyBase
+from model_analyzer.record.record import DecreasingRecord
 
 
 @total_ordering
-class PerfLatencyP99(PerfLatencyBase):
+class PerfLatencyBase(DecreasingRecord):
     """
-    A record for perf_analyzer latency metric
+    A base class for perf_analyzer latency metric
     """
-
-    tag = "perf_latency_p99"
 
     def __init__(self, value, timestamp=0):
         """
@@ -39,22 +37,38 @@ class PerfLatencyP99(PerfLatencyBase):
 
         super().__init__(value, timestamp)
 
-    @classmethod
-    def header(cls, aggregation_tag=False):
+    def __eq__(self, other):
         """
-        Parameters
-        ----------
-        aggregation_tag: bool
-            An optional tag that may be displayed
-            as part of the header indicating that
-            this record has been aggregated using
-            max, min or average etc.
-
-        Returns
-        -------
-        str
-            The full name of the
-            metric.
+        Allows checking for
+        equality between two records
         """
 
-        return "p99 Latency (ms)"
+        return self.value() == other.value()
+
+    def __lt__(self, other):
+        """
+        Allows checking if
+        this record is less than
+        the other
+        """
+
+        return self.value() > other.value()
+
+    def __add__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return self.__class__(value=(self.value() + other.value()))
+
+    def __sub__(self, other):
+        """
+        Allows subbing two records together
+        to produce a brand new record.
+
+        ** Note this does reverse subtraction because
+            of the inverted nature of latency (lower is better)
+        """
+
+        return self.__class__(value=(other.value() - self.value()))

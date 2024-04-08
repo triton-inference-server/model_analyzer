@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright 2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,16 +16,16 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.types.perf_latency_base import PerfLatencyBase
+from model_analyzer.record.types.inter_token_latency_base import InterTokenLatencyBase
 
 
 @total_ordering
-class PerfLatencyP99(PerfLatencyBase):
+class InterTokenLatencyP25(InterTokenLatencyBase):
     """
-    A record for perf_analyzer latency metric
+    A record for perf_analyzer Inter token latency metric
     """
 
-    tag = "perf_latency_p99"
+    tag = "inter_token_latency_p25"
 
     def __init__(self, value, timestamp=0):
         """
@@ -57,4 +57,4 @@ class PerfLatencyP99(PerfLatencyBase):
             metric.
         """
 
-        return "p99 Latency (ms)"
+        return "p25 Inter Token Latency (ms)"
