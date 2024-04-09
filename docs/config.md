@@ -303,6 +303,9 @@ cpu_only_composing_models: <comma-delimited-string-list>
 # Allows custom configuration of perf analyzer instances used by model analyzer
 [ perf_analyzer_flags: <dict> ]
 
+# Allows custom configuration of GenAI-perf instances used by model analyzer
+[ genai_perf_flags: <dict> ]
+
 # Allows custom configuration of the environment variables for tritonserver instances
 # launched by model analyzer
 [ triton_server_environment: <dict> ]
@@ -375,7 +378,7 @@ of the types of constraints allowed:
 | `perf_throughput`         | inf / sec |    min     | Specify minimum desired throughput.                    |
 | `perf_latency_p99`        |    ms     |    max     | Specify maximum tolerable latency or latency budget.   |
 | `output_token_throughput` | tok / sec |    min     | Specify minimum desired output token throughput.       |
-| `inter_token_latency_p99` |    ms     |    max     | Specify maximum tolerable input token latency.         |
+| `inter_token_latency_p99` |    ms     |    max     | Specify maximum tolerable inter token latency.         |
 | `time_to_first_token_p99` |    ms     |    max     | Specify maximum tolerable time to first token latency. |
 | `gpu_used_memory`         |    MB     |    max     | Specify maximum GPU memory used by model.              |
 
@@ -457,15 +460,18 @@ profile_models:
 Objectives specify the sorting criteria for the final results. The fields below
 are supported under this object type:
 
-| Option Name        | Description                                            |
-| :----------------- | :----------------------------------------------------- |
-| `perf_throughput`  | Use throughput as the objective.                       |
-| `perf_latency_p99` | Use latency as the objective.                          |
-| `gpu_used_memory`  | Use GPU memory used by the model as the objective.     |
-| `gpu_free_memory`  | Use GPU memory not used by the model as the objective. |
-| `gpu_utilization`  | Use the GPU utilization as the objective.              |
-| `cpu_used_ram`     | Use RAM used by the model as the objective.            |
-| `cpu_free_ram`     | Use RAM not used by the model as the objective.        |
+| Option Name               | Description                                            |
+| :------------------------ | :----------------------------------------------------- |
+| `perf_throughput`         | Use throughput as the objective.                       |
+| `perf_latency_p99`        | Use latency as the objective.                          |
+| `gpu_used_memory`         | Use GPU memory used by the model as the objective.     |
+| `gpu_free_memory`         | Use GPU memory not used by the model as the objective. |
+| `gpu_utilization`         | Use the GPU utilization as the objective.              |
+| `cpu_used_ram`            | Use RAM used by the model as the objective.            |
+| `cpu_free_ram`            | Use RAM not used by the model as the objective.        |
+| `output_token_throughput` | Use output token throughput as the objective.          |
+| `inter_token_latency_p99` | Use inter token latency as the objective.              |
+| `time_to_first_token_p99` | Use time to first token latency as the objective.      |
 
 An example `objectives` that will sort the results by throughput looks like
 below:

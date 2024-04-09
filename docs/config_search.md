@@ -24,6 +24,7 @@ limitations under the License.
 - [Quick Search Mode](#quick-search-mode)
 - [Ensemble Model Search](#ensemble-model-search)
 - [BLS Model Search](#bls-model-search)
+- [LLM Search](#llm-search)
 - [Multi-Model Search Mode](#multi-model-search-mode)
 
 <br>
@@ -300,6 +301,35 @@ _This mode has the following limitations:_
 BLS models can be optimized using the Quick Search mode's hill climbing algorithm to search the BLS composing models' configuration spaces, as well as the BLS model's instance count, in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under one hour (compared to the days it would take a brute force run to complete) for BLS models that contain up to four composing models.
 
 After Model Analyzer has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
+
+---
+
+## LLM Search
+
+_This mode has the following limitations:_
+
+- Summary/Detailed reports do not include the new metrics
+
+LLMs can be optimized using either Quick or Brute search mode by setting `--model-type LLM`. You can specify CLI options to the GenAI-Perf tool using `genai_perf_flags`. See the [GenAI-Perf CLI](https://github.com/triton-inference-server/client/blob/main/src/c%2B%2B/perf_analyzer/genai-perf/README.md#cli) documentation for a list of the flags that can be specified.
+
+_An example model analyzer YAML config for a LLM:_
+
+```yaml
+model_repository: /path/to/model/repository/
+
+model_type: LLM
+client_prototcol: grpc
+
+genai_perf_flags:
+  backend: vllm
+  streaming: true
+```
+
+For LLMs there are three new metrics being reported: **Inter-token Latency**, **Time to First Token Latency** and **Output Token Throughput**.
+
+These new metrics can be specified as either objectives or constraints.
+
+_**NOTE: In order to enable these new metrics you must enable `streaming` in `genai_perf_flags` and the `client protocol` must be set to `gRPC`**_
 
 ---
 
