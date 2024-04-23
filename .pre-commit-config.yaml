@@ -73,3 +73,19 @@ repos:
   - id: mixed-line-ending
   - id: requirements-txt-fixer
   - id: trailing-whitespace
+
+
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.9.0
+  hooks:
+  - id: mypy
+    types_or: [python, cython]
+    args: ["--explicit-package-bases", "--ignore-missing-imports", "--show-error-codes", "--pretty", "--show-column-numbers", "--show-error-context"]
+    exclude: |
+      (?x)^(
+        examples/.*/model\.py|
+        experiments/.*xperiment_data\.py|
+        experiments/.*evaluate_config_generator\.py|
+        qa/.*/.*config_generator\.py|
+        qa/.*/check_results\.py
+      )$
