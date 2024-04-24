@@ -106,7 +106,6 @@ repos:
             examples/.*/model\.py|
             experiments/.*xperiment_data\.py|
             experiments/.*evaluate_config_generator\.py|
-            experiments/.*|
             qa/.*/.*config_generator\.py|
             qa/.*/check_results\.py|
             setup.py|
