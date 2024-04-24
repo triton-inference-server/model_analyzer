@@ -98,6 +98,8 @@ repos:
             "--pretty",
             "--show-column-numbers",
             "--show-error-context",
+            "--disable-error-code",
+            "import-untyped",
           ]
         exclude: |
           (?x)^(
