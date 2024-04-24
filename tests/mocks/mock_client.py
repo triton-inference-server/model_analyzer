@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, patch
 
 from tritonclient.http import InferenceServerException
@@ -28,7 +29,7 @@ class MockTritonClientMethods(MockBase):
     Provides functions to check operation.
     """
 
-    TEST_MODEL_CONFIG = {}
+    TEST_MODEL_CONFIG: Any = {}
 
     def __init__(self):
         client_attrs = {

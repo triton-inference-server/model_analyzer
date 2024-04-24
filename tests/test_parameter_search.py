@@ -16,9 +16,11 @@
 
 import unittest
 from math import log2
+from typing import Union
 from unittest.mock import MagicMock, patch
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.config.input.config_defaults import (
     DEFAULT_RUN_CONFIG_MAX_CONCURRENCY,
     DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE,
@@ -283,7 +285,7 @@ class TestParameterSearch(trc.TestResultCollector):
 
     def _create_single_model_with_constraints(
         self, latency_budget: str
-    ) -> ConfigCommandProfile:
+    ) -> Union[ConfigCommandProfile | ConfigCommandReport]:
         args = [
             "model-analyzer",
             "profile",

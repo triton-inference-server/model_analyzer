@@ -61,7 +61,7 @@ def evaluate_mock_config(
     mock_config.start()
 
     if subcommand == "report":
-        config = ConfigCommandReport()
+        config: Union[ConfigCommandProfile, ConfigCommandReport] = ConfigCommandReport()
     else:
         config = ConfigCommandProfile()
 
