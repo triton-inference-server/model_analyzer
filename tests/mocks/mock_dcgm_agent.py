@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
 from unittest.mock import MagicMock
 
 import model_analyzer.monitor.dcgm.dcgm_structs as structs
@@ -24,8 +25,8 @@ TEST_UUID = "dddddddd-bbbb-aaaa-cccc-ffffffffffff"
 
 
 class MockDCGMAgent:
-    device_groups = {}
-    field_groups = {}
+    device_groups: Dict = {}
+    field_groups: Dict = {}
     devices = [{"pci_bus_id": TEST_PCI_BUS_ID, "uuid": TEST_UUID}]
 
     @staticmethod
