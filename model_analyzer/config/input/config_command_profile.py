@@ -927,8 +927,8 @@ class ConfigCommandProfile(ConfigCommand):
                 " model configurations. 'brute' will brute force all combinations of"
                 " configuration options.  'quick' will attempt to find a near-optimal"
                 " configuration as fast as possible, but isn't guaranteed to find the"
-                " best. 'optuna' is a more generalized version of quick search allowing "
-                " the user to quick search over any parameter.",
+                " best. 'optuna' is a more generalized search algorithm allowing "
+                " the user to quickly search over any set of parameters.",
             )
         )
         self._add_config(
