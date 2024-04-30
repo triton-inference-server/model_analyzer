@@ -1979,7 +1979,7 @@ profile_models:
 
     def test_multi_model_search_mode(self):
         """
-        Test that multi-model is only run in quick
+        Test that multi-model is only run in quick/optuna
         """
         args = [
             "model-analyzer",
@@ -2008,6 +2008,13 @@ profile_models:
         new_args = list(args)
         new_args.append("--run-config-search-mode")
         new_args.append("quick")
+
+        self._evaluate_config(new_args, yaml_content, subcommand="profile")
+
+        # Optuna should pass
+        new_args = list(args)
+        new_args.append("--run-config-search-mode")
+        new_args.append("optuna")
 
         self._evaluate_config(new_args, yaml_content, subcommand="profile")
 
