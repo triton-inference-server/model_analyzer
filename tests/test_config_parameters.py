@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import MagicMock, patch
 
 from model_analyzer.config.generate.config_parameters import (
     ConfigParameters,
