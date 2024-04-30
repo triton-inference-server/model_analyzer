@@ -920,14 +920,15 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 "run_config_search_mode",
                 flags=["--run-config-search-mode"],
-                choices=["brute", "quick"],
+                choices=["brute", "quick", "optuna"],
                 field_type=ConfigPrimitive(str),
                 default_value=DEFAULT_RUN_CONFIG_SEARCH_MODE,
                 description="The search mode for Model Analyzer to find and evaluate"
                 " model configurations. 'brute' will brute force all combinations of"
                 " configuration options.  'quick' will attempt to find a near-optimal"
                 " configuration as fast as possible, but isn't guaranteed to find the"
-                " best.",
+                " best. 'optuna' is a more generalized search algorithm allowing "
+                " the user to quickly search over any set of parameters.",
             )
         )
         self._add_config(
