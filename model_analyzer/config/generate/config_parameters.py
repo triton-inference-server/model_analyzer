@@ -37,7 +37,7 @@ class ConfigParameters:
         min_range: Optional[int] = None,
         max_range: Optional[int] = None,
         enumerated_list: List[Any] = [],
-    ):
+    ) -> None:
         self._check_for_illegal_input(category, min_range, max_range, enumerated_list)
 
         self._parameters[name] = ConfigParameter(
@@ -88,13 +88,13 @@ class ConfigParameters:
     ) -> None:
         if not enumerated_list:
             raise TritonModelAnalyzerException(
-                f"enumerated_list must be specified for a LIST"
+                f"enumerated_list must be specified for a ParameterCategory.LIST"
             )
         elif min_range is not None:
             raise TritonModelAnalyzerException(
-                f"min_range cannot be specified for a list"
+                f"min_range cannot be specified for a ParameterCategory.LIST"
             )
         elif max_range is not None:
             raise TritonModelAnalyzerException(
-                f"max_range cannot be specified for a list"
+                f"max_range cannot be specified for a ParameterCategory.LIST"
             )
