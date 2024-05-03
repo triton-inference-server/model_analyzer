@@ -28,8 +28,9 @@ class ConfigParameters:
     Contains information about all configuration parameters the user wants to search
     """
 
-    exponential_parameters = ["batch_sizes", "concurrency"]
-    linear_parameters = ["instance_group"]
+    # These map to the run-config-search fields (see config.md for details)
+    exponential_rcs_parameters = ["batch_sizes", "concurrency"]
+    linear_rcs_parameters = ["instance_group"]
 
     model_parameters = ["batch_sizes", "instance_group", "max_queue_delay_microseconds"]
     runtime_parameters = ["concurrency"]
@@ -76,27 +77,28 @@ class ConfigParameters:
     ) -> None:
         self._populate_parameter(
             parameter_name="batch_sizes",
-            rcs_min_value=config.run_config_search_min_model_batch_size,
-            rcs_max_value=config.run_config_search_max_model_batch_size,
+            rcs_parameter_min_value=config.run_config_search_min_model_batch_size,
+            rcs_parameter_max_value=config.run_config_search_max_model_batch_size,
             parameter_list=parameters["batch_sizes"],
         )
         # TODO: Figure out how to use request rate - TMA-1903
         self._populate_parameter(
             parameter_name="concurrency",
-            rcs_min_value=config.run_config_search_min_concurrency,
-            rcs_max_value=config.run_config_search_max_concurrency,
+            rcs_parameter_min_value=config.run_config_search_min_concurrency,
+            rcs_parameter_max_value=config.run_config_search_max_concurrency,
             parameter_list=parameters["concurrency"],
         )
 
     def _populate_parameter(
         self,
         parameter_name: str,
-        rcs_min_value: Optional[int] = None,
-        rcs_max_value: Optional[int] = None,
+        rcs_parameter_min_value: Optional[int] = None,
+        rcs_parameter_max_value: Optional[int] = None,
         parameter_list: Optional[List[int]] = None,
     ) -> None:
         ptype = self._determine_parameter_type(parameter_name)
 
+        # If a list is specified then RCS parameters are ignored
         if parameter_list:
             self._add_parameter(
                 name=parameter_name,
@@ -108,11 +110,11 @@ class ConfigParameters:
             category = self._determine_parameter_category(parameter_name)
 
             if category == ParameterCategory.EXPONENTIAL:
-                min_range = int(log2(rcs_min_value))  # type: ignore
-                max_range = int(log2(rcs_max_value))  # type: ignore
+                min_range = int(log2(rcs_parameter_min_value))  # type: ignore
+                max_range = int(log2(rcs_parameter_max_value))  # type: ignore
             else:
-                min_range = rcs_min_value  # type: ignore
-                max_range = rcs_max_value  # type: ignore
+                min_range = rcs_parameter_min_value  # type: ignore
+                max_range = rcs_parameter_max_value  # type: ignore
 
             self._add_parameter(
                 name=parameter_name,
@@ -123,9 +125,9 @@ class ConfigParameters:
             )
 
     def _determine_parameter_category(self, name: str) -> ParameterCategory:
-        if name in ConfigParameters.exponential_parameters:
+        if name in ConfigParameters.exponential_rcs_parameters:
             category = ParameterCategory.EXPONENTIAL
-        elif name in ConfigParameters.linear_parameters:
+        elif name in ConfigParameters.linear_rcs_parameters:
             category = ParameterCategory.INTEGER
         else:
             TritonModelAnalyzerException(f"ParameterCategory not found for {name}")
@@ -150,8 +152,8 @@ class ConfigParameters:
         if not model_config_parameters:
             self._populate_parameter(
                 parameter_name="instance_group",
-                rcs_min_value=config.run_config_search_min_instance_count,
-                rcs_max_value=config.run_config_search_max_instance_count,
+                rcs_parameter_min_value=config.run_config_search_min_instance_count,
+                rcs_parameter_max_value=config.run_config_search_max_instance_count,
             )
             return
 
@@ -162,9 +164,9 @@ class ConfigParameters:
 
         self._populate_parameter(
             parameter_name="instance_group",
-            rcs_min_value=config.run_config_search_min_instance_count,
-            rcs_max_value=config.run_config_search_max_instance_count,
             parameter_list=parameter_list,
+            rcs_parameter_min_value=config.run_config_search_min_instance_count,
+            rcs_parameter_max_value=config.run_config_search_max_instance_count,
         )
 
         if "dynamic_batching" in model_config_parameters.keys():
