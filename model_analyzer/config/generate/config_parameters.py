@@ -80,7 +80,7 @@ class ConfigParameters:
             rcs_max_value=config.run_config_search_max_model_batch_size,
             parameter_list=parameters["batch_sizes"],
         )
-        # TODO: Figure out how to use request rate
+        # TODO: Figure out how to use request rate - TMA-1903
         self._populate_parameter(
             parameter_name="concurrency",
             rcs_min_value=config.run_config_search_min_concurrency,
