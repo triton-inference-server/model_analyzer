@@ -25,7 +25,6 @@ from unittest.mock import MagicMock, patch
 from model_analyzer.analyzer import Analyzer
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.generate.config_parameters import (
-    ConfigParameters,
     ParameterCategory,
     ParameterType,
 )
