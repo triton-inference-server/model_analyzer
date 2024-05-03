@@ -17,12 +17,13 @@
 import logging
 import sys
 from copy import deepcopy
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.generate.base_model_config_generator import (
     BaseModelConfigGenerator,
 )
+from model_analyzer.config.generate.config_parameters import ConfigParameters
 from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.server.server import TritonServer
@@ -82,6 +83,8 @@ class Analyzer:
             constraint_manager=self._constraint_manager,
         )
 
+        self._search_parameters: Dict[str, ConfigParameters] = {}
+
     def profile(
         self, client: TritonClient, gpus: List[GPUDevice], mode: str, verbose: bool
     ) -> None:
@@ -115,6 +118,7 @@ class Analyzer:
 
         self._create_metrics_manager(client, gpus)
         self._create_model_manager(client, gpus)
+        self._populate_search_parameters()
 
         if self._config.triton_launch_mode == "remote":
             self._warn_if_other_models_loaded_on_remote_server(client)
@@ -414,3 +418,9 @@ class Analyzer:
                     f"A model not being profiled ({model_name}) is loaded on the remote Tritonserver. "
                     "This could impact the profile results."
                 )
+
+    def _populate_search_parameters(self):
+        for model in self._config.profile_models:
+            self._search_parameters[model.model_name()] = ConfigParameters(
+                self._config, model.parameters(), model.model_config_parameters()
+            )

@@ -18,14 +18,27 @@ import re
 import unittest
 from argparse import Namespace
 from copy import deepcopy
+from math import log2
 from typing import Any, Dict, List, Optional
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from model_analyzer.analyzer import Analyzer
 from model_analyzer.cli.cli import CLI
+from model_analyzer.config.generate.config_parameters import (
+    ConfigParameters,
+    ParameterCategory,
+    ParameterType,
+)
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.config.input.config_defaults import (
     DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS,
+    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY,
+    DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT,
+    DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE,
+    DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
+    DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT,
+    DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE,
 )
 from model_analyzer.config.input.config_enum import ConfigEnum
 from model_analyzer.config.input.config_list_generic import ConfigListGeneric
@@ -2386,6 +2399,67 @@ profile_models:
 
         self.assertEqual(
             config.inference_output_fields, DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS
+        )
+
+    def test_config_parameter_creation_default(self):
+        """
+        Test that config parameters are correctly created in default optuna case
+        """
+
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli-repository",
+            "-f",
+            "path-to-config-file",
+            "--run-config-search-mode",
+            "optuna",
+        ]
+
+        yaml_content = """
+        profile_models: add_sub
+        """
+
+        config = self._evaluate_config(args, yaml_content)
+
+        analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
+        analyzer._populate_search_parameters()
+
+        batch_sizes = analyzer._search_parameters["add_sub"].get_parameter(
+            "batch_sizes"
+        )
+        self.assertEqual(ParameterType.MODEL, batch_sizes.ptype)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, batch_sizes.category)
+        self.assertEqual(
+            log2(DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE), batch_sizes.min_range
+        )
+        self.assertEqual(
+            log2(DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE), batch_sizes.max_range
+        )
+
+        concurrency = analyzer._search_parameters["add_sub"].get_parameter(
+            "concurrency"
+        )
+        self.assertEqual(ParameterType.RUNTIME, concurrency.ptype)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, concurrency.category)
+        self.assertEqual(
+            log2(DEFAULT_RUN_CONFIG_MIN_CONCURRENCY), concurrency.min_range
+        )
+        self.assertEqual(
+            log2(DEFAULT_RUN_CONFIG_MAX_CONCURRENCY), concurrency.max_range
+        )
+
+        instance_group = analyzer._search_parameters["add_sub"].get_parameter(
+            "instance_group"
+        )
+        self.assertEqual(ParameterType.MODEL, instance_group.ptype)
+        self.assertEqual(ParameterCategory.INTEGER, instance_group.category)
+        self.assertEqual(
+            DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT, instance_group.min_range
+        )
+        self.assertEqual(
+            DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, instance_group.max_range
         )
 
     def _test_request_rate_config_conflicts(

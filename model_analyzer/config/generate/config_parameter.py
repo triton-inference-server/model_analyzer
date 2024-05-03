@@ -45,4 +45,4 @@ class ConfigParameter:
     max_range: Optional[int] = None
 
     # This is only applicable to LIST category
-    enumerated_list: List[Any] = []
+    enumerated_list: Optional[List[Any]] = None

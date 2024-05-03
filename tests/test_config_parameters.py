@@ -30,7 +30,7 @@ class TestConfigParameters(trc.TestResultCollector):
     def setUp(self):
         self.config_parameters = ConfigParameters()
 
-        self.config_parameters.add_parameter(
+        self.config_parameters._add_parameter(
             name="concurrency",
             ptype=ParameterType.RUNTIME,
             category=ParameterCategory.EXPONENTIAL,
@@ -38,7 +38,7 @@ class TestConfigParameters(trc.TestResultCollector):
             max_range=10,
         )
 
-        self.config_parameters.add_parameter(
+        self.config_parameters._add_parameter(
             name="instance_count",
             ptype=ParameterType.MODEL,
             category=ParameterCategory.INTEGER,
@@ -46,7 +46,7 @@ class TestConfigParameters(trc.TestResultCollector):
             max_range=8,
         )
 
-        self.config_parameters.add_parameter(
+        self.config_parameters._add_parameter(
             name="size",
             ptype=ParameterType.BUILD,
             category=ParameterCategory.LIST,
@@ -102,7 +102,7 @@ class TestConfigParameters(trc.TestResultCollector):
         Check that an exception is raised for illegal input combos
         """
         with self.assertRaises(TritonModelAnalyzerException):
-            self.config_parameters.add_parameter(
+            self.config_parameters._add_parameter(
                 name="concurrency",
                 ptype=ParameterType.RUNTIME,
                 category=ParameterCategory.EXPONENTIAL,
@@ -110,7 +110,7 @@ class TestConfigParameters(trc.TestResultCollector):
             )
 
         with self.assertRaises(TritonModelAnalyzerException):
-            self.config_parameters.add_parameter(
+            self.config_parameters._add_parameter(
                 name="concurrency",
                 ptype=ParameterType.RUNTIME,
                 category=ParameterCategory.EXPONENTIAL,
@@ -118,7 +118,7 @@ class TestConfigParameters(trc.TestResultCollector):
             )
 
         with self.assertRaises(TritonModelAnalyzerException):
-            self.config_parameters.add_parameter(
+            self.config_parameters._add_parameter(
                 name="concurrency",
                 ptype=ParameterType.RUNTIME,
                 category=ParameterCategory.EXPONENTIAL,
@@ -127,14 +127,14 @@ class TestConfigParameters(trc.TestResultCollector):
             )
 
         with self.assertRaises(TritonModelAnalyzerException):
-            self.config_parameters.add_parameter(
+            self.config_parameters._add_parameter(
                 name="size",
                 ptype=ParameterType.BUILD,
                 category=ParameterCategory.LIST,
             )
 
         with self.assertRaises(TritonModelAnalyzerException):
-            self.config_parameters.add_parameter(
+            self.config_parameters._add_parameter(
                 name="size",
                 ptype=ParameterType.BUILD,
                 category=ParameterCategory.LIST,
@@ -143,7 +143,7 @@ class TestConfigParameters(trc.TestResultCollector):
             )
 
         with self.assertRaises(TritonModelAnalyzerException):
-            self.config_parameters.add_parameter(
+            self.config_parameters._add_parameter(
                 name="size",
                 ptype=ParameterType.BUILD,
                 category=ParameterCategory.LIST,
