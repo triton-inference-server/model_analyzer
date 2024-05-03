@@ -1529,7 +1529,6 @@ class ConfigCommandProfile(ConfigCommand):
 
             # Run parameters
             if not model.parameters():
-                foo = self.run_config_search_mode
                 if self.run_config_search_mode != "optuna":
                     new_model["parameters"] = {
                         "batch_sizes": self.batch_sizes,
@@ -1552,7 +1551,12 @@ class ConfigCommandProfile(ConfigCommand):
                         {"batch_sizes": model.parameters()["batch_sizes"]}
                     )
                 else:
-                    new_model["parameters"].update({"batch_sizes": self.batch_sizes})
+                    if self.run_config_search_mode != "optuna":
+                        new_model["parameters"].update(
+                            {"batch_sizes": self.batch_sizes}
+                        )
+                    else:
+                        new_model["parameters"].update({"batch_sizes": []})
 
                 if "concurrency" in model.parameters():
                     new_model["parameters"].update(

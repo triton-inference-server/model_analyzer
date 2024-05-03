@@ -32,7 +32,7 @@ class ConfigParameters:
     exponential_parameters = ["batch_sizes", "concurrency"]
     linear_parameters = ["instance_group"]
 
-    model_parameters = ["batch_sizes", "instance_group"]
+    model_parameters = ["batch_sizes", "instance_group", "max_queue_delay_microseconds"]
     runtime_parameters = ["concurrency"]
 
     def __init__(
@@ -96,16 +96,17 @@ class ConfigParameters:
         rcs_max_value: Optional[int] = None,
         parameter_list: Optional[List[int]] = None,
     ) -> None:
+        ptype = self._determine_parameter_type(parameter_name)
+
         if parameter_list:
             self._add_parameter(
                 name=parameter_name,
-                ptype=ParameterType.MODEL,
+                ptype=ptype,
                 category=ParameterCategory.LIST,
                 enumerated_list=parameter_list,
             )
         else:
             category = self._determine_parameter_category(parameter_name)
-            ptype = self._determine_parameter_type(parameter_name)
 
             if category == ParameterCategory.EXPONENTIAL:
                 min_range = int(log2(rcs_min_value))  # type: ignore
