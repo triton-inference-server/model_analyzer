@@ -28,7 +28,8 @@ class ConfigParameters:
     Contains information about all configuration parameters the user wants to search
     """
 
-    # These map to the run-config-search fields (see config.md for details)
+    # These map to the run-config-search fields
+    # See github.com/triton-inference-server/model_analyzer/blob/main/docs/config.md
     exponential_rcs_parameters = ["batch_sizes", "concurrency"]
     linear_rcs_parameters = ["instance_group"]
 
@@ -37,14 +38,16 @@ class ConfigParameters:
 
     def __init__(
         self,
-        config: Optional[ConfigCommandProfile] = None,
+        config: ConfigCommandProfile,
         parameters: Dict[str, Any] = {},
         model_config_parameters: Dict[str, Any] = {},
     ):
-        self._parameters: Dict[str, ConfigParameter] = {}
+        self._config = config
+        self._parameters = parameters
+        self._model_config_parameters = model_config_parameters
+        self._search_parameters: Dict[str, ConfigParameter] = {}
 
-        if config:
-            self.populate_search_parameters(config, parameters, model_config_parameters)
+        self._populate_search_parameters()
 
     def get_parameter(self, name: str) -> ConfigParameter:
         return self._parameters[name]
@@ -61,68 +64,144 @@ class ConfigParameters:
     def get_list(self, name: str) -> Optional[List[Any]]:
         return self._parameters[name].enumerated_list
 
-    def populate_search_parameters(
-        self,
-        config: ConfigCommandProfile,
-        parameters: Dict[str, Any],
-        model_config_parameters: Dict[str, Any],
-    ) -> None:
-        self._populate_parameters(config, parameters)
-        self._populate_model_config_parameters(config, model_config_parameters)
+    def _populate_search_parameters(self) -> None:
+        self._populate_parameters()
+        self._populate_model_config_parameters()
 
-    def _populate_parameters(
-        self,
-        config: ConfigCommandProfile,
-        parameters: Dict[str, Any],
-    ) -> None:
-        self._populate_parameter(
-            parameter_name="batch_sizes",
-            rcs_parameter_min_value=config.run_config_search_min_model_batch_size,
-            rcs_parameter_max_value=config.run_config_search_max_model_batch_size,
-            parameter_list=parameters["batch_sizes"],
-        )
-        # TODO: Figure out how to use request rate - TMA-1903
-        self._populate_parameter(
-            parameter_name="concurrency",
-            rcs_parameter_min_value=config.run_config_search_min_concurrency,
-            rcs_parameter_max_value=config.run_config_search_max_concurrency,
-            parameter_list=parameters["concurrency"],
-        )
+    def _populate_parameters(self) -> None:
+        self._populate_batch_sizes()
+        self._populate_concurrency()
+        # TODO: Populate request rate - TMA-1903
 
-    def _populate_parameter(
+    def _populate_model_config_parameters(self) -> None:
+        self._populate_instance_group()
+        self._populate_max_queue_delay_microseconds()
+
+    def _populate_batch_sizes(self) -> None:
+        if self._parameters["batch_sizes"]:
+            self._populate_list_parameter(
+                parameter_name="batch_sizes",
+                parameter_list=self._parameters["batch_sizes"],
+            )
+        else:
+            self._populate_rcs_parameter(
+                parameter_name="batch_sizes",
+                rcs_parameter_min_value=self._config.run_config_search_min_model_batch_size,
+                rcs_parameter_max_value=self._config.run_config_search_max_model_batch_size,
+            )
+
+    def _populate_concurrency(self) -> None:
+        if self._parameters["concurrency"]:
+            self._populate_list_parameter(
+                parameter_name="concurrency",
+                parameter_list=self._parameters["concurrency"],
+            )
+        else:
+            self._populate_rcs_parameter(
+                parameter_name="concurrency",
+                rcs_parameter_min_value=self._config.run_config_search_min_concurrency,
+                rcs_parameter_max_value=self._config.run_config_search_max_concurrency,
+            )
+
+    def _populate_instance_group(self) -> None:
+        # Example config format:
+        #
+        # model_config_parameters:
+        #   instance_group:
+        #     - kind: KIND_GPU
+        #       count: [1, 2, 3, 4]
+
+        # Need to populate instance_group based on RCS min/max values
+        # even if no model config parameters are present
+        if not self._model_config_parameters:
+            self._populate_rcs_parameter(
+                parameter_name="instance_group",
+                rcs_parameter_min_value=self._config.run_config_search_min_instance_count,
+                rcs_parameter_max_value=self._config.run_config_search_max_instance_count,
+            )
+        elif "instance_group" in self._model_config_parameters.keys():
+            parameter_list = self._model_config_parameters["instance_group"][0][0][
+                "count"
+            ]
+
+            self._populate_list_parameter(
+                parameter_name="instance_group",
+                parameter_list=parameter_list,
+            )
+        else:
+            self._populate_rcs_parameter(
+                parameter_name="instance_group",
+                rcs_parameter_min_value=self._config.run_config_search_min_instance_count,
+                rcs_parameter_max_value=self._config.run_config_search_max_instance_count,
+            )
+
+    def _populate_max_queue_delay_microseconds(self) -> None:
+        # Example format
+        #
+        # model_config_parameters:
+        #  dynamic_batching:
+        #    max_queue_delay_microseconds: [100, 200, 300]
+
+        # There is no RCS field for max_queue_delay_microseconds
+        if self._is_max_queue_delay_in_model_config_parameters():
+            self._populate_list_parameter(
+                parameter_name="max_queue_delay_microseconds",
+                parameter_list=self._model_config_parameters["dynamic_batching"][0][
+                    "max_queue_delay_microseconds"
+                ],
+            )
+
+    def _is_max_queue_delay_in_model_config_parameters(self) -> bool:
+        if self._model_config_parameters:
+            max_queue_delay_present = (
+                "dynamic_batching" in self._model_config_parameters.keys()
+                and (
+                    "max_queue_delay_microseconds"
+                    in self._model_config_parameters["dynamic_batching"][0]
+                )
+            )
+        else:
+            max_queue_delay_present = False
+
+        return max_queue_delay_present
+
+    def _populate_list_parameter(
         self,
         parameter_name: str,
-        rcs_parameter_min_value: Optional[int] = None,
-        rcs_parameter_max_value: Optional[int] = None,
-        parameter_list: Optional[List[int]] = None,
+        parameter_list: List[int],
     ) -> None:
         ptype = self._determine_parameter_type(parameter_name)
 
-        # If a list is specified then RCS parameters are ignored
-        if parameter_list:
-            self._add_parameter(
-                name=parameter_name,
-                ptype=ptype,
-                category=ParameterCategory.LIST,
-                enumerated_list=parameter_list,
-            )
+        self._add_parameter(
+            name=parameter_name,
+            ptype=ptype,
+            category=ParameterCategory.LIST,
+            enumerated_list=parameter_list,
+        )
+
+    def _populate_rcs_parameter(
+        self,
+        parameter_name: str,
+        rcs_parameter_min_value: int,
+        rcs_parameter_max_value: int,
+    ) -> None:
+        ptype = self._determine_parameter_type(parameter_name)
+        category = self._determine_parameter_category(parameter_name)
+
+        if category == ParameterCategory.EXPONENTIAL:
+            min_range = int(log2(rcs_parameter_min_value))  # type: ignore
+            max_range = int(log2(rcs_parameter_max_value))  # type: ignore
         else:
-            category = self._determine_parameter_category(parameter_name)
+            min_range = rcs_parameter_min_value  # type: ignore
+            max_range = rcs_parameter_max_value  # type: ignore
 
-            if category == ParameterCategory.EXPONENTIAL:
-                min_range = int(log2(rcs_parameter_min_value))  # type: ignore
-                max_range = int(log2(rcs_parameter_max_value))  # type: ignore
-            else:
-                min_range = rcs_parameter_min_value  # type: ignore
-                max_range = rcs_parameter_max_value  # type: ignore
-
-            self._add_parameter(
-                name=parameter_name,
-                ptype=ptype,
-                category=category,
-                min_range=min_range,
-                max_range=max_range,
-            )
+        self._add_parameter(
+            name=parameter_name,
+            ptype=ptype,
+            category=category,
+            min_range=min_range,
+            max_range=max_range,
+        )
 
     def _determine_parameter_category(self, name: str) -> ParameterCategory:
         if name in ConfigParameters.exponential_rcs_parameters:
@@ -143,43 +222,6 @@ class ConfigParameters:
             TritonModelAnalyzerException(f"ParameterType not found for {name}")
 
         return ptype
-
-    def _populate_model_config_parameters(
-        self, config: ConfigCommandProfile, model_config_parameters: Dict[str, Any]
-    ) -> None:
-        # Need to populate instance_group based on RCS min/max values
-        # even if no model config parameters are present
-        if not model_config_parameters:
-            self._populate_parameter(
-                parameter_name="instance_group",
-                rcs_parameter_min_value=config.run_config_search_min_instance_count,
-                rcs_parameter_max_value=config.run_config_search_max_instance_count,
-            )
-            return
-
-        if "instance_group" in model_config_parameters.keys():
-            parameter_list = model_config_parameters["instance_group"][0][0]["count"]
-        else:
-            parameter_list = None
-
-        self._populate_parameter(
-            parameter_name="instance_group",
-            parameter_list=parameter_list,
-            rcs_parameter_min_value=config.run_config_search_min_instance_count,
-            rcs_parameter_max_value=config.run_config_search_max_instance_count,
-        )
-
-        if "dynamic_batching" in model_config_parameters.keys():
-            if (
-                "max_queue_delay_microseconds"
-                in model_config_parameters["dynamic_batching"][0]
-            ):
-                self._populate_parameter(
-                    parameter_name="max_queue_delay_microseconds",
-                    parameter_list=model_config_parameters["dynamic_batching"][0][
-                        "max_queue_delay_microseconds"
-                    ],
-                )
 
     def _add_parameter(
         self,
