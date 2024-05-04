@@ -20,10 +20,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-from .config_parameter import ConfigParameter, ParameterCategory, ParameterType
+from .search_parameter import ParameterCategory, ParameterUsage, SearchParameter
 
 
-class ConfigParameters:
+class SearchParameters:
     """
     Contains information about all configuration parameters the user wants to search
     """
@@ -38,34 +38,39 @@ class ConfigParameters:
 
     def __init__(
         self,
-        config: ConfigCommandProfile,
+        config: ConfigCommandProfile = ConfigCommandProfile(),
         parameters: Dict[str, Any] = {},
         model_config_parameters: Dict[str, Any] = {},
     ):
         self._config = config
         self._parameters = parameters
         self._model_config_parameters = model_config_parameters
-        self._search_parameters: Dict[str, ConfigParameter] = {}
+        self._search_parameters: Dict[str, SearchParameter] = {}
 
         self._populate_search_parameters()
 
-    def get_parameter(self, name: str) -> ConfigParameter:
-        return self._parameters[name]
+    def get_parameter(self, name: str) -> SearchParameter:
+        return self._search_parameters[name]
 
-    def get_type(self, name: str) -> ParameterType:
-        return self._parameters[name].ptype
+    def get_type(self, name: str) -> ParameterUsage:
+        return self._search_parameters[name].usage
 
     def get_category(self, name: str) -> ParameterCategory:
-        return self._parameters[name].category
+        return self._search_parameters[name].category
 
     def get_range(self, name: str) -> Tuple[Optional[int], Optional[int]]:
-        return (self._parameters[name].min_range, self._parameters[name].max_range)
+        return (
+            self._search_parameters[name].min_range,
+            self._search_parameters[name].max_range,
+        )
 
     def get_list(self, name: str) -> Optional[List[Any]]:
-        return self._parameters[name].enumerated_list
+        return self._search_parameters[name].enumerated_list
 
     def _populate_search_parameters(self) -> None:
-        self._populate_parameters()
+        if self._parameters:
+            self._populate_parameters()
+
         self._populate_model_config_parameters()
 
     def _populate_parameters(self) -> None:
@@ -170,11 +175,11 @@ class ConfigParameters:
         parameter_name: str,
         parameter_list: List[int],
     ) -> None:
-        ptype = self._determine_parameter_type(parameter_name)
+        usage = self._determine_parameter_usage(parameter_name)
 
-        self._add_parameter(
+        self._add_search_parameter(
             name=parameter_name,
-            ptype=ptype,
+            usage=usage,
             category=ParameterCategory.LIST,
             enumerated_list=parameter_list,
         )
@@ -185,7 +190,7 @@ class ConfigParameters:
         rcs_parameter_min_value: int,
         rcs_parameter_max_value: int,
     ) -> None:
-        ptype = self._determine_parameter_type(parameter_name)
+        usage = self._determine_parameter_usage(parameter_name)
         category = self._determine_parameter_category(parameter_name)
 
         if category == ParameterCategory.EXPONENTIAL:
@@ -195,38 +200,38 @@ class ConfigParameters:
             min_range = rcs_parameter_min_value  # type: ignore
             max_range = rcs_parameter_max_value  # type: ignore
 
-        self._add_parameter(
+        self._add_search_parameter(
             name=parameter_name,
-            ptype=ptype,
+            usage=usage,
             category=category,
             min_range=min_range,
             max_range=max_range,
         )
 
     def _determine_parameter_category(self, name: str) -> ParameterCategory:
-        if name in ConfigParameters.exponential_rcs_parameters:
+        if name in SearchParameters.exponential_rcs_parameters:
             category = ParameterCategory.EXPONENTIAL
-        elif name in ConfigParameters.linear_rcs_parameters:
+        elif name in SearchParameters.linear_rcs_parameters:
             category = ParameterCategory.INTEGER
         else:
             TritonModelAnalyzerException(f"ParameterCategory not found for {name}")
 
         return category
 
-    def _determine_parameter_type(self, name: str) -> ParameterType:
-        if name in ConfigParameters.model_parameters:
-            ptype = ParameterType.MODEL
-        elif name in ConfigParameters.runtime_parameters:
-            ptype = ParameterType.RUNTIME
+    def _determine_parameter_usage(self, name: str) -> ParameterUsage:
+        if name in SearchParameters.model_parameters:
+            usage = ParameterUsage.MODEL
+        elif name in SearchParameters.runtime_parameters:
+            usage = ParameterUsage.RUNTIME
         else:
-            TritonModelAnalyzerException(f"ParameterType not found for {name}")
+            TritonModelAnalyzerException(f"ParameterUsage not found for {name}")
 
-        return ptype
+        return usage
 
-    def _add_parameter(
+    def _add_search_parameter(
         self,
         name: str,
-        ptype: ParameterType,
+        usage: ParameterUsage,
         category: ParameterCategory,
         min_range: Optional[int] = None,
         max_range: Optional[int] = None,
@@ -234,8 +239,12 @@ class ConfigParameters:
     ) -> None:
         self._check_for_illegal_input(category, min_range, max_range, enumerated_list)
 
-        self._parameters[name] = ConfigParameter(
-            ptype, category, min_range, max_range, enumerated_list
+        self._search_parameters[name] = SearchParameter(
+            usage=usage,
+            category=category,
+            enumerated_list=enumerated_list,
+            min_range=min_range,
+            max_range=max_range,
         )
 
     def _check_for_illegal_input(

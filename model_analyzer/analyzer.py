@@ -23,7 +23,7 @@ from model_analyzer.cli.cli import CLI
 from model_analyzer.config.generate.base_model_config_generator import (
     BaseModelConfigGenerator,
 )
-from model_analyzer.config.generate.config_parameters import ConfigParameters
+from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.server.server import TritonServer
@@ -83,7 +83,7 @@ class Analyzer:
             constraint_manager=self._constraint_manager,
         )
 
-        self._search_parameters: Dict[str, ConfigParameters] = {}
+        self._search_parameters: Dict[str, SearchParameters] = {}
 
     def profile(
         self, client: TritonClient, gpus: List[GPUDevice], mode: str, verbose: bool
@@ -421,6 +421,6 @@ class Analyzer:
 
     def _populate_search_parameters(self):
         for model in self._config.profile_models:
-            self._search_parameters[model.model_name()] = ConfigParameters(
+            self._search_parameters[model.model_name()] = SearchParameters(
                 self._config, model.parameters(), model.model_config_parameters()
             )
