@@ -18,16 +18,10 @@ import re
 import unittest
 from argparse import Namespace
 from copy import deepcopy
-from math import log2
 from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from model_analyzer.analyzer import Analyzer
 from model_analyzer.cli.cli import CLI
-from model_analyzer.config.generate.search_parameters import (
-    ParameterCategory,
-    ParameterUsage,
-)
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.config.input.config_defaults import (
