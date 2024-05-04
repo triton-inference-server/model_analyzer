@@ -15,8 +15,11 @@
 # limitations under the License.
 
 import unittest
+from math import log2
 from unittest.mock import MagicMock, patch
 
+import model_analyzer.config.input.config_defaults as default
+from model_analyzer.analyzer import Analyzer
 from model_analyzer.config.generate.search_parameters import (
     ParameterCategory,
     ParameterUsage,
@@ -180,6 +183,193 @@ class TestSearchParameters(trc.TestResultCollector):
                 enumerated_list=["FP8", "FP16", "FP32"],
                 max_range=10,
             )
+
+    def test_search_parameter_creation_default(self):
+        """
+        Test that search parameters are correctly created in default optuna case
+        """
+
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli-repository",
+            "-f",
+            "path-to-config-file",
+            "--run-config-search-mode",
+            "optuna",
+        ]
+
+        yaml_content = """
+        profile_models: add_sub
+        """
+
+        config = TestConfig()._evaluate_config(args=args, yaml_content=yaml_content)
+
+        analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
+        analyzer._populate_search_parameters()
+
+        # batch_sizes
+        batch_sizes = analyzer._search_parameters["add_sub"].get_parameter(
+            "batch_sizes"
+        )
+        self.assertEqual(ParameterUsage.MODEL, batch_sizes.usage)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, batch_sizes.category)
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE), batch_sizes.min_range
+        )
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE), batch_sizes.max_range
+        )
+
+        # concurrency
+        concurrency = analyzer._search_parameters["add_sub"].get_parameter(
+            "concurrency"
+        )
+        self.assertEqual(ParameterUsage.RUNTIME, concurrency.usage)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, concurrency.category)
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MIN_CONCURRENCY), concurrency.min_range
+        )
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MAX_CONCURRENCY), concurrency.max_range
+        )
+
+        # instance_group
+        instance_group = analyzer._search_parameters["add_sub"].get_parameter(
+            "instance_group"
+        )
+        self.assertEqual(ParameterUsage.MODEL, instance_group.usage)
+        self.assertEqual(ParameterCategory.INTEGER, instance_group.category)
+        self.assertEqual(
+            default.DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT, instance_group.min_range
+        )
+        self.assertEqual(
+            default.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, instance_group.max_range
+        )
+
+    def test_search_parameter_creation_multi_model_non_default(self):
+        """
+        Test that search parameters are correctly created in
+        a multi-model non-default optuna case
+        """
+
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli-repository",
+            "-f",
+            "path-to-config-file",
+            "--run-config-search-mode",
+            "optuna",
+        ]
+
+        yaml_content = """
+        run_config_search_mode: optuna
+        profile_models:
+            add_sub:
+                parameters:
+                    batch_sizes: [16, 32, 64]
+                model_config_parameters:
+                    dynamic_batching:
+                        max_queue_delay_microseconds: [100, 200, 300]
+                    instance_group:
+                        - kind: KIND_GPU
+                          count: [1, 2, 3, 4]
+            mult_div:
+                parameters:
+                    concurrency: [1, 8, 64, 256]
+        """
+
+        config = TestConfig()._evaluate_config(args, yaml_content)
+
+        analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
+        analyzer._populate_search_parameters()
+
+        # ===================================================================
+        # ADD_SUB
+        # ===================================================================
+
+        # batch_sizes
+        # ===================================================================
+        batch_sizes = analyzer._search_parameters["add_sub"].get_parameter(
+            "batch_sizes"
+        )
+        self.assertEqual(ParameterUsage.MODEL, batch_sizes.usage)
+        self.assertEqual(ParameterCategory.LIST, batch_sizes.category)
+        self.assertEqual([16, 32, 64], batch_sizes.enumerated_list)
+
+        # concurrency
+        # ===================================================================
+        concurrency = analyzer._search_parameters["add_sub"].get_parameter(
+            "concurrency"
+        )
+        self.assertEqual(ParameterUsage.RUNTIME, concurrency.usage)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, concurrency.category)
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MIN_CONCURRENCY), concurrency.min_range
+        )
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MAX_CONCURRENCY), concurrency.max_range
+        )
+
+        # instance_group
+        # ===================================================================
+        instance_group = analyzer._search_parameters["add_sub"].get_parameter(
+            "instance_group"
+        )
+        self.assertEqual(ParameterUsage.MODEL, instance_group.usage)
+        self.assertEqual(ParameterCategory.LIST, instance_group.category)
+        self.assertEqual([1, 2, 3, 4], instance_group.enumerated_list)
+
+        instance_group = analyzer._search_parameters["add_sub"].get_parameter(
+            "max_queue_delay_microseconds"
+        )
+        self.assertEqual(ParameterUsage.MODEL, instance_group.usage)
+        self.assertEqual(ParameterCategory.LIST, instance_group.category)
+        self.assertEqual([100, 200, 300], instance_group.enumerated_list)
+
+        # ===================================================================
+        # MULT_DIV
+        # ===================================================================
+
+        # batch_sizes
+        # ===================================================================
+        batch_sizes = analyzer._search_parameters["mult_div"].get_parameter(
+            "batch_sizes"
+        )
+        self.assertEqual(ParameterUsage.MODEL, batch_sizes.usage)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, batch_sizes.category)
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE), batch_sizes.min_range
+        )
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE), batch_sizes.max_range
+        )
+
+        # concurrency
+        # ===================================================================
+        concurrency = analyzer._search_parameters["mult_div"].get_parameter(
+            "concurrency"
+        )
+        self.assertEqual(ParameterUsage.RUNTIME, concurrency.usage)
+        self.assertEqual(ParameterCategory.LIST, concurrency.category)
+        self.assertEqual([1, 8, 64, 256], concurrency.enumerated_list)
+
+        # instance_group
+        # ===================================================================
+        instance_group = analyzer._search_parameters["mult_div"].get_parameter(
+            "instance_group"
+        )
+        self.assertEqual(ParameterUsage.MODEL, instance_group.usage)
+        self.assertEqual(ParameterCategory.INTEGER, instance_group.category)
+        self.assertEqual(
+            default.DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT, instance_group.min_range
+        )
+        self.assertEqual(
+            default.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, instance_group.max_range
+        )
 
 
 if __name__ == "__main__":
