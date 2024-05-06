@@ -19,7 +19,7 @@ from enum import Enum, auto
 from typing import Any, List, Optional
 
 
-class ParameterType(Enum):
+class ParameterUsage(Enum):
     MODEL = auto()
     RUNTIME = auto()
     BUILD = auto()
@@ -32,17 +32,17 @@ class ParameterCategory(Enum):
 
 
 @dataclass
-class ConfigParameter:
+class SearchParameter:
     """
-    A dataclass that holds information about a configuration parameter
+    A dataclass that holds information about a configuration's search parameter
     """
 
-    ptype: ParameterType
+    usage: ParameterUsage
     category: ParameterCategory
+
+    # This is only applicable to LIST category
+    enumerated_list: Optional[List[Any]] = None
 
     # These are only applicable to INTEGER and EXPONENTIAL categories
     min_range: Optional[int] = None
     max_range: Optional[int] = None
-
-    # This is only applicable to LIST category
-    enumerated_list: List[Any] = []
