@@ -1529,11 +1529,21 @@ class ConfigCommandProfile(ConfigCommand):
 
             # Run parameters
             if not model.parameters():
-                new_model["parameters"] = {
-                    "batch_sizes": self.batch_sizes,
-                    "concurrency": self.concurrency,
-                    "request_rate": self.request_rate,
-                }
+                if self.run_config_search_mode != "optuna":
+                    new_model["parameters"] = {
+                        "batch_sizes": self.batch_sizes,
+                        "concurrency": self.concurrency,
+                        "request_rate": self.request_rate,
+                    }
+                else:
+                    if self._fields["batch_sizes"].is_set_by_user():
+                        new_model["parameters"] = {"batch_sizes": self.batch_sizes}
+                    else:
+                        new_model["parameters"] = {"batch_sizes": []}
+
+                    new_model["parameters"]["concurrency"] = self.concurrency
+                    new_model["parameters"]["request_rate"] = self.request_rate
+
             else:
                 new_model["parameters"] = {}
                 if "batch_sizes" in model.parameters():
@@ -1541,7 +1551,12 @@ class ConfigCommandProfile(ConfigCommand):
                         {"batch_sizes": model.parameters()["batch_sizes"]}
                     )
                 else:
-                    new_model["parameters"].update({"batch_sizes": self.batch_sizes})
+                    if self.run_config_search_mode != "optuna":
+                        new_model["parameters"].update(
+                            {"batch_sizes": self.batch_sizes}
+                        )
+                    else:
+                        new_model["parameters"].update({"batch_sizes": []})
 
                 if "concurrency" in model.parameters():
                     new_model["parameters"].update(
