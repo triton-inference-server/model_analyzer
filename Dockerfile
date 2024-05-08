@@ -12,11 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.04-py3
-ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.04-py3-sdk
+ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.05-py3
+ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.05-py3-sdk
 
+<<<<<<< HEAD
 ARG MODEL_ANALYZER_VERSION=1.41.0dev
 ARG MODEL_ANALYZER_CONTAINER_VERSION=24.06dev
+=======
+ARG MODEL_ANALYZER_VERSION=1.40.0
+ARG MODEL_ANALYZER_CONTAINER_VERSION=24.05
+>>>>>>> ad32523...  Update README and versions for 1.40.0 / 24.05 (#872)
 FROM ${TRITONSDK_BASE_IMAGE} as sdk
 
 FROM $BASE_IMAGE
