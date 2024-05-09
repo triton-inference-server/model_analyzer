@@ -39,7 +39,9 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-22.04"]
-        python-version: ["3.8", "3.10"]
+        python-version: ["3.8", "3.11"]
+    env:
+      SKIP_GPU_TESTS: 1  # Set this variable to skip GPU tests
 
     steps:
     - uses: actions/checkout@v3
