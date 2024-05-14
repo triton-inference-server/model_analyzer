@@ -285,7 +285,7 @@ class TestParameterSearch(trc.TestResultCollector):
 
     def _create_single_model_with_constraints(
         self, latency_budget: str
-    ) -> Union[ConfigCommandProfile | ConfigCommandReport]:
+    ) -> Union[ConfigCommandProfile, ConfigCommandReport]:
         args = [
             "model-analyzer",
             "profile",

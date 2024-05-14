@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
 from filecmp import cmp
 from shutil import rmtree
@@ -79,6 +80,8 @@ class TestResultTableManager(trc.TestResultCollector):
         Match the csvs against the golden versions in
         tests/common/multi-model-ckpt
         """
+        if os.getenv("SKIP_GPU_TESTS"):
+            self.skipTest("Skipping this test as it requires GPU")
         table_manager = self._create_multi_model_result_table_manager()
 
         table_manager.create_tables()

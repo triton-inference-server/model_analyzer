@@ -262,6 +262,8 @@ ensemble_scheduling {
 
     def test_instance_group_string(self):
         """Test out all corner cases of instance_group_string()"""
+        if os.getenv("SKIP_GPU_TESTS"):
+            self.skipTest("Skipping this test as it requires GPU")
 
         def _test_helper(config_dict, expected_result, gpu_count=None):
             model_config = ModelConfig.create_from_dictionary(config_dict)
@@ -318,6 +320,8 @@ ensemble_scheduling {
 
     def test_instance_group_count(self):
         """Test out all corner cases of instance_group_count()"""
+        if os.getenv("SKIP_GPU_TESTS"):
+            self.skipTest("Skipping this test as it requires GPU")
 
         def _test_helper(config_dict, expected_result, gpu_count=None):
             model_config = ModelConfig.create_from_dictionary(config_dict)
