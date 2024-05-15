@@ -17,16 +17,12 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
 )
 from model_analyzer.config.generate.optuna_run_config_generator import (
     OptunaRunConfigGenerator,
-)
-from model_analyzer.config.generate.run_config_generator_factory import (
-    RunConfigGeneratorFactory,
 )
 from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES
 from model_analyzer.config.input.objects.config_model_profile_spec import (

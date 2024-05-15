@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright 2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
 # limitations under the License.
 
 import logging
-from sys import maxsize
-from typing import Any, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Union
 
 import optuna
 
@@ -26,8 +25,6 @@ from model_analyzer.config.generate.base_model_config_generator import (
 from model_analyzer.config.generate.brute_run_config_generator import (
     BruteRunConfigGenerator,
 )
-from model_analyzer.config.generate.coordinate import Coordinate
-from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
@@ -47,10 +44,8 @@ from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
 from .config_generator_interface import ConfigGeneratorInterface
-from .generator_utils import GeneratorUtils
 
 logger = logging.getLogger(LOGGER_NAME)
-from copy import deepcopy
 
 
 class OptunaRunConfigGenerator(ConfigGeneratorInterface):
