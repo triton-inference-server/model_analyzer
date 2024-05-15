@@ -29,8 +29,6 @@ from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
 )
 from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.triton.model.model_config import ModelConfig
 from tests.common.test_utils import evaluate_mock_config
 
 from .common import test_result_collector as trc
