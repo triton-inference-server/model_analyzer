@@ -509,7 +509,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         concurrency = self._calculate_concurrency(dimension_values)
 
-        perf_config_params = {"batch-size": 1, "concurrency-range": concurrency}
+        perf_config_params = {
+            "batch-size": DEFAULT_BATCH_SIZES,
+            "concurrency-range": concurrency,
+        }
         perf_analyzer_config.update_config(perf_config_params)
 
         perf_analyzer_config.update_config(model.perf_analyzer_flags())

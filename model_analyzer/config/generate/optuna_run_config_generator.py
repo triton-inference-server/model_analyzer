@@ -281,7 +281,10 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         perf_analyzer_config.update_config_from_profile_config(model_name, self._config)
 
-        perf_config_params = {"batch-size": 1, "concurrency-range": concurrency}
+        perf_config_params = {
+            "batch-size": DEFAULT_BATCH_SIZES,
+            "concurrency-range": concurrency,
+        }
         perf_analyzer_config.update_config(perf_config_params)
 
         perf_analyzer_config.update_config(model.perf_analyzer_flags())
