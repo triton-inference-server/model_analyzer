@@ -26,7 +26,6 @@ from model_analyzer.config.generate.quick_run_config_generator import (
     QuickRunConfigGenerator,
 )
 from model_analyzer.config.generate.search_config import SearchConfig
-from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
