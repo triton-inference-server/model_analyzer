@@ -529,7 +529,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
         qrcg = QuickRunConfigGenerator(
-            sc, config, ["GPU0"], models, {}, ModelVariantNameManager()
+            sc, config, 1, models, {}, ModelVariantNameManager()
         )
 
         default_run_config = qrcg._create_default_run_config()

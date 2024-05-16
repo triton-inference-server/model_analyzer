@@ -58,7 +58,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         config = self._create_config()
         self._rcg = OptunaRunConfigGenerator(
             config=config,
-            gpus=[GPUDevice("TEST_DEVICE_NAME", 0, "TEST_BUS_ID0", "TEST_UUID0")],
+            gpu_count=1,
             models=self._mock_models,
             model_variant_name_manager=ModelVariantNameManager(),
             search_parameters=MagicMock(),

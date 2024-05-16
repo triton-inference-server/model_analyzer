@@ -37,7 +37,6 @@ from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -59,7 +58,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self,
         search_config: SearchConfig,
         config: ConfigCommandProfile,
-        gpus: List[GPUDevice],
+        gpu_count: int,
         models: List[ModelProfileSpec],
         composing_models: List[ModelProfileSpec],
         model_variant_name_manager: ModelVariantNameManager,
@@ -71,7 +70,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             Defines parameters and dimensions for the search
         config: ConfigCommandProfile
             Profile configuration information
-        gpus: List of GPUDevices
+        gpu_count: Number of gpus in the system
         models: List of ModelProfileSpec
             List of models to profile
         composing_models: List of ModelProfileSpec
@@ -80,7 +79,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         """
         self._search_config = search_config
         self._config = config
-        self._gpus = gpus
+        self._gpu_count = gpu_count
         self._models = models
         self._composing_models = composing_models
 
@@ -716,7 +715,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _calculate_default_concurrency(self, model_config: ModelConfig) -> int:
         default_max_batch_size = model_config.max_batch_size()
         default_instance_count = model_config.instance_group_count(
-            system_gpu_count=len(self._gpus)
+            system_gpu_count=self._gpu_count
         )
         default_concurrency = 2 * default_max_batch_size * default_instance_count
 

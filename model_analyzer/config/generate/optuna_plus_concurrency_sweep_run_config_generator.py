@@ -29,7 +29,6 @@ from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
@@ -49,7 +48,7 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     def __init__(
         self,
         config: ConfigCommandProfile,
-        gpus: List[GPUDevice],
+        gpu_count: int,
         models: List[ModelProfileSpec],
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
@@ -60,7 +59,7 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         ----------
         config: ConfigCommandProfile
             Profile configuration information
-        gpus: List of GPUDevices
+        gpu_count: Number of gpus in the system
         models: List of ModelProfileSpec
             List of models to profile
         result_manager: ResultManager
@@ -71,7 +70,7 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             The object that handles the users configuration search parameters
         """
         self._config = config
-        self._gpus = gpus
+        self._gpu_count = gpu_count
         self._models = models
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
@@ -113,7 +112,7 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     def _create_optuna_run_config_generator(self) -> OptunaRunConfigGenerator:
         return OptunaRunConfigGenerator(
             config=self._config,
-            gpus=self._gpus,
+            gpu_count=self._gpu_count,
             models=self._models,
             model_variant_name_manager=self._model_variant_name_manager,
             search_parameters=self._search_parameters,

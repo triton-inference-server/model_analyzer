@@ -29,7 +29,6 @@ from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
@@ -50,7 +49,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self,
         search_config: SearchConfig,
         config: ConfigCommandProfile,
-        gpus: List[GPUDevice],
+        gpu_count: int,
         models: List[ModelProfileSpec],
         composing_models: List[ModelProfileSpec],
         result_manager: ResultManager,
@@ -63,7 +62,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             Defines parameters and dimensions for the search
         config: ConfigCommandProfile
             Profile configuration information
-        gpus: List of GPUDevices
+        gpu_count: Number of gpus in the system
         models: List of ModelProfileSpec
             List of models to profile
         composing_models: List of ModelProfileSpec
@@ -75,7 +74,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         """
         self._search_config = search_config
         self._config = config
-        self._gpus = gpus
+        self._gpu_count = gpu_count
         self._models = models
         self._composing_models = composing_models
         self._result_manager = result_manager
@@ -118,7 +117,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         return QuickRunConfigGenerator(
             search_config=self._search_config,
             config=self._config,
-            gpus=self._gpus,
+            gpu_count=self._gpu_count,
             models=self._models,
             composing_models=self._composing_models,
             model_variant_name_manager=self._model_variant_name_manager,
