@@ -186,7 +186,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             self._mock_models,
             {},
-            MagicMock(),
             ModelVariantNameManager(),
         )
 
@@ -207,7 +206,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             self._mock_models,
             {},
-            MagicMock(),
             ModelVariantNameManager(),
         )
         self.assertEqual(qrcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
@@ -276,7 +274,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             mock_models,
             {},
-            MagicMock(),
             ModelVariantNameManager(),
         )
 
@@ -448,7 +445,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             mock_models,
             {},
-            MagicMock(),
             ModelVariantNameManager(),
         )
 
@@ -533,7 +529,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
         qrcg = QuickRunConfigGenerator(
-            sc, config, ["GPU0"], models, {}, MagicMock(), ModelVariantNameManager()
+            sc, config, ["GPU0"], models, {}, ModelVariantNameManager()
         )
 
         default_run_config = qrcg._create_default_run_config()
@@ -599,7 +595,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             models,
             ensemble_composing_models,
-            MagicMock(),
             ModelVariantNameManager(),
         )
 
@@ -681,7 +676,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             models,
             bls_composing_models,
-            MagicMock(),
             ModelVariantNameManager(),
         )
 
@@ -759,7 +753,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             self._mock_models,
             {},
-            MagicMock(),
             ModelVariantNameManager(),
         )
 
@@ -812,7 +805,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             self._mock_models,
             {},
-            MagicMock(),
             ModelVariantNameManager(),
         )
 
@@ -865,7 +857,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             self._mock_models,
             {},
-            MagicMock(),
             ModelVariantNameManager(),
         )
 
@@ -918,7 +909,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             self._mock_models,
             {},
-            MagicMock(),
             ModelVariantNameManager(),
         )
 
@@ -1093,7 +1083,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             models,
             ensemble_composing_models,
-            MagicMock(),
             ModelVariantNameManager(),
         )
 
@@ -1283,7 +1272,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             MagicMock(),
             models,
             bls_composing_models,
-            MagicMock(),
             ModelVariantNameManager(),
         )
 

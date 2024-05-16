@@ -40,7 +40,6 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
@@ -63,7 +62,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         gpus: List[GPUDevice],
         models: List[ModelProfileSpec],
         composing_models: List[ModelProfileSpec],
-        client: TritonClient,
         model_variant_name_manager: ModelVariantNameManager,
     ):
         """
@@ -78,12 +76,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             List of models to profile
         composing_models: List of ModelProfileSpec
             List of composing model profiles
-        client: TritonClient
         model_variant_name_manager: ModelVariantNameManager
         """
         self._search_config = search_config
         self._config = config
-        self._client = client
         self._gpus = gpus
         self._models = models
         self._composing_models = composing_models

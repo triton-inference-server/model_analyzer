@@ -33,7 +33,6 @@ from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.triton.client.client import TritonClient
 
 from .config_generator_interface import ConfigGeneratorInterface
 
@@ -54,7 +53,6 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         gpus: List[GPUDevice],
         models: List[ModelProfileSpec],
         composing_models: List[ModelProfileSpec],
-        client: TritonClient,
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
     ):
@@ -70,7 +68,6 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             List of models to profile
         composing_models: List of ModelProfileSpec
             List of composing models that exist inside of the supplied models
-        client: TritonClient
         result_manager: ResultManager
             The object that handles storing and sorting the results from the perf analyzer
         model_variant_name_manager: ModelVariantNameManager
@@ -81,7 +78,6 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self._gpus = gpus
         self._models = models
         self._composing_models = composing_models
-        self._client = client
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
 
@@ -125,7 +121,6 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             gpus=self._gpus,
             models=self._models,
             composing_models=self._composing_models,
-            client=self._client,
             model_variant_name_manager=self._model_variant_name_manager,
         )
 

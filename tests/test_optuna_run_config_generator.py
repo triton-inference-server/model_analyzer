@@ -60,7 +60,6 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             config=config,
             gpus=[GPUDevice("TEST_DEVICE_NAME", 0, "TEST_BUS_ID0", "TEST_UUID0")],
             models=self._mock_models,
-            client=MagicMock(),
             model_variant_name_manager=ModelVariantNameManager(),
             search_parameters=MagicMock(),
             seed=100,

@@ -97,7 +97,6 @@ class RunConfigGeneratorFactory:
                 command_config=command_config,
                 gpus=gpus,
                 models=new_models,
-                client=client,
                 result_manager=result_manager,
                 search_parameters=search_parameters,
                 model_variant_name_manager=model_variant_name_manager,
@@ -108,7 +107,6 @@ class RunConfigGeneratorFactory:
                 gpus=gpus,
                 models=new_models,
                 composing_models=composing_models,
-                client=client,
                 result_manager=result_manager,
                 model_variant_name_manager=model_variant_name_manager,
             )
@@ -149,7 +147,6 @@ class RunConfigGeneratorFactory:
         command_config: ConfigCommandProfile,
         gpus: List[GPUDevice],
         models: List[ModelProfileSpec],
-        client: TritonClient,
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: SearchParameters,
@@ -158,7 +155,6 @@ class RunConfigGeneratorFactory:
             config=command_config,
             gpus=gpus,
             models=models,
-            client=client,
             result_manager=result_manager,
             model_variant_name_manager=model_variant_name_manager,
             search_parameters=search_parameters,
@@ -170,7 +166,6 @@ class RunConfigGeneratorFactory:
         gpus: List[GPUDevice],
         models: List[ModelProfileSpec],
         composing_models: List[ModelProfileSpec],
-        client: TritonClient,
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
     ) -> ConfigGeneratorInterface:
@@ -183,7 +178,6 @@ class RunConfigGeneratorFactory:
             gpus=gpus,
             models=models,
             composing_models=composing_models,
-            client=client,
             result_manager=result_manager,
             model_variant_name_manager=model_variant_name_manager,
         )

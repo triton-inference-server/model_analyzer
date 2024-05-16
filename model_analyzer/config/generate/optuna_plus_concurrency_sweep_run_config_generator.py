@@ -33,7 +33,6 @@ from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.triton.client.client import TritonClient
 
 from .config_generator_interface import ConfigGeneratorInterface
 
@@ -52,7 +51,6 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         config: ConfigCommandProfile,
         gpus: List[GPUDevice],
         models: List[ModelProfileSpec],
-        client: TritonClient,
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: SearchParameters,
@@ -65,7 +63,6 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         gpus: List of GPUDevices
         models: List of ModelProfileSpec
             List of models to profile
-        client: TritonClient
         result_manager: ResultManager
             The object that handles storing and sorting the results from the perf analyzer
         model_variant_name_manager: ModelVariantNameManager
@@ -76,7 +73,6 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self._config = config
         self._gpus = gpus
         self._models = models
-        self._client = client
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
         self._search_parameters = search_parameters
@@ -119,7 +115,6 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             config=self._config,
             gpus=self._gpus,
             models=self._models,
-            client=self._client,
             model_variant_name_manager=self._model_variant_name_manager,
             search_parameters=self._search_parameters,
         )
