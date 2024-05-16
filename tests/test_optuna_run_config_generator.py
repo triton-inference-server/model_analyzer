@@ -28,7 +28,6 @@ from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES
 from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
 )
-from model_analyzer.device.gpu_device import GPUDevice
 from tests.common.test_utils import evaluate_mock_config
 
 from .common import test_result_collector as trc
