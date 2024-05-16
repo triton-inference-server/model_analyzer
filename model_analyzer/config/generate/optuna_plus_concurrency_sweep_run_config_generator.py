@@ -30,7 +30,6 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
@@ -55,7 +54,6 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         models: List[ModelProfileSpec],
         client: TritonClient,
         result_manager: ResultManager,
-        metrics_manager: MetricsManager,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: SearchParameters,
     ):
@@ -80,7 +78,6 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self._models = models
         self._client = client
         self._result_manager = result_manager
-        self._metrics_manager = metrics_manager
         self._model_variant_name_manager = model_variant_name_manager
         self._search_parameters = search_parameters
 
@@ -125,7 +122,6 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             client=self._client,
             model_variant_name_manager=self._model_variant_name_manager,
             search_parameters=self._search_parameters,
-            metrics_manager=self._metrics_manager,
         )
 
     def _sweep_concurrency_over_top_results(self) -> Generator[RunConfig, None, None]:

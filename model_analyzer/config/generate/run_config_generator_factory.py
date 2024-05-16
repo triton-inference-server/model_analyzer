@@ -28,7 +28,6 @@ from model_analyzer.config.input.objects.config_model_profile_spec import (
 from model_analyzer.constants import MIN_INITIALIZED, RADIUS
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -60,7 +59,6 @@ class RunConfigGeneratorFactory:
         models: List[ConfigModelProfileSpec],
         client: TritonClient,
         result_manager: ResultManager,
-        metrics_manager: MetricsManager,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: SearchParameters,
     ) -> ConfigGeneratorInterface:
@@ -101,7 +99,6 @@ class RunConfigGeneratorFactory:
                 models=new_models,
                 client=client,
                 result_manager=result_manager,
-                metrics_manager=metrics_manager,
                 search_parameters=search_parameters,
                 model_variant_name_manager=model_variant_name_manager,
             )
@@ -154,7 +151,6 @@ class RunConfigGeneratorFactory:
         models: List[ModelProfileSpec],
         client: TritonClient,
         result_manager: ResultManager,
-        metrics_manager: MetricsManager,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: SearchParameters,
     ) -> ConfigGeneratorInterface:
@@ -164,7 +160,6 @@ class RunConfigGeneratorFactory:
             models=models,
             client=client,
             result_manager=result_manager,
-            metrics_manager=metrics_manager,
             model_variant_name_manager=model_variant_name_manager,
             search_parameters=search_parameters,
         )
