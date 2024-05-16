@@ -136,7 +136,6 @@ class ModelManager:
             models=models,
             client=self._client,
             result_manager=self._result_manager,
-            metrics_manager=self._metrics_manager,
             search_parameters=self._search_parameters,
             model_variant_name_manager=self._model_variant_name_manager,
         )
