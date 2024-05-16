@@ -204,6 +204,7 @@ class Analyzer:
             metrics_manager=self._metrics_manager,
             state_manager=self._state_manager,
             constraint_manager=self._constraint_manager,
+            search_parameters=self._search_parameters,
         )
 
     def _get_server_only_metrics(self, client, gpus):
