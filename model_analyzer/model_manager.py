@@ -23,6 +23,7 @@ from model_analyzer.config.generate.model_variant_name_manager import (
 from model_analyzer.config.generate.run_config_generator_factory import (
     RunConfigGeneratorFactory,
 )
+from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
@@ -59,6 +60,7 @@ class ModelManager:
         result_manager: ResultManager,
         state_manager: AnalyzerStateManager,
         constraint_manager: ConstraintManager,
+        search_parameters: SearchParameters,
     ):
         """
         Parameters
@@ -79,6 +81,8 @@ class ModelManager:
         constraint_manager: ConstraintManager
             The object that handles processing and applying
             constraints on a given measurements
+        search_parameters: SearchParameters
+            The object that handles the users configuration search parameters
         """
 
         self._config = config
@@ -89,6 +93,7 @@ class ModelManager:
         self._result_manager = result_manager
         self._state_manager = state_manager
         self._constraint_manager = constraint_manager
+        self._search_parameters = search_parameters
 
         if state_manager.starting_fresh_run():
             self._init_state()
@@ -131,6 +136,7 @@ class ModelManager:
             models=models,
             client=self._client,
             result_manager=self._result_manager,
+            search_parameters=self._search_parameters,
             model_variant_name_manager=self._model_variant_name_manager,
         )
 

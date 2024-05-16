@@ -49,6 +49,9 @@ class SearchParameters:
 
         self._populate_search_parameters()
 
+    def get_parameters(self) -> List[SearchParameter]:
+        return [v for v in self._search_parameters.values()]
+
     def get_parameter(self, name: str) -> SearchParameter:
         return self._search_parameters[name]
 

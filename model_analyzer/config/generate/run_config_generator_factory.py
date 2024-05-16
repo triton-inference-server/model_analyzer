@@ -20,6 +20,7 @@ from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
 )
+from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
@@ -35,6 +36,9 @@ from .brute_plus_binary_parameter_search_run_config_generator import (
     BrutePlusBinaryParameterSearchRunConfigGenerator,
 )
 from .config_generator_interface import ConfigGeneratorInterface
+from .optuna_plus_concurrency_sweep_run_config_generator import (
+    OptunaPlusConcurrencySweepRunConfigGenerator,
+)
 from .quick_plus_concurrency_sweep_run_config_generator import (
     QuickPlusConcurrencySweepRunConfigGenerator,
 )
@@ -56,6 +60,7 @@ class RunConfigGeneratorFactory:
         client: TritonClient,
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
+        search_parameters: SearchParameters,
     ) -> ConfigGeneratorInterface:
         """
         Parameters
@@ -71,6 +76,8 @@ class RunConfigGeneratorFactory:
             The object that handles storing and sorting the results from the perf analyzer
         model_variant_name_manager: ModelVariantNameManager
             Maps model variants to config names
+        search_parameters: SearchParameters
+            The object that handles the users configuration search parameters
 
         Returns
         -------
@@ -85,7 +92,17 @@ class RunConfigGeneratorFactory:
             new_models, command_config, client, gpus
         )
 
-        if command_config.run_config_search_mode == "quick" or composing_models:
+        if command_config.run_config_search_mode == "optuna":
+            return RunConfigGeneratorFactory._create_optuna_plus_concurrency_sweep_run_config_generator(
+                command_config=command_config,
+                gpus=gpus,
+                models=new_models,
+                client=client,
+                result_manager=result_manager,
+                search_parameters=search_parameters,
+                model_variant_name_manager=model_variant_name_manager,
+            )
+        elif command_config.run_config_search_mode == "quick" or composing_models:
             return RunConfigGeneratorFactory._create_quick_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
@@ -125,6 +142,26 @@ class RunConfigGeneratorFactory:
             client=client,
             result_manager=result_manager,
             model_variant_name_manager=model_variant_name_manager,
+        )
+
+    @staticmethod
+    def _create_optuna_plus_concurrency_sweep_run_config_generator(
+        command_config: ConfigCommandProfile,
+        gpus: List[GPUDevice],
+        models: List[ModelProfileSpec],
+        client: TritonClient,
+        result_manager: ResultManager,
+        model_variant_name_manager: ModelVariantNameManager,
+        search_parameters: SearchParameters,
+    ) -> ConfigGeneratorInterface:
+        return OptunaPlusConcurrencySweepRunConfigGenerator(
+            config=command_config,
+            gpus=gpus,
+            models=models,
+            client=client,
+            result_manager=result_manager,
+            model_variant_name_manager=model_variant_name_manager,
+            search_parameters=search_parameters,
         )
 
     @staticmethod
