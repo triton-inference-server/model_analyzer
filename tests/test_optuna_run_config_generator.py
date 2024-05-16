@@ -63,7 +63,6 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             client=MagicMock(),
             model_variant_name_manager=ModelVariantNameManager(),
             search_parameters=MagicMock(),
-            metrics_manager=MagicMock(),
             seed=100,
         )
 
