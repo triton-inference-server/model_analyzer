@@ -37,7 +37,6 @@ from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
-from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -61,7 +60,6 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         client: TritonClient,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: SearchParameters,
-        metrics_manager: MetricsManager,
         seed: Optional[int] = 0,
     ):
         """
@@ -82,7 +80,6 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         self._gpus = gpus
         self._models = models
         self._search_parameters = search_parameters
-        self._metrics_manager = metrics_manager
 
         self._model_variant_name_manager = model_variant_name_manager
 
