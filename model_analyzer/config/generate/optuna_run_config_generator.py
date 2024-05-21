@@ -281,6 +281,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         perf_analyzer_config.update_config_from_profile_config(model_name, self._config)
 
+        # TODO: TMA-1934 add support for user specifying a range of client batch sizes
         perf_config_params = {
             "batch-size": DEFAULT_BATCH_SIZES,
             "concurrency-range": concurrency,
