@@ -49,11 +49,13 @@ class SearchParameters:
 
         self._populate_search_parameters()
 
-    def get_parameters(self) -> List[SearchParameter]:
-        return [v for v in self._search_parameters.values()]
+    def get_parameter(self, name: str) -> Optional[SearchParameter]:
+        try:
+            parameter = self._search_parameters[name]
+        except KeyError:
+            return None
 
-    def get_parameter(self, name: str) -> SearchParameter:
-        return self._search_parameters[name]
+        return parameter
 
     def get_type(self, name: str) -> ParameterUsage:
         return self._search_parameters[name].usage
@@ -73,6 +75,9 @@ class SearchParameters:
     def _populate_search_parameters(self) -> None:
         if self._parameters:
             self._populate_parameters()
+        else:
+            # Always populate batch size if nothing is specified
+            self._populate_batch_sizes()
 
         self._populate_model_config_parameters()
 
@@ -86,10 +91,11 @@ class SearchParameters:
         self._populate_max_queue_delay_microseconds()
 
     def _populate_batch_sizes(self) -> None:
-        if self._parameters["batch_sizes"]:
+        if self._parameters and self._parameters["batch_sizes"]:
             self._populate_list_parameter(
                 parameter_name="batch_sizes",
                 parameter_list=self._parameters["batch_sizes"],
+                parameter_category=ParameterCategory.INT_LIST,
             )
         else:
             self._populate_rcs_parameter(
@@ -103,6 +109,7 @@ class SearchParameters:
             self._populate_list_parameter(
                 parameter_name="concurrency",
                 parameter_list=self._parameters["concurrency"],
+                parameter_category=ParameterCategory.INT_LIST,
             )
         else:
             self._populate_rcs_parameter(
@@ -135,6 +142,7 @@ class SearchParameters:
             self._populate_list_parameter(
                 parameter_name="instance_group",
                 parameter_list=parameter_list,
+                parameter_category=ParameterCategory.INT_LIST,
             )
         else:
             self._populate_rcs_parameter(
@@ -157,6 +165,7 @@ class SearchParameters:
                 parameter_list=self._model_config_parameters["dynamic_batching"][0][
                     "max_queue_delay_microseconds"
                 ],
+                parameter_category=ParameterCategory.INT_LIST,
             )
 
     def _is_max_queue_delay_in_model_config_parameters(self) -> bool:
@@ -176,14 +185,15 @@ class SearchParameters:
     def _populate_list_parameter(
         self,
         parameter_name: str,
-        parameter_list: List[int],
+        parameter_list: List[int | str],
+        parameter_category: ParameterCategory,
     ) -> None:
         usage = self._determine_parameter_usage(parameter_name)
 
         self._add_search_parameter(
             name=parameter_name,
             usage=usage,
-            category=ParameterCategory.LIST,
+            category=parameter_category,
             enumerated_list=parameter_list,
         )
 
@@ -257,7 +267,10 @@ class SearchParameters:
         max_range: Optional[int],
         enumerated_list: List[Any],
     ) -> None:
-        if category is ParameterCategory.LIST:
+        if (
+            category is ParameterCategory.INT_LIST
+            or category is ParameterCategory.STR_LIST
+        ):
             self._check_for_illegal_list_input(min_range, max_range, enumerated_list)
         else:
             if min_range is None or max_range is None:
