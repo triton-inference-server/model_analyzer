@@ -95,9 +95,8 @@ class RunConfigGeneratorFactory:
         if command_config.run_config_search_mode == "optuna":
             return RunConfigGeneratorFactory._create_optuna_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
-                gpus=gpus,
+                gpu_count=len(gpus),
                 models=new_models,
-                client=client,
                 result_manager=result_manager,
                 search_parameters=search_parameters,
                 model_variant_name_manager=model_variant_name_manager,
@@ -105,10 +104,9 @@ class RunConfigGeneratorFactory:
         elif command_config.run_config_search_mode == "quick" or composing_models:
             return RunConfigGeneratorFactory._create_quick_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
-                gpus=gpus,
+                gpu_count=len(gpus),
                 models=new_models,
                 composing_models=composing_models,
-                client=client,
                 result_manager=result_manager,
                 model_variant_name_manager=model_variant_name_manager,
             )
@@ -147,18 +145,16 @@ class RunConfigGeneratorFactory:
     @staticmethod
     def _create_optuna_plus_concurrency_sweep_run_config_generator(
         command_config: ConfigCommandProfile,
-        gpus: List[GPUDevice],
+        gpu_count: int,
         models: List[ModelProfileSpec],
-        client: TritonClient,
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: SearchParameters,
     ) -> ConfigGeneratorInterface:
         return OptunaPlusConcurrencySweepRunConfigGenerator(
             config=command_config,
-            gpus=gpus,
+            gpu_count=gpu_count,
             models=models,
-            client=client,
             result_manager=result_manager,
             model_variant_name_manager=model_variant_name_manager,
             search_parameters=search_parameters,
@@ -167,10 +163,9 @@ class RunConfigGeneratorFactory:
     @staticmethod
     def _create_quick_plus_concurrency_sweep_run_config_generator(
         command_config: ConfigCommandProfile,
-        gpus: List[GPUDevice],
+        gpu_count: int,
         models: List[ModelProfileSpec],
         composing_models: List[ModelProfileSpec],
-        client: TritonClient,
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
     ) -> ConfigGeneratorInterface:
@@ -180,10 +175,9 @@ class RunConfigGeneratorFactory:
         return QuickPlusConcurrencySweepRunConfigGenerator(
             search_config=search_config,
             config=command_config,
-            gpus=gpus,
+            gpu_count=gpu_count,
             models=models,
             composing_models=composing_models,
-            client=client,
             result_manager=result_manager,
             model_variant_name_manager=model_variant_name_manager,
         )

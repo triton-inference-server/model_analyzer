@@ -37,10 +37,8 @@ from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
@@ -60,10 +58,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self,
         search_config: SearchConfig,
         config: ConfigCommandProfile,
-        gpus: List[GPUDevice],
+        gpu_count: int,
         models: List[ModelProfileSpec],
         composing_models: List[ModelProfileSpec],
-        client: TritonClient,
         model_variant_name_manager: ModelVariantNameManager,
     ):
         """
@@ -73,18 +70,16 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             Defines parameters and dimensions for the search
         config: ConfigCommandProfile
             Profile configuration information
-        gpus: List of GPUDevices
+        gpu_count: Number of gpus in the system
         models: List of ModelProfileSpec
             List of models to profile
         composing_models: List of ModelProfileSpec
             List of composing model profiles
-        client: TritonClient
         model_variant_name_manager: ModelVariantNameManager
         """
         self._search_config = search_config
         self._config = config
-        self._client = client
-        self._gpus = gpus
+        self._gpu_count = gpu_count
         self._models = models
         self._composing_models = composing_models
 
@@ -514,7 +509,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         concurrency = self._calculate_concurrency(dimension_values)
 
-        perf_config_params = {"batch-size": 1, "concurrency-range": concurrency}
+        perf_config_params = {
+            "batch-size": DEFAULT_BATCH_SIZES,
+            "concurrency-range": concurrency,
+        }
         perf_analyzer_config.update_config(perf_config_params)
 
         perf_analyzer_config.update_config(model.perf_analyzer_flags())
@@ -720,7 +718,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _calculate_default_concurrency(self, model_config: ModelConfig) -> int:
         default_max_batch_size = model_config.max_batch_size()
         default_instance_count = model_config.instance_group_count(
-            system_gpu_count=len(self._gpus)
+            system_gpu_count=self._gpu_count
         )
         default_concurrency = 2 * default_max_batch_size * default_instance_count
 
