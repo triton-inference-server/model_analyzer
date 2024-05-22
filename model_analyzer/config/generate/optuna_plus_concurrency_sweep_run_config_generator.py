@@ -29,11 +29,9 @@ from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.triton.client.client import TritonClient
 
 from .config_generator_interface import ConfigGeneratorInterface
 
@@ -50,9 +48,8 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     def __init__(
         self,
         config: ConfigCommandProfile,
-        gpus: List[GPUDevice],
+        gpu_count: int,
         models: List[ModelProfileSpec],
-        client: TritonClient,
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: SearchParameters,
@@ -62,10 +59,9 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         ----------
         config: ConfigCommandProfile
             Profile configuration information
-        gpus: List of GPUDevices
+        gpu_count: Number of gpus in the system
         models: List of ModelProfileSpec
             List of models to profile
-        client: TritonClient
         result_manager: ResultManager
             The object that handles storing and sorting the results from the perf analyzer
         model_variant_name_manager: ModelVariantNameManager
@@ -74,9 +70,8 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             The object that handles the users configuration search parameters
         """
         self._config = config
-        self._gpus = gpus
+        self._gpu_count = gpu_count
         self._models = models
-        self._client = client
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
         self._search_parameters = search_parameters
@@ -117,9 +112,8 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     def _create_optuna_run_config_generator(self) -> OptunaRunConfigGenerator:
         return OptunaRunConfigGenerator(
             config=self._config,
-            gpus=self._gpus,
+            gpu_count=self._gpu_count,
             models=self._models,
-            client=self._client,
             model_variant_name_manager=self._model_variant_name_manager,
             search_parameters=self._search_parameters,
         )
