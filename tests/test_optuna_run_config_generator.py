@@ -102,7 +102,6 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(model_config.to_dict()["name"], self._test_config_dict["name"])
 
         # These values are the result of using a fixed seed of 100
-        foo = model_config.to_dict()
         self.assertEqual(model_config.to_dict()["maxBatchSize"], 16)
         self.assertEqual(model_config.to_dict()["instanceGroup"][0]["count"], 2)
         self.assertEqual(
