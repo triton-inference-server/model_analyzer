@@ -24,6 +24,7 @@ from model_analyzer.config.generate.model_variant_name_manager import (
 from model_analyzer.config.generate.optuna_run_config_generator import (
     OptunaRunConfigGenerator,
 )
+from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES
 from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
@@ -55,12 +56,19 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             ]
 
         config = self._create_config()
+        model = config.profile_models[0]
+        search_parameters = SearchParameters(
+            config=config,
+            parameters={},
+            model_config_parameters=model.model_config_parameters(),
+        )
+
         self._rcg = OptunaRunConfigGenerator(
             config=config,
             gpu_count=1,
             models=self._mock_models,
             model_variant_name_manager=ModelVariantNameManager(),
-            search_parameters=MagicMock(),
+            search_parameters={"add_sub": search_parameters},
             seed=100,
         )
 
@@ -85,8 +93,8 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         Test that an objective based run config is properly created
         """
         trial = self._rcg._study.ask()
-        self._rcg._create_trial_objectives(trial)
-        run_config = self._rcg._create_objective_based_run_config()
+        trial_objectives = self._rcg._create_trial_objectives(trial)
+        run_config = self._rcg._create_objective_based_run_config(trial_objectives)
 
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
@@ -94,10 +102,14 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(model_config.to_dict()["name"], self._test_config_dict["name"])
 
         # These values are the result of using a fixed seed of 100
-        self.assertEqual(model_config.to_dict()["maxBatchSize"], 8)
-        self.assertEqual(model_config.to_dict()["instanceGroup"][0]["count"], 5)
+        self.assertEqual(model_config.to_dict()["maxBatchSize"], 16)
+        self.assertEqual(model_config.to_dict()["instanceGroup"][0]["count"], 2)
+        self.assertEqual(
+            model_config.to_dict()["dynamicBatching"]["maxQueueDelayMicroseconds"],
+            "200",
+        )
         self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
-        self.assertEqual(perf_config["concurrency-range"], 80)
+        self.assertEqual(perf_config["concurrency-range"], 64)
 
     def _create_config(self, additional_args=[]):
         args = [
@@ -115,7 +127,11 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         # yapf: disable
         yaml_str = ("""
             profile_models:
-                - my-model
+                add_sub:
+                    model_config_parameters:
+                        dynamic_batching:
+                            max_queue_delay_microseconds: [100, 200, 300]
+
             """)
         # yapf: enable
 

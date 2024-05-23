@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import logging
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
@@ -60,7 +60,7 @@ class ModelManager:
         result_manager: ResultManager,
         state_manager: AnalyzerStateManager,
         constraint_manager: ConstraintManager,
-        search_parameters: SearchParameters,
+        search_parameters: Dict[str, SearchParameters],
     ):
         """
         Parameters

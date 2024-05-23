@@ -28,7 +28,8 @@ class ParameterUsage(Enum):
 class ParameterCategory(Enum):
     INTEGER = auto()
     EXPONENTIAL = auto()
-    LIST = auto()
+    STR_LIST = auto()
+    INT_LIST = auto()
 
 
 @dataclass
@@ -40,7 +41,7 @@ class SearchParameter:
     usage: ParameterUsage
     category: ParameterCategory
 
-    # This is only applicable to LIST category
+    # This is only applicable to the LIST categories
     enumerated_list: Optional[List[Any]] = None
 
     # These are only applicable to INTEGER and EXPONENTIAL categories
