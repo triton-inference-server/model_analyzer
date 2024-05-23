@@ -78,7 +78,7 @@ class TestSearchParameters(trc.TestResultCollector):
         self.search_parameters._add_search_parameter(
             name="size",
             usage=ParameterUsage.BUILD,
-            category=ParameterCategory.LIST,
+            category=ParameterCategory.STR_LIST,
             enumerated_list=["FP8", "FP16", "FP32"],
         )
 
@@ -123,7 +123,7 @@ class TestSearchParameters(trc.TestResultCollector):
             self.search_parameters.get_type("size"),
         )
         self.assertEqual(
-            ParameterCategory.LIST,
+            ParameterCategory.STR_LIST,
             self.search_parameters.get_category("size"),
         )
         self.assertEqual(
@@ -163,14 +163,14 @@ class TestSearchParameters(trc.TestResultCollector):
             self.search_parameters._add_search_parameter(
                 name="size",
                 usage=ParameterUsage.BUILD,
-                category=ParameterCategory.LIST,
+                category=ParameterCategory.INT_LIST,
             )
 
         with self.assertRaises(TritonModelAnalyzerException):
             self.search_parameters._add_search_parameter(
                 name="size",
                 usage=ParameterUsage.BUILD,
-                category=ParameterCategory.LIST,
+                category=ParameterCategory.STR_LIST,
                 enumerated_list=["FP8", "FP16", "FP32"],
                 min_range=0,
             )
@@ -179,7 +179,7 @@ class TestSearchParameters(trc.TestResultCollector):
             self.search_parameters._add_search_parameter(
                 name="size",
                 usage=ParameterUsage.BUILD,
-                category=ParameterCategory.LIST,
+                category=ParameterCategory.STR_LIST,
                 enumerated_list=["FP8", "FP16", "FP32"],
                 max_range=10,
             )
@@ -297,7 +297,7 @@ class TestSearchParameters(trc.TestResultCollector):
             "batch_sizes"
         )
         self.assertEqual(ParameterUsage.MODEL, batch_sizes.usage)
-        self.assertEqual(ParameterCategory.LIST, batch_sizes.category)
+        self.assertEqual(ParameterCategory.INT_LIST, batch_sizes.category)
         self.assertEqual([16, 32, 64], batch_sizes.enumerated_list)
 
         # concurrency
@@ -320,14 +320,14 @@ class TestSearchParameters(trc.TestResultCollector):
             "instance_group"
         )
         self.assertEqual(ParameterUsage.MODEL, instance_group.usage)
-        self.assertEqual(ParameterCategory.LIST, instance_group.category)
+        self.assertEqual(ParameterCategory.INT_LIST, instance_group.category)
         self.assertEqual([1, 2, 3, 4], instance_group.enumerated_list)
 
         instance_group = analyzer._search_parameters["add_sub"].get_parameter(
             "max_queue_delay_microseconds"
         )
         self.assertEqual(ParameterUsage.MODEL, instance_group.usage)
-        self.assertEqual(ParameterCategory.LIST, instance_group.category)
+        self.assertEqual(ParameterCategory.INT_LIST, instance_group.category)
         self.assertEqual([100, 200, 300], instance_group.enumerated_list)
 
         # ===================================================================
@@ -354,7 +354,7 @@ class TestSearchParameters(trc.TestResultCollector):
             "concurrency"
         )
         self.assertEqual(ParameterUsage.RUNTIME, concurrency.usage)
-        self.assertEqual(ParameterCategory.LIST, concurrency.category)
+        self.assertEqual(ParameterCategory.INT_LIST, concurrency.category)
         self.assertEqual([1, 8, 64, 256], concurrency.enumerated_list)
 
         # instance_group

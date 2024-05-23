@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import Dict, List
 
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_variant_name_manager import (
@@ -60,7 +60,7 @@ class RunConfigGeneratorFactory:
         client: TritonClient,
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
-        search_parameters: SearchParameters,
+        search_parameters: Dict[str, SearchParameters],
     ) -> ConfigGeneratorInterface:
         """
         Parameters
@@ -149,7 +149,7 @@ class RunConfigGeneratorFactory:
         models: List[ModelProfileSpec],
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
-        search_parameters: SearchParameters,
+        search_parameters: Dict[str, SearchParameters],
     ) -> ConfigGeneratorInterface:
         return OptunaPlusConcurrencySweepRunConfigGenerator(
             config=command_config,

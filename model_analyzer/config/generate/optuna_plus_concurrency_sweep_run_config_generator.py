@@ -16,7 +16,7 @@
 
 import logging
 from copy import deepcopy
-from typing import Generator, List, Optional
+from typing import Dict, Generator, List, Optional
 
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_variant_name_manager import (
@@ -52,7 +52,7 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         models: List[ModelProfileSpec],
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
-        search_parameters: SearchParameters,
+        search_parameters: Dict[str, SearchParameters],
     ):
         """
         Parameters
