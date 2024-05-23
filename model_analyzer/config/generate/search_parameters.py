@@ -50,12 +50,7 @@ class SearchParameters:
         self._populate_search_parameters()
 
     def get_parameter(self, name: str) -> Optional[SearchParameter]:
-        try:
-            parameter = self._search_parameters[name]
-        except KeyError:
-            return None
-
-        return parameter
+        return self._search_parameters.get(name)
 
     def get_type(self, name: str) -> ParameterUsage:
         return self._search_parameters[name].usage

@@ -51,7 +51,8 @@ from .config_generator_interface import ConfigGeneratorInterface
 
 logger = logging.getLogger(LOGGER_NAME)
 
-TrialObjectives: TypeAlias = Dict[str, Any]
+TrialObjective: TypeAlias = Union[str | int]
+TrialObjectives: TypeAlias = Dict[str, TrialObjective]
 ParameterCombo: TypeAlias = Dict[str, Any]
 
 
@@ -157,22 +158,20 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             parameter = self._search_parameters.get_parameter(parameter_name)
 
             if parameter:
-                trial_objectives = self._add_trial_objective(
-                    trial, parameter_name, parameter, trial_objectives
+                trial_objectives[parameter_name] = self._create_trial_objective(
+                    trial, parameter_name, parameter
                 )
 
         # TODO: TMA-1884: Need an option to choose btw. concurrency formula and optuna searching
-        trial_objectives = self._set_objective_concurrency(trial_objectives)
+        trial_objectives["concurrency"] = self._get_objective_concurrency(
+            trial_objectives
+        )
 
         return trial_objectives
 
-    def _add_trial_objective(
-        self,
-        trial: optuna.Trial,
-        name: str,
-        parameter: SearchParameter,
-        trial_objectives: TrialObjectives,
-    ) -> TrialObjectives:
+    def _create_trial_objective(
+        self, trial: optuna.Trial, name: str, parameter: SearchParameter
+    ) -> TrialObjective:
         if parameter.category is ParameterCategory.INTEGER:
             objective = trial.suggest_int(
                 name, parameter.min_range, parameter.max_range
@@ -186,24 +185,21 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         elif parameter.category is ParameterCategory.STR_LIST:
             objective = trial.suggest_categorical(name, parameter.enumerated_list)
 
-        trial_objectives[name] = objective
+        return objective
 
-        return trial_objectives
-
-    def _set_objective_concurrency(
-        self, trial_objectives: TrialObjectives
-    ) -> TrialObjectives:
+    def _get_objective_concurrency(self, trial_objectives: TrialObjectives) -> int:
         concurrency = (
-            2 * trial_objectives["instance_group"] * trial_objectives["batch_sizes"]
+            2
+            * int(trial_objectives["instance_group"])
+            * int(trial_objectives["batch_sizes"])
         )
         concurrency = (
             DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
             if concurrency > DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
             else concurrency
         )
-        trial_objectives["concurrency"] = concurrency
 
-        return trial_objectives
+        return concurrency
 
     def _create_objective_based_run_config(
         self, trial_objectives: TrialObjectives
@@ -340,7 +336,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         trial_objectives: TrialObjectives,
     ) -> ModelRunConfig:
         perf_analyzer_config = self._create_perf_analyzer_config(
-            model.model_name(), model, trial_objectives["concurrency"]
+            model.model_name(), model, int(trial_objectives["concurrency"])
         )
         model_run_config = ModelRunConfig(
             model.model_name(), model_config_variant, perf_analyzer_config
