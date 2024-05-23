@@ -71,8 +71,7 @@ class SearchParameters:
         if self._parameters:
             self._populate_parameters()
         else:
-            # Always populate batch size if nothing is specified
-            self._populate_batch_sizes()
+            self._populate_default_parameters()
 
         self._populate_model_config_parameters()
 
@@ -80,6 +79,11 @@ class SearchParameters:
         self._populate_batch_sizes()
         self._populate_concurrency()
         # TODO: Populate request rate - TMA-1903
+
+    def _populate_default_parameters(self) -> None:
+        # Always populate batch sizes if nothing is specified
+        # TODO: TMA-1884: Will need to add concurrency if the user wants this searched
+        self._populate_batch_sizes()
 
     def _populate_model_config_parameters(self) -> None:
         self._populate_instance_group()
