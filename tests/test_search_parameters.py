@@ -68,7 +68,7 @@ class TestSearchParameters(trc.TestResultCollector):
         )
 
         self.search_parameters._add_search_parameter(
-            name="instance_count",
+            name="instance_group",
             usage=ParameterUsage.MODEL,
             category=ParameterCategory.INTEGER,
             min_range=1,
@@ -105,13 +105,13 @@ class TestSearchParameters(trc.TestResultCollector):
 
         self.assertEqual(
             ParameterUsage.MODEL,
-            self.search_parameters.get_type("instance_count"),
+            self.search_parameters.get_type("instance_group"),
         )
         self.assertEqual(
             ParameterCategory.INTEGER,
-            self.search_parameters.get_category("instance_count"),
+            self.search_parameters.get_category("instance_group"),
         )
-        self.assertEqual((1, 8), self.search_parameters.get_range("instance_count"))
+        self.assertEqual((1, 8), self.search_parameters.get_range("instance_group"))
 
     def test_list_parameter(self):
         """
@@ -370,6 +370,46 @@ class TestSearchParameters(trc.TestResultCollector):
         self.assertEqual(
             default.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, instance_group.max_range
         )
+
+    def test_number_of_configs_range(self):
+        """
+        Test number of configs for a range (INTEGER/EXPONENTIAL)
+        """
+
+        # INTEGER
+        # =====================================================================
+        num_of_configs = self.search_parameters._number_of_configurations_for_parameter(
+            self.search_parameters.get_parameter("instance_group")
+        )
+        self.assertEqual(8, num_of_configs)
+
+        # EXPONENTIAL
+        # =====================================================================
+        num_of_configs = self.search_parameters._number_of_configurations_for_parameter(
+            self.search_parameters.get_parameter("concurrency")
+        )
+        self.assertEqual(11, num_of_configs)
+
+    def test_number_of_configs_list(self):
+        """
+        Test number of configs for a list
+        """
+
+        num_of_configs = self.search_parameters._number_of_configurations_for_parameter(
+            self.search_parameters.get_parameter("size")
+        )
+        self.assertEqual(3, num_of_configs)
+
+    def test_total_possible_configurations(self):
+        """
+        Test number of total possible configurations
+        """
+        total_num_of_possible_configurations = (
+            self.search_parameters.number_of_total_possible_configurations()
+        )
+
+        # batch_sizes (8) * instance group (8) * concurrency (11) * size (3)
+        self.assertEqual(8 * 8 * 11 * 3, total_num_of_possible_configurations)
 
 
 if __name__ == "__main__":
