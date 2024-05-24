@@ -62,6 +62,8 @@ from .config_defaults import (
     DEFAULT_OFFLINE_PLOTS,
     DEFAULT_ONLINE_OBJECTIVES,
     DEFAULT_ONLINE_PLOTS,
+    DEFAULT_OPTUNA_MAX_PERCENTAGE_OF_SEARCH_SPACE,
+    DEFAULT_OPTUNA_MIN_PERCENTAGE_OF_SEARCH_SPACE,
     DEFAULT_OUTPUT_MODEL_REPOSITORY,
     DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG,
     DEFAULT_PERF_ANALYZER_CPU_UTIL,
@@ -914,6 +916,24 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS,
                 description="Maximum number of steps take during the binary concurrency search.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "min_percentage_of_search_space",
+                flags=["--min_percentage_of_search_space"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_OPTUNA_MIN_PERCENTAGE_OF_SEARCH_SPACE,
+                description="Minimum percentage of the search space to profile when using Optuna",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "max_percentage_of_search_space",
+                flags=["--max_percentage_of_search_space"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_OPTUNA_MAX_PERCENTAGE_OF_SEARCH_SPACE,
+                description="Maximum percentage of the search space to profile when using Optuna",
             )
         )
         self._add_config(

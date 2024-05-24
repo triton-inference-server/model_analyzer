@@ -67,6 +67,28 @@ class SearchParameters:
     def get_list(self, name: str) -> Optional[List[Any]]:
         return self._search_parameters[name].enumerated_list
 
+    def number_of_total_possible_configurations(self) -> int:
+        total_number_of_configs = 1
+        for parameter in self._search_parameters.values():
+            total_number_of_configs *= self._number_of_configurations_for_parameter(
+                parameter
+            )
+
+        return total_number_of_configs
+
+    def _number_of_configurations_for_parameter(
+        self, parameter: SearchParameter
+    ) -> int:
+        if (
+            parameter.category is ParameterCategory.INTEGER
+            or parameter.category is ParameterCategory.EXPONENTIAL
+        ):
+            number_of_parameter_configs = parameter.max_range - parameter.min_range + 1  # type: ignore
+        else:
+            number_of_parameter_configs = len(parameter.enumerated_list)  # type: ignore
+
+        return number_of_parameter_configs
+
     def _populate_search_parameters(self) -> None:
         if self._parameters:
             self._populate_parameters()

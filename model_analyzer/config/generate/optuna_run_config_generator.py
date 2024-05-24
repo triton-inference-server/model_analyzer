@@ -141,10 +141,17 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         yield default_run_config
         self._default_measurement = self._last_measurement
 
-        # TODO: TMA-1884: Need a default + config option for trial number
-        n_trials = 20
+        total_num_of_possible_configs = (
+            self._search_parameters.number_of_total_possible_configurations()
+        )
+        max_configs_to_search = int(
+            total_num_of_possible_configs
+            * self._config.max_percentage_of_search_space
+            / 100
+        )
+
         # TODO: TMA-1885: Need an early exit strategy
-        for _ in range(n_trials):
+        for _ in range(max_configs_to_search):
             trial = self._study.ask()
             trial_objectives = self._create_trial_objectives(trial)
             run_config = self._create_objective_based_run_config(trial_objectives)

@@ -85,6 +85,8 @@ def get_test_options():
         OptionStruct("int", "profile", "--run-config-search-min-instance-count", None, "2", "1"),
         OptionStruct("int", "profile", "--run-config-search-max-instance-count", None, "10", "5"),
         OptionStruct("int", "profile", "--run-config-search-max-binary-search-steps", None, "10", "5"),
+        OptionStruct("int", "profile", "--min_percentage_of_search_space", None, "10", "5"),
+        OptionStruct("int", "profile", "--max_percentage_of_search_space", None, "5", "10"),
         OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", "1.0"),
         OptionStruct("float", "profile", "--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0)),
         OptionStruct("int", "profile", "--num-configs-per-model", None, "10", "3"),
