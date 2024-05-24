@@ -72,6 +72,54 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             seed=100,
         )
 
+    def test_max_number_of_configs_to_search_percentage(self):
+        """
+        Test percentage based max num of configs to search
+        """
+        max_configs_to_search = (
+            self._rcg._determine_maximum_number_of_configs_to_search()
+        )
+
+        # Batch sizes (8) * Instance groups (5) * queue delays (3) = 120
+        # 10% of search space (120) = 12
+        self.assertEquals(max_configs_to_search, 12)
+
+    def test_max_number_of_configs_to_search_count(self):
+        """
+        Test count based max num of configs to search
+        """
+        config = self._create_config(additional_args=["--optuna_max_trials", "6"])
+
+        self._rcg._config = config
+
+        max_configs_to_search = (
+            self._rcg._determine_maximum_number_of_configs_to_search()
+        )
+
+        self.assertEquals(max_configs_to_search, 6)
+
+    def test_max_number_of_configs_to_search_both(self):
+        """
+        Test count based on specify both a count and percentage
+        """
+        config = self._create_config(
+            additional_args=[
+                "--optuna_max_trials",
+                "6",
+                "--max_percentage_of_search_space",
+                "3",
+            ]
+        )
+
+        self._rcg._config = config
+
+        max_configs_to_search = (
+            self._rcg._determine_maximum_number_of_configs_to_search()
+        )
+
+        # Since both are specified we will use the smaller of the two (3% of 120 = 3)
+        self.assertEquals(max_configs_to_search, 3)
+
     def test_create_default_run_config(self):
         """
         Test that a default run config is properly created

@@ -87,6 +87,8 @@ def get_test_options():
         OptionStruct("int", "profile", "--run-config-search-max-binary-search-steps", None, "10", "5"),
         OptionStruct("int", "profile", "--min_percentage_of_search_space", None, "10", "5"),
         OptionStruct("int", "profile", "--max_percentage_of_search_space", None, "5", "10"),
+        OptionStruct("int", "profile", "--optuna_min_trials", None, "10", "20"),
+        OptionStruct("int", "profile", "--optuna_max_trials", None, "5", "200"),
         OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", "1.0"),
         OptionStruct("float", "profile", "--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0)),
         OptionStruct("int", "profile", "--num-configs-per-model", None, "10", "3"),
