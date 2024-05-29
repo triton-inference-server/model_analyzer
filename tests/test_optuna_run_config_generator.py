@@ -55,7 +55,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
                 )
             ]
 
-        config = self._create_config()
+        config = self._create_config(additional_args=["--use-concurrency-formula"])
         model = config.profile_models[0]
         search_parameters = SearchParameters(
             config=config,
@@ -154,10 +154,10 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(model_config.to_dict()["instanceGroup"][0]["count"], 2)
         self.assertEqual(
             model_config.to_dict()["dynamicBatching"]["maxQueueDelayMicroseconds"],
-            "100",
+            "200",
         )
         self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
-        self.assertEqual(perf_config["concurrency-range"], 16)
+        self.assertEqual(perf_config["concurrency-range"], 64)
 
     def test_create_run_config_with_concurrency_formula(self):
         config = self._create_config(["--use-concurrency-formula"])
