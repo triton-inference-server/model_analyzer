@@ -55,7 +55,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
                 )
             ]
 
-        config = self._create_config()
+        config = self._create_config(additional_args=["--use-concurrency-formula"])
         model = config.profile_models[0]
         search_parameters = SearchParameters(
             config=config,
@@ -143,6 +143,43 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         trial = self._rcg._study.ask()
         trial_objectives = self._rcg._create_trial_objectives(trial)
         run_config = self._rcg._create_objective_based_run_config(trial_objectives)
+
+        model_config = run_config.model_run_configs()[0].model_config()
+        perf_config = run_config.model_run_configs()[0].perf_config()
+
+        self.assertEqual(model_config.to_dict()["name"], self._test_config_dict["name"])
+
+        # These values are the result of using a fixed seed of 100
+        self.assertEqual(model_config.to_dict()["maxBatchSize"], 16)
+        self.assertEqual(model_config.to_dict()["instanceGroup"][0]["count"], 2)
+        self.assertEqual(
+            model_config.to_dict()["dynamicBatching"]["maxQueueDelayMicroseconds"],
+            "200",
+        )
+        self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
+        self.assertEqual(perf_config["concurrency-range"], 64)
+
+    def test_create_run_config_with_concurrency_formula(self):
+        config = self._create_config(["--use-concurrency-formula"])
+        model = config.profile_models[0]
+        search_parameters = SearchParameters(
+            config=config,
+            parameters={},
+            model_config_parameters=model.model_config_parameters(),
+        )
+
+        rcg = OptunaRunConfigGenerator(
+            config=config,
+            gpu_count=1,
+            models=self._mock_models,
+            model_variant_name_manager=ModelVariantNameManager(),
+            search_parameters={"add_sub": search_parameters},
+            seed=100,
+        )
+
+        trial = rcg._study.ask()
+        trial_objectives = rcg._create_trial_objectives(trial)
+        run_config = rcg._create_objective_based_run_config(trial_objectives)
 
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()

@@ -248,6 +248,38 @@ class TestSearchParameters(trc.TestResultCollector):
             default.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, instance_group.max_range
         )
 
+    def test_search_parameter_concurrency_formula(self):
+        """
+        Test that when concurrency formula is specified it is
+        not added as a search parameter
+        """
+
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli-repository",
+            "-f",
+            "path-to-config-file",
+            "--run-config-search-mode",
+            "optuna",
+            "--use-concurrency-formula",
+        ]
+
+        yaml_content = """
+        profile_models: add_sub
+        """
+        config = TestConfig()._evaluate_config(args=args, yaml_content=yaml_content)
+
+        analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
+        analyzer._populate_search_parameters()
+
+        concurrency = analyzer._search_parameters["add_sub"].get_parameter(
+            "concurrency"
+        )
+
+        self.assertEqual(concurrency, None)
+
     def test_search_parameter_creation_multi_model_non_default(self):
         """
         Test that search parameters are correctly created in

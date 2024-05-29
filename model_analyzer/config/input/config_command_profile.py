@@ -98,6 +98,7 @@ from .config_defaults import (
     DEFAULT_TRITON_LAUNCH_MODE,
     DEFAULT_TRITON_METRICS_URL,
     DEFAULT_TRITON_SERVER_PATH,
+    DEFAULT_USE_CONCURRENCY_FORMULA,
 )
 from .config_enum import ConfigEnum
 from .config_field import ConfigField
@@ -954,6 +955,16 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_OPTUNA_MAX_TRIALS,
                 description="Maximum number of trials to profile when using Optuna",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "use_concurrency_formula",
+                flags=["--use-concurrency-formula"],
+                field_type=ConfigPrimitive(bool),
+                parser_args={"action": "store_true"},
+                default_value=DEFAULT_USE_CONCURRENCY_FORMULA,
+                description="Use the concurrency formula instead of searching the concurrency space in Optuna search mode",
             )
         )
         self._add_config(

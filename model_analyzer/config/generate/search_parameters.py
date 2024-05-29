@@ -90,22 +90,13 @@ class SearchParameters:
         return number_of_parameter_configs
 
     def _populate_search_parameters(self) -> None:
-        if self._parameters:
-            self._populate_parameters()
-        else:
-            self._populate_default_parameters()
-
+        self._populate_parameters()
         self._populate_model_config_parameters()
 
     def _populate_parameters(self) -> None:
         self._populate_batch_sizes()
         self._populate_concurrency()
         # TODO: Populate request rate - TMA-1903
-
-    def _populate_default_parameters(self) -> None:
-        # Always populate batch sizes if nothing is specified
-        # TODO: TMA-1884: Will need to add concurrency if the user wants this searched
-        self._populate_batch_sizes()
 
     def _populate_model_config_parameters(self) -> None:
         self._populate_instance_group()
@@ -126,12 +117,14 @@ class SearchParameters:
             )
 
     def _populate_concurrency(self) -> None:
-        if self._parameters["concurrency"]:
+        if self._parameters and self._parameters["concurrency"]:
             self._populate_list_parameter(
                 parameter_name="concurrency",
                 parameter_list=self._parameters["concurrency"],
                 parameter_category=ParameterCategory.INT_LIST,
             )
+        elif self._config.use_concurrency_formula:
+            return
         else:
             self._populate_rcs_parameter(
                 parameter_name="concurrency",
