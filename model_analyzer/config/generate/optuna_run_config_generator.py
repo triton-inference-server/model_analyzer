@@ -141,14 +141,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         yield default_run_config
         self._default_measurement = self._last_measurement
 
-        total_num_of_possible_configs = (
-            self._search_parameters.number_of_total_possible_configurations()
-        )
-        max_configs_to_search = int(
-            total_num_of_possible_configs
-            * self._config.max_percentage_of_search_space
-            / 100
-        )
+        max_configs_to_search = self._determine_maximum_number_of_configs_to_search()
 
         # TODO: TMA-1885: Need an early exit strategy
         for _ in range(max_configs_to_search):
@@ -158,6 +151,57 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             yield run_config
             score = self._calculate_score()
             self._study.tell(trial, score)
+
+    def _determine_maximum_number_of_configs_to_search(self) -> int:
+        max_trials_based_on_percentage_of_search_space = (
+            self._determine_trials_based_on_max_percentage_of_search_space()
+        )
+
+        max_configs_to_search = self._decide_between_percentage_and_trial_count(
+            max_trials_based_on_percentage_of_search_space
+        )
+
+        return max_configs_to_search
+
+    def _determine_trials_based_on_max_percentage_of_search_space(self) -> int:
+        total_num_of_possible_configs = (
+            self._search_parameters.number_of_total_possible_configurations()
+        )
+        max_trials_based_on_percentage_of_search_space = int(
+            total_num_of_possible_configs
+            * self._config.max_percentage_of_search_space
+            / 100
+        )
+
+        return max_trials_based_on_percentage_of_search_space
+
+    def _decide_between_percentage_and_trial_count(
+        self, max_trials_based_on_percentage_of_search_space: int
+    ) -> int:
+        # By default we will search based on percentage of search space
+        # If the user specifies a number of trials we will use that instead
+        # If both are specified we will use the smaller number
+        max_trials_set_by_user = self._config.get_config()[
+            "optuna_max_trials"
+        ].is_set_by_user()
+        max_percentage_set_by_user = self._config.get_config()[
+            "max_percentage_of_search_space"
+        ].is_set_by_user()
+
+        if max_trials_set_by_user and max_percentage_set_by_user:
+            if (
+                self._config.optuna_max_trials
+                < max_trials_based_on_percentage_of_search_space
+            ):
+                max_configs_to_search = self._config.optuna_max_trials
+            else:
+                max_configs_to_search = max_trials_based_on_percentage_of_search_space
+        elif max_trials_set_by_user:
+            max_configs_to_search = self._config.optuna_max_trials
+        else:
+            max_configs_to_search = max_trials_based_on_percentage_of_search_space
+
+        return max_configs_to_search
 
     def _create_trial_objectives(self, trial: optuna.Trial) -> TrialObjectives:
         trial_objectives: TrialObjectives = {}
