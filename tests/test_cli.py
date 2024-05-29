@@ -65,6 +65,7 @@ def get_test_options():
         OptionStruct("bool", "profile","--skip-summary-reports"),
         OptionStruct("bool", "profile","--skip-detailed-reports"),
         OptionStruct("bool", "profile","--always-report-gpu-metrics"),
+        OptionStruct("bool", "profile","--use-concurrency-formula"),
 
         #Int/Float options
         # Options format:
@@ -385,6 +386,7 @@ class TestCLI(trc.TestResultCollector):
         cli = option_struct.cli_subcommand()
         _, config = cli.parse()
         option_value = config.get_config().get(option_with_underscores).value()
+        # Boolean values must always default to False
         self.assertEqual(option_value, False)
 
         # Test boolean option

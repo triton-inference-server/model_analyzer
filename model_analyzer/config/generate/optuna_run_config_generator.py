@@ -213,10 +213,10 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
                     trial, parameter_name, parameter
                 )
 
-        # TODO: TMA-1884: Need an option to choose btw. concurrency formula and optuna searching
-        trial_objectives["concurrency"] = self._get_objective_concurrency(
-            trial_objectives
-        )
+        if self._config.use_concurrency_formula:
+            trial_objectives["concurrency"] = self._get_objective_concurrency(
+                trial_objectives
+            )
 
         return trial_objectives
 
