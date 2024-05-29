@@ -63,7 +63,9 @@ from .config_defaults import (
     DEFAULT_ONLINE_OBJECTIVES,
     DEFAULT_ONLINE_PLOTS,
     DEFAULT_OPTUNA_MAX_PERCENTAGE_OF_SEARCH_SPACE,
+    DEFAULT_OPTUNA_MAX_TRIALS,
     DEFAULT_OPTUNA_MIN_PERCENTAGE_OF_SEARCH_SPACE,
+    DEFAULT_OPTUNA_MIN_TRIALS,
     DEFAULT_OUTPUT_MODEL_REPOSITORY,
     DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG,
     DEFAULT_PERF_ANALYZER_CPU_UTIL,
@@ -934,6 +936,24 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_OPTUNA_MAX_PERCENTAGE_OF_SEARCH_SPACE,
                 description="Maximum percentage of the search space to profile when using Optuna",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "optuna_min_trials",
+                flags=["--optuna_min_trials"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_OPTUNA_MIN_TRIALS,
+                description="Minimum number of trials to profile when using Optuna",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "optuna_max_trials",
+                flags=["--optuna_max_trials"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_OPTUNA_MAX_TRIALS,
+                description="Maximum number of trials to profile when using Optuna",
             )
         )
         self._add_config(
