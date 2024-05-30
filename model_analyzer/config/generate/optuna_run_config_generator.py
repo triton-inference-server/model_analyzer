@@ -151,7 +151,9 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         self._capture_default_measurement(default_run_config)
         self._set_best_measurement(default_run_config)
-        self._print_debug_search_space_info()
+
+        if logging.DEBUG:
+            self._print_debug_search_space_info()
 
         max_configs_to_search = self._determine_maximum_number_of_configs_to_search()
         # TODO: TMA-1885: Need an early exit strategy
@@ -164,7 +166,9 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
             score = self._calculate_score()
             self._set_best_measurement(run_config, score)
-            self._print_debug_score_info(run_config, score)
+
+            if logging.DEBUG:
+                self._print_debug_score_info(run_config, score)
 
             self._study.tell(trial, score)
 
@@ -177,10 +181,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         self._default_measurement = self._last_measurement
 
     def _set_best_measurement(self, run_config: RunConfig, score: float = 0) -> None:
-        if self._best_config_score is None:
-            self._best_config_name = run_config.model_variants_name()
-            self._best_config_score = 0
-        elif score > self._best_config_score:
+        if self._best_config_score is None or score > self._best_config_score:
             self._best_config_name = run_config.model_variants_name()
             self._best_config_score = score
 
@@ -247,7 +248,8 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             )
             max_configs_to_search = max_trials_based_on_percentage_of_search_space
 
-        logger.info("")
+        if logging.DEBUG:
+            logger.info("")
         return max_configs_to_search
 
     def _create_trial_objectives(self, trial: optuna.Trial) -> TrialObjectives:
