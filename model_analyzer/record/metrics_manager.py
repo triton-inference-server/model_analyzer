@@ -783,13 +783,23 @@ class MetricsManager:
         for model_run_config in run_config.model_run_configs():
             perf_config = model_run_config.perf_config()
             if perf_config["request-rate-range"]:
-                logger.info(
-                    f"Profiling {model_run_config.model_variant_name()}: client batch size={perf_config['batch-size']}, request-rate-range={perf_config['request-rate-range']}"
-                )
+                if perf_config["batch-size"] != 1:
+                    logger.info(
+                        f"Profiling {model_run_config.model_variant_name()}: client batch size={perf_config['batch-size']}, request-rate-range={perf_config['request-rate-range']}"
+                    )
+                else:
+                    logger.info(
+                        f"Profiling {model_run_config.model_variant_name()}: request-rate-range={perf_config['request-rate-range']}"
+                    )
             else:
-                logger.info(
-                    f"Profiling {model_run_config.model_variant_name()}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
-                )
+                if perf_config["batch-size"] != 1:
+                    logger.info(
+                        f"Profiling {model_run_config.model_variant_name()}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
+                    )
+                else:
+                    logger.info(
+                        f"Profiling {model_run_config.model_variant_name()}: concurrency={perf_config['concurrency-range']}"
+                    )
 
         # Vertical spacing when running multiple models at a time
         if len(run_config.model_run_configs()) > 1:

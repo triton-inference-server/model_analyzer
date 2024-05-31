@@ -49,6 +49,9 @@ class SearchParameters:
 
         self._populate_search_parameters()
 
+    def get_search_parameters(self) -> Dict[str, SearchParameter]:
+        return self._search_parameters
+
     def get_parameter(self, name: str) -> Optional[SearchParameter]:
         return self._search_parameters.get(name)
 
@@ -75,6 +78,24 @@ class SearchParameters:
             )
 
         return total_number_of_configs
+
+    def print_info(self, name: str) -> str:
+        info_string = f"  {name}: "
+
+        parameter = self._search_parameters[name]
+        if parameter.category is ParameterCategory.INTEGER:
+            info_string += f"{parameter.min_range} to {parameter.max_range}"
+        elif parameter.category is ParameterCategory.EXPONENTIAL:
+            info_string += f"{2**parameter.min_range} to {2**parameter.max_range}"  # type: ignore
+        elif (
+            parameter.category is ParameterCategory.INT_LIST
+            or parameter.category is ParameterCategory.STR_LIST
+        ):
+            info_string += f"{parameter.enumerated_list}"
+
+        info_string += f" ({self._number_of_configurations_for_parameter(parameter)})"
+
+        return info_string
 
     def _number_of_configurations_for_parameter(
         self, parameter: SearchParameter
