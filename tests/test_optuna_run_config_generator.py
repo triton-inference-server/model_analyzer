@@ -100,7 +100,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
 
     def test_max_number_of_configs_to_search_both(self):
         """
-        Test count based on specify both a count and percentage
+        Test max count based on specify both a count and percentage
         """
         config = self._create_config(
             additional_args=[
@@ -119,6 +119,54 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
 
         # Since both are specified we will use the smaller of the two (3% of 120 = 3)
         self.assertEquals(max_configs_to_search, 3)
+
+    def test_min_number_of_configs_to_search_percentage(self):
+        """
+        Test percentage based min num of configs to search
+        """
+        min_configs_to_search = (
+            self._rcg._determine_minimum_number_of_configs_to_search()
+        )
+
+        # Batch sizes (8) * Instance groups (5) * queue delays (3) = 120
+        # 5% of search space (120) = 6
+        self.assertEquals(min_configs_to_search, 6)
+
+    def test_min_number_of_configs_to_search_count(self):
+        """
+        Test count based min num of configs to search
+        """
+        config = self._create_config(additional_args=["--optuna_min_trials", "12"])
+
+        self._rcg._config = config
+
+        min_configs_to_search = (
+            self._rcg._determine_minimum_number_of_configs_to_search()
+        )
+
+        self.assertEquals(min_configs_to_search, 12)
+
+    def test_min_number_of_configs_to_search_both(self):
+        """
+        Test min count based on specify both a count and percentage
+        """
+        config = self._create_config(
+            additional_args=[
+                "--optuna_min_trials",
+                "6",
+                "--min_percentage_of_search_space",
+                "3",
+            ]
+        )
+
+        self._rcg._config = config
+
+        min_configs_to_search = (
+            self._rcg._determine_minimum_number_of_configs_to_search()
+        )
+
+        # Since both are specified we will use the larger of the two (trials=6)
+        self.assertEquals(min_configs_to_search, 6)
 
     def test_create_default_run_config(self):
         """

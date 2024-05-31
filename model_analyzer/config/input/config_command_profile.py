@@ -62,6 +62,7 @@ from .config_defaults import (
     DEFAULT_OFFLINE_PLOTS,
     DEFAULT_ONLINE_OBJECTIVES,
     DEFAULT_ONLINE_PLOTS,
+    DEFAULT_OPTUNA_EARLY_EXIT_THRESHOLD,
     DEFAULT_OPTUNA_MAX_PERCENTAGE_OF_SEARCH_SPACE,
     DEFAULT_OPTUNA_MAX_TRIALS,
     DEFAULT_OPTUNA_MIN_PERCENTAGE_OF_SEARCH_SPACE,
@@ -955,6 +956,15 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_OPTUNA_MAX_TRIALS,
                 description="Maximum number of trials to profile when using Optuna",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "optuna_early_exit_threshold",
+                flags=["--optuna_early_exit_threshold"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_OPTUNA_EARLY_EXIT_THRESHOLD,
+                description="Number of trials to attempt before triggering early exit when using Optuna",
             )
         )
         self._add_config(
