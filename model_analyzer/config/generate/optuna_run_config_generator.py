@@ -108,6 +108,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         self._last_measurement: Optional[RunConfigMeasurement] = None
         self._best_config_name = ""
         self._best_config_score: Optional[float] = None
+        self._best_trial_number: Optional[int] = None
 
         self._c_api_mode = config.triton_launch_mode == "c_api"
 
@@ -155,12 +156,13 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         if logging.DEBUG:
             self._print_debug_search_space_info()
 
+        min_configs_to_search = self._determine_minimum_number_of_configs_to_search()
         max_configs_to_search = self._determine_maximum_number_of_configs_to_search()
         # TODO: TMA-1885: Need an early exit strategy
-        for trial_count in range(max_configs_to_search):
+        for trial_number in range(1, max_configs_to_search + 1):
             trial = self._study.ask()
             trial_objectives = self._create_trial_objectives(trial)
-            logger.debug(f"Trial {trial_count+1} of {max_configs_to_search}:")
+            logger.debug(f"Trial {trial_number} of {max_configs_to_search}:")
             run_config = self._create_objective_based_run_config(trial_objectives)
             yield run_config
 
@@ -170,6 +172,9 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             if logging.DEBUG:
                 self._print_debug_score_info(run_config, score)
 
+            if self._should_terminate_early(min_configs_to_search, trial_number):
+                logger.debug("Early termination threshold reached")
+                break
             self._study.tell(trial, score)
 
     def _capture_default_measurement(self, default_run_config: RunConfig) -> None:
@@ -180,17 +185,20 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         self._default_measurement = self._last_measurement
 
-    def _set_best_measurement(self, run_config: RunConfig, score: float = 0) -> None:
+    def _set_best_measurement(
+        self, run_config: RunConfig, score: float = 0, trial_number: int = 0
+    ) -> None:
         if self._best_config_score is None or score > self._best_config_score:
             self._best_config_name = run_config.model_variants_name()
             self._best_config_score = score
+            self._best_trial_number = trial_number
 
     def _determine_maximum_number_of_configs_to_search(self) -> int:
         max_trials_based_on_percentage_of_search_space = (
             self._determine_trials_based_on_max_percentage_of_search_space()
         )
 
-        max_configs_to_search = self._decide_between_percentage_and_trial_count(
+        max_configs_to_search = self._decide_max_between_percentage_and_trial_count(
             max_trials_based_on_percentage_of_search_space
         )
 
@@ -208,7 +216,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         return max_trials_based_on_percentage_of_search_space
 
-    def _decide_between_percentage_and_trial_count(
+    def _decide_max_between_percentage_and_trial_count(
         self, max_trials_based_on_percentage_of_search_space: int
     ) -> int:
         # By default we will search based on percentage of search space
@@ -238,7 +246,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
                 max_configs_to_search = max_trials_based_on_percentage_of_search_space
         elif max_trials_set_by_user:
             logger.debug(
-                f"Maximum number of trials: {self._config.optuna_max_trials} (set by max. trials)"
+                f"Maximum number of trials: {self._config.optuna_max_trials} (optuna_max_trials)"
             )
             max_configs_to_search = self._config.optuna_max_trials
         else:
@@ -251,6 +259,71 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         if logging.DEBUG:
             logger.info("")
         return max_configs_to_search
+
+    def _determine_minimum_number_of_configs_to_search(self) -> int:
+        min_trials_based_on_percentage_of_search_space = (
+            self._determine_trials_based_on_min_percentage_of_search_space()
+        )
+
+        min_configs_to_search = self._decide_min_between_percentage_and_trial_count(
+            min_trials_based_on_percentage_of_search_space
+        )
+
+        return min_configs_to_search
+
+    def _determine_trials_based_on_min_percentage_of_search_space(self) -> int:
+        total_num_of_possible_configs = (
+            self._search_parameters.number_of_total_possible_configurations()
+        )
+        min_trials_based_on_percentage_of_search_space = int(
+            total_num_of_possible_configs
+            * self._config.min_percentage_of_search_space
+            / 100
+        )
+
+        return min_trials_based_on_percentage_of_search_space
+
+    def _decide_min_between_percentage_and_trial_count(
+        self, min_trials_based_on_percentage_of_search_space: int
+    ) -> int:
+        # By default we will search based on percentage of search space
+        # If the user specifies a number of trials we will use that instead
+        # If both are specified we will use the larger number
+        min_trials_set_by_user = self._config.get_config()[
+            "optuna_min_trials"
+        ].is_set_by_user()
+        min_percentage_set_by_user = self._config.get_config()[
+            "min_percentage_of_search_space"
+        ].is_set_by_user()
+
+        if min_trials_set_by_user and min_percentage_set_by_user:
+            if (
+                self._config.optuna_min_trials
+                > min_trials_based_on_percentage_of_search_space
+            ):
+                logger.debug(
+                    f"Minimum number of trials: {self._config.optuna_min_trials} (optuna_min_trials)"
+                )
+                min_configs_to_search = self._config.optuna_min_trials
+            else:
+                logger.debug(
+                    f"Minimum number of trials: {min_trials_based_on_percentage_of_search_space} "
+                    f"({self._config.min_percentage_of_search_space}% of search space)"
+                )
+                min_configs_to_search = min_trials_based_on_percentage_of_search_space
+        elif min_trials_set_by_user:
+            logger.debug(
+                f"Minimum number of trials: {self._config.optuna_min_trials} (optuna_min_trials)"
+            )
+            min_configs_to_search = self._config.optuna_min_trials
+        else:
+            logger.debug(
+                f"Minimum number of trials: {min_trials_based_on_percentage_of_search_space} "
+                f"({self._config.min_percentage_of_search_space}% of search space)"
+            )
+            min_configs_to_search = min_trials_based_on_percentage_of_search_space
+
+        return min_configs_to_search
 
     def _create_trial_objectives(self, trial: optuna.Trial) -> TrialObjectives:
         trial_objectives: TrialObjectives = {}
@@ -463,6 +536,19 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         perf_analyzer_config.update_config(model.perf_analyzer_flags())
         return perf_analyzer_config
+
+    def _should_terminate_early(
+        self, min_configs_to_search: int, trial_number: int
+    ) -> bool:
+        number_of_trials_since_best = trial_number - self._best_trial_number  # type: ignore
+        if trial_number < min_configs_to_search:
+            should_terminate_early = False
+        elif number_of_trials_since_best >= self._config.optuna_early_exit_threshold:
+            should_terminate_early = True
+        else:
+            should_terminate_early = False
+
+        return should_terminate_early
 
     def _print_debug_search_space_info(self) -> None:
         logger.info("")
