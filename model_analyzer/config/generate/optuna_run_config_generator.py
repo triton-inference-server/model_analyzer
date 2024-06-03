@@ -159,10 +159,10 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         min_configs_to_search = self._determine_minimum_number_of_configs_to_search()
         max_configs_to_search = self._determine_maximum_number_of_configs_to_search()
         # TODO: TMA-1885: Need an early exit strategy
-        for trial_number in range(max_configs_to_search):
+        for trial_number in range(1, max_configs_to_search + 1):
             trial = self._study.ask()
             trial_objectives = self._create_trial_objectives(trial)
-            logger.debug(f"Trial {trial_number+1} of {max_configs_to_search}:")
+            logger.debug(f"Trial {trial_number} of {max_configs_to_search}:")
             run_config = self._create_objective_based_run_config(trial_objectives)
             yield run_config
 
@@ -541,7 +541,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         self, min_configs_to_search: int, trial_number: int
     ) -> bool:
         number_of_trials_since_best = trial_number - self._best_trial_number  # type: ignore
-        if trial_number + 1 < min_configs_to_search:
+        if trial_number < min_configs_to_search:
             should_terminate_early = False
         elif number_of_trials_since_best >= self._config.optuna_early_exit_threshold:
             should_terminate_early = True

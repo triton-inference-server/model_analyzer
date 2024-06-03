@@ -964,7 +964,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=["--optuna_early_exit_threshold"],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_OPTUNA_EARLY_EXIT_THRESHOLD,
-                description="Number of trials to attempt before triggering early exit when using Optuna",
+                description="Number of trials without improvement before triggering early exit when using Optuna",
             )
         )
         self._add_config(
