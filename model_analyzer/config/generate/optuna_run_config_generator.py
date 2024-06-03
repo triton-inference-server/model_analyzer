@@ -331,8 +331,9 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         self, trial_objectives: TrialObjectives
     ) -> ParameterCombo:
         param_combo: ParameterCombo = {}
-        # TODO: TMA-1938: Need to look at model in ParameterSearch and add this as a parameter
-        param_combo["dynamic_batching"] = []
+
+        if self._models[0].supports_dynamic_batching():
+            param_combo["dynamic_batching"] = []
 
         # TODO: TMA-1927: Add support for multi-model
         if "instance_group" in trial_objectives:
