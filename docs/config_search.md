@@ -22,6 +22,7 @@ limitations under the License.
   - [Automatic Brute Search](#automatic-brute-search)
   - [Manual Brute Search](#manual-brute-search)
 - [Quick Search Mode](#quick-search-mode)
+- [Optuna Search Mode](#optuna-search-mode)
 - [Ensemble Model Search](#ensemble-model-search)
 - [BLS Model Search](#bls-model-search)
 - [LLM Search](#llm-search)
@@ -48,6 +49,9 @@ Model Analyzer's `profile` subcommand supports multiple modes when searching to 
     - Single BLS models
     - Multiple models being profiled concurrently
   - **Command:** `--run-config-search-mode quick`
+- [Optuna Search](config_search.md#optuna-search-mode) **-ALPHA RELEASE-**
+  - **Search type:** Heuristic sweep using a hyperparameter optimization framework to find an optimal configuration
+  - **Command:** `--run-config-search-mode optuna`
 
 ---
 
@@ -275,6 +279,106 @@ profile_models:
 ```
 
 ---
+
+## Optuna Search Mode
+
+**-ALPHA RELEASE-**
+
+_This mode has the following limitations:_
+
+- **Ensemble, BLS or concurrent multi-model profiling is not supported**
+- **Profiling with request rate is not supported**
+
+This mode uses a hyperparameter optimization framework to search the configuration
+space, looking for the maximal objective value within the specified constraints.
+Please see the [Optuna](https://optuna.org/) website if you are interested in specific details on how the algorithm functions.
+
+Optuna allows you to search for every parameter that can be specified in the model configuration. Parameters can be specified
+with a min/max range (using the run-config-search options) or a list of parameters to test against can be set in the
+parameters/model_config_parameters field.
+
+After optuna search has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency range before generation of the summary reports.
+
+---
+
+_An example model analyzer YAML config that performs an Optuna Search:_
+
+```yaml
+model_repository: /path/to/model/repository/
+
+run_config_search_mode: optuna
+profile_models:
+  - model_A
+```
+
+A number of new configuration options were added to support tailoring the Optuna search to your needs:
+
+- `--min/max_percentage_of_search_space`: sets the percentage of the space you want Optuna to search
+- `--optuna-min/max-trials`: sets the number of trials Optuna will attempt
+- `--optuna-early-exit-threshold`: sets the number of trials without improvement before triggering early exit
+- `--use-concurrency-formula`: uses a formula (2 \* batch size \* instance group count), rather than sweeping concurrency
+
+---
+
+_An example that performs an Optuna Search using these new configuration options:_
+
+```yaml
+model_repository: /path/to/model/repository/
+
+run_config_search_mode: optuna
+run_config_search_max_instance_count: 8
+run_config_search_min_concurrency: 32
+run_config_search_max_concurrency: 256
+
+use_concurrency_formula: True
+min_percentage_of_search_space: 10
+optuna_max_trials: 200
+optuna_early_exit_threshold: 15
+
+profile_models:
+  model_A:
+    model_config_parameters:
+      max_batch_size: [1, 4, 8, 32, 64, 128]
+      dynamic_batching:
+        max_queue_delay_microseconds: [100, 200, 300]
+    parameters:
+      batch_sizes: 1, 2, 4, 8, 16
+```
+
+_The debug output showing how the space will be searched:_
+
+```yaml
+Number of configs in search space: 720
+   batch_sizes: [1, 2, 4, 8, 16] (5)
+   max_batch_size: [1, 4, 8, 32, 64, 128] (6)
+   instance_group: 1 to 8 (8)
+   max_queue_delay_microseconds: [100, 200, 300] (3)
+
+Minimum number of trials: 72 (10% of search space)
+Maximum number of trials: 200 (set by max trials)
+```
+
+---
+
+### Optuna Search in Detail
+
+When performing an Optuna Search, Model Analyzer's goal is to maximize the configuration's `objective score`. First,
+MA profiles the default configuration and assigns it an `objective score` of zero. All future configurations
+are also assigned an `objective score`; with positive values indicating this configuration is better than the default
+configuration and negative values indicating it performs worse.
+
+_Here is an example debug output:_
+
+```yaml
+Trial 7 of 200:
+  Creating model config: model_A_config_6
+  Setting dynamic_batching to {'max_queue_delay_microseconds': 200}
+  Setting instance_group to [{'count': 4, 'kind': 'KIND_GPU'}]
+  Setting max_batch_size to 64
+
+  Profiling model_A_config_6: client batch size=4, concurrency=256
+  Objective score for model_A_config_6: 57 --- Best: model_A_config_4 (83)
+```
 
 ## Ensemble Model Search
 
