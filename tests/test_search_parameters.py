@@ -209,17 +209,19 @@ class TestSearchParameters(trc.TestResultCollector):
         analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
         analyzer._populate_search_parameters()
 
-        # batch_sizes
-        batch_sizes = analyzer._search_parameters["add_sub"].get_parameter(
-            "batch_sizes"
+        # max_batch_size
+        max_batch_size = analyzer._search_parameters["add_sub"].get_parameter(
+            "max_batch_size"
         )
-        self.assertEqual(ParameterUsage.MODEL, batch_sizes.usage)
-        self.assertEqual(ParameterCategory.EXPONENTIAL, batch_sizes.category)
+        self.assertEqual(ParameterUsage.MODEL, max_batch_size.usage)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, max_batch_size.category)
         self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE), batch_sizes.min_range
+            log2(default.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE),
+            max_batch_size.min_range,
         )
         self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE), batch_sizes.max_range
+            log2(default.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE),
+            max_batch_size.max_range,
         )
 
         # concurrency
@@ -304,6 +306,7 @@ class TestSearchParameters(trc.TestResultCollector):
                 parameters:
                     batch_sizes: [16, 32, 64]
                 model_config_parameters:
+                    max_batch_size: [1, 2, 4, 8]
                     dynamic_batching:
                         max_queue_delay_microseconds: [100, 200, 300]
                     instance_group:
@@ -323,12 +326,21 @@ class TestSearchParameters(trc.TestResultCollector):
         # ADD_SUB
         # ===================================================================
 
-        # batch_sizes
+        # max batch size
+        # ===================================================================
+        max_batch_size = analyzer._search_parameters["add_sub"].get_parameter(
+            "max_batch_size"
+        )
+        self.assertEqual(ParameterUsage.MODEL, max_batch_size.usage)
+        self.assertEqual(ParameterCategory.INT_LIST, max_batch_size.category)
+        self.assertEqual([1, 2, 4, 8], max_batch_size.enumerated_list)
+
+        # batch sizes
         # ===================================================================
         batch_sizes = analyzer._search_parameters["add_sub"].get_parameter(
             "batch_sizes"
         )
-        self.assertEqual(ParameterUsage.MODEL, batch_sizes.usage)
+        self.assertEqual(ParameterUsage.RUNTIME, batch_sizes.usage)
         self.assertEqual(ParameterCategory.INT_LIST, batch_sizes.category)
         self.assertEqual([16, 32, 64], batch_sizes.enumerated_list)
 
@@ -366,18 +378,20 @@ class TestSearchParameters(trc.TestResultCollector):
         # MULT_DIV
         # ===================================================================
 
-        # batch_sizes
+        # max batch size
         # ===================================================================
-        batch_sizes = analyzer._search_parameters["mult_div"].get_parameter(
-            "batch_sizes"
+        max_batch_size = analyzer._search_parameters["mult_div"].get_parameter(
+            "max_batch_size"
         )
-        self.assertEqual(ParameterUsage.MODEL, batch_sizes.usage)
-        self.assertEqual(ParameterCategory.EXPONENTIAL, batch_sizes.category)
+        self.assertEqual(ParameterUsage.MODEL, max_batch_size.usage)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, max_batch_size.category)
         self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE), batch_sizes.min_range
+            log2(default.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE),
+            max_batch_size.min_range,
         )
         self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE), batch_sizes.max_range
+            log2(default.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE),
+            max_batch_size.max_range,
         )
 
         # concurrency

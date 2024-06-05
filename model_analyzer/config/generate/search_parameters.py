@@ -30,11 +30,15 @@ class SearchParameters:
 
     # These map to the run-config-search fields
     # See github.com/triton-inference-server/model_analyzer/blob/main/docs/config.md
-    exponential_rcs_parameters = ["batch_sizes", "concurrency"]
+    exponential_rcs_parameters = ["max_batch_size", "batch_sizes", "concurrency"]
     linear_rcs_parameters = ["instance_group"]
 
-    model_parameters = ["batch_sizes", "instance_group", "max_queue_delay_microseconds"]
-    runtime_parameters = ["concurrency"]
+    model_parameters = [
+        "max_batch_size",
+        "instance_group",
+        "max_queue_delay_microseconds",
+    ]
+    runtime_parameters = ["batch_sizes", "concurrency"]
 
     def __init__(
         self,
@@ -120,6 +124,7 @@ class SearchParameters:
         # TODO: Populate request rate - TMA-1903
 
     def _populate_model_config_parameters(self) -> None:
+        self._populate_max_batch_size()
         self._populate_instance_group()
         self._populate_max_queue_delay_microseconds()
 
@@ -129,12 +134,6 @@ class SearchParameters:
                 parameter_name="batch_sizes",
                 parameter_list=self._parameters["batch_sizes"],
                 parameter_category=ParameterCategory.INT_LIST,
-            )
-        else:
-            self._populate_rcs_parameter(
-                parameter_name="batch_sizes",
-                rcs_parameter_min_value=self._config.run_config_search_min_model_batch_size,
-                rcs_parameter_max_value=self._config.run_config_search_max_model_batch_size,
             )
 
     def _populate_concurrency(self) -> None:
@@ -153,6 +152,26 @@ class SearchParameters:
                 rcs_parameter_max_value=self._config.run_config_search_max_concurrency,
             )
 
+    def _populate_max_batch_size(self) -> None:
+        # Example config format:
+        # model_config_parameters:
+        #  max_batch_size: [1, 4, 16]
+        if self._is_key_in_model_config_parameters("max_batch_size"):
+            parameter_list = self._model_config_parameters["max_batch_size"]
+            self._populate_list_parameter(
+                parameter_name="max_batch_size",
+                parameter_list=parameter_list,
+                parameter_category=ParameterCategory.INT_LIST,
+            )
+        else:
+            # Need to populate max_batch_size based on RCS min/max values
+            # when no model config parameters are present
+            self._populate_rcs_parameter(
+                parameter_name="max_batch_size",
+                rcs_parameter_min_value=self._config.run_config_search_min_model_batch_size,
+                rcs_parameter_max_value=self._config.run_config_search_max_model_batch_size,
+            )
+
     def _populate_instance_group(self) -> None:
         # Example config format:
         #
@@ -160,16 +179,7 @@ class SearchParameters:
         #   instance_group:
         #     - kind: KIND_GPU
         #       count: [1, 2, 3, 4]
-
-        # Need to populate instance_group based on RCS min/max values
-        # even if no model config parameters are present
-        if not self._model_config_parameters:
-            self._populate_rcs_parameter(
-                parameter_name="instance_group",
-                rcs_parameter_min_value=self._config.run_config_search_min_instance_count,
-                rcs_parameter_max_value=self._config.run_config_search_max_instance_count,
-            )
-        elif "instance_group" in self._model_config_parameters.keys():
+        if self._is_key_in_model_config_parameters("instance_group"):
             parameter_list = self._model_config_parameters["instance_group"][0][0][
                 "count"
             ]
@@ -180,11 +190,20 @@ class SearchParameters:
                 parameter_category=ParameterCategory.INT_LIST,
             )
         else:
+            # Need to populate instance_group based on RCS min/max values
+            # when no model config parameters are present
             self._populate_rcs_parameter(
                 parameter_name="instance_group",
                 rcs_parameter_min_value=self._config.run_config_search_min_instance_count,
                 rcs_parameter_max_value=self._config.run_config_search_max_instance_count,
             )
+
+    def _is_key_in_model_config_parameters(self, key: str) -> bool:
+        key_found = bool(
+            self._model_config_parameters and key in self._model_config_parameters
+        )
+
+        return key_found
 
     def _populate_max_queue_delay_microseconds(self) -> None:
         # Example format
