@@ -43,6 +43,7 @@ from .config_defaults import (
     DEFAULT_CHECKPOINT_DIRECTORY,
     DEFAULT_CLIENT_PROTOCOL,
     DEFAULT_COLLECT_CPU_METRICS,
+    DEFAULT_CONCURRENCY_SWEEP_DISABLE,
     DEFAULT_DURATION_SECONDS,
     DEFAULT_EXPORT_PATH,
     DEFAULT_FILENAME_MODEL_GPU,
@@ -1020,6 +1021,16 @@ class ConfigCommandProfile(ConfigCommand):
                 parser_args={"action": "store_true"},
                 default_value=DEFAULT_REQUEST_RATE_SEARCH_ENABLE,
                 description="Enables the searching of request rate (instead of concurrency).",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "concurrency_sweep_disable",
+                flags=["--concurrency-sweep-disable"],
+                field_type=ConfigPrimitive(bool),
+                parser_args={"action": "store_true"},
+                default_value=DEFAULT_CONCURRENCY_SWEEP_DISABLE,
+                description="Disables the sweeping of concurrencies for the top-N models after quick/optuna search completion.",
             )
         )
 
