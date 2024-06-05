@@ -200,8 +200,7 @@ class SearchParameters:
 
     def _is_key_in_model_config_parameters(self, key: str) -> bool:
         key_found = bool(
-            self._model_config_parameters
-            and key in self._model_config_parameters.keys()
+            self._model_config_parameters and key in self._model_config_parameters
         )
 
         return key_found
