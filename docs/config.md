@@ -188,31 +188,31 @@ cpu_only_composing_models: <comma-delimited-string-list>
 # List of GPU UUIDs to be used for the profiling. Use 'all' to profile all the GPUs visible by CUDA
 [ gpus: <string|comma-delimited-list-string> | default: 'all' ]
 
-# Search mode. Options are "brute" and "quick"
+# Search mode. Options are "brute", "quick", and "optuna"
 [ run_config_search_mode: <string> | default: brute]
 
-# Minimum concurrency used for the automatic/quick config search
+# Minimum concurrency used for the automatic/quick/optuna config search
 [ run_config_search_min_concurrency: <int> | default: 1 ]
 
-# Maximum concurrency used for the automatic/quick config search
+# Maximum concurrency used for the automatic/quick/optuna config search
 [ run_config_search_max_concurrency: <int> | default: 1024 ]
 
-# Minimum max_batch_size used for the automatic/quick config search
+# Minimum max_batch_size used for the automatic/quick/optuna config search
 [ run_config_search_min_model_batch_size: <int> | default: 1 ]
 
-# Maximum max_batch_size used for the automatic/quick config search
+# Maximum max_batch_size used for the automatic/quick/optuna config search
 [ run_config_search_max_model_batch_size: <int> | default: 128 ]
 
-# Minimum instance group count used for the automatic/quick config search
+# Minimum instance group count used for the automatic/quick/optuna config search
 [ run_config_search_min_instance_count: <int> | default: 1 ]
 
-# Maximum instance group count used for the automatic/quick config search
+# Maximum instance group count used for the automatic/quick/optuna config search
 [ run_config_search_max_instance_count: <int> | default: 5 ]
 
-# Minimum request rate used for the automatic/quick config search
+# Minimum request rate used for the automatic/quick/optuna config search
 [ run_config_search_min_request_rate: <int> | default: 16 ]
 
-# Maximum request rate used for the automatic/quick config search
+# Maximum request rate used for the automatic/quick/optuna config search
 [ run_config_search_max_request_rate: <int> | default: 8092 ]
 
 # Maximum number of steps taken during a binary search
@@ -226,6 +226,27 @@ cpu_only_composing_models: <comma-delimited-string-list>
 
 # Enables the searching of request rate (instead of concurrency)
 [ request_rate_search_enable: <bool> | default: false]
+
+# Minimum percentage of the search space to profile when using Optuna
+[ min_percentage_of_search_space: <int> | default: 5]
+
+# Maximum percentage of the search space to profile when using Optuna
+[ max_percentage_of_search_space: <int> | default: 10]
+
+# Minimum number of trials to profile when using Optuna
+[ optuna_min_trials: <int> | default: 20]
+
+# Maximum number of trials to profile when using Optuna
+[ optuna_max_trials: <int> | default: 200]
+
+# Number of trials without improvement before triggering early exit when using Optuna
+[ optuna_early_exit_threshold: <int> | default: 10]
+
+# Use the concurrency formula instead of searching the concurrency space in Optuna search mode
+[ use_concurrency_formula: <bool> | default: false]
+
+# Disables the sweeping of concurrencies for the top-N models after quick/optuna search completion
+[ concurrency_sweep_disable: <bool> | default: false]
 
 # Always report GPU metrics, even if the model(s) is cpu_only
 [ always_report_gpu_metrics: <bool> | default: false]

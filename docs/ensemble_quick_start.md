@@ -45,7 +45,7 @@ git pull origin main
 **3. Add a version directory to ensemble_add_sub**
 
 ```
-mkdir examples/quick/ensemble_add_sub/1
+mkdir examples/quick-start/ensemble_add_sub/1
 ```
 
 ## `Step 2:` Pull and Run the SDK Container
