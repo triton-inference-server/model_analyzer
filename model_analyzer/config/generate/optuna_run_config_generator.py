@@ -65,6 +65,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
     # This list represents all possible parameters Optuna can currently search for
     optuna_parameter_list = [
         "batch_sizes",
+        "max_batch_size",
         "instance_group",
         "concurrency",
         "max_queue_delay_microseconds",
@@ -364,7 +365,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         concurrency_formula = (
             2
             * int(trial_objectives["instance_group"])
-            * int(trial_objectives["batch_sizes"])
+            * int(trial_objectives["max_batch_size"])
         )
         concurrency = (
             self._config.run_config_search_max_concurrency
@@ -418,8 +419,8 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
                 }
             ]
 
-        if "batch_sizes" in trial_objectives:
-            param_combo["max_batch_size"] = trial_objectives["batch_sizes"]
+        if "max_batch_size" in trial_objectives:
+            param_combo["max_batch_size"] = trial_objectives["max_batch_size"]
 
         if "max_queue_delay_microseconds" in trial_objectives:
             param_combo["dynamic_batching"] = {
@@ -509,8 +510,16 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         model_config_variant: ModelConfigVariant,
         trial_objectives: TrialObjectives,
     ) -> ModelRunConfig:
+        trial_batch_sizes = (
+            int(trial_objectives["batch_sizes"])
+            if "batch_sizes" in trial_objectives
+            else DEFAULT_BATCH_SIZES
+        )
         perf_analyzer_config = self._create_perf_analyzer_config(
-            model.model_name(), model, int(trial_objectives["concurrency"])
+            model_name=model.model_name(),
+            model=model,
+            concurrency=int(trial_objectives["concurrency"]),
+            batch_sizes=trial_batch_sizes,
         )
         model_run_config = ModelRunConfig(
             model.model_name(), model_config_variant, perf_analyzer_config
@@ -523,14 +532,14 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         model_name: str,
         model: ModelProfileSpec,
         concurrency: int,
+        batch_sizes: int,
     ) -> PerfAnalyzerConfig:
         perf_analyzer_config = PerfAnalyzerConfig()
 
         perf_analyzer_config.update_config_from_profile_config(model_name, self._config)
 
-        # TODO: TMA-1934 add support for user specifying a range of client batch sizes
         perf_config_params = {
-            "batch-size": DEFAULT_BATCH_SIZES,
+            "batch-size": batch_sizes,
             "concurrency-range": concurrency,
         }
         perf_analyzer_config.update_config(perf_config_params)
