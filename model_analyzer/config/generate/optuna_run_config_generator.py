@@ -436,16 +436,16 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         model_config_variant: ModelConfigVariant,
         trial_objectives: TrialObjectives,
     ) -> ModelRunConfig:
-        trial_batch_size = (
+        trial_batch_sizes = (
             int(trial_objectives["batch_sizes"])
             if "batch_sizes" in trial_objectives
             else DEFAULT_BATCH_SIZES
         )
         perf_analyzer_config = self._create_perf_analyzer_config(
-            model.model_name(),
-            model,
-            int(trial_objectives["concurrency"]),
-            trial_batch_size,
+            model_name=model.model_name(),
+            model=model,
+            concurrency=int(trial_objectives["concurrency"]),
+            batch_sizes=trial_batch_sizes,
         )
         model_run_config = ModelRunConfig(
             model.model_name(), model_config_variant, perf_analyzer_config
