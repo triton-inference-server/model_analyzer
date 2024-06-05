@@ -99,13 +99,16 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         logger.info("")
         yield from self._execute_quick_search()
         logger.info("")
-        logger.info(
-            "Done with quick mode search. Gathering concurrency sweep measurements for reports"
-        )
-        logger.info("")
-        yield from self._sweep_concurrency_over_top_results()
-        logger.info("")
-        logger.info("Done gathering concurrency sweep measurements for reports")
+        if self._config.concurrency_sweep_disable:
+            logger.info("Done with quick mode search.")
+        else:
+            logger.info(
+                "Done with quick mode search. Gathering concurrency sweep measurements for reports"
+            )
+            logger.info("")
+            yield from self._sweep_concurrency_over_top_results()
+            logger.info("")
+            logger.info("Done gathering concurrency sweep measurements for reports")
         logger.info("")
 
     def _execute_quick_search(self) -> Generator[RunConfig, None, None]:

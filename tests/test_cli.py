@@ -66,6 +66,8 @@ def get_test_options():
         OptionStruct("bool", "profile","--skip-detailed-reports"),
         OptionStruct("bool", "profile","--always-report-gpu-metrics"),
         OptionStruct("bool", "profile","--use-concurrency-formula"),
+        OptionStruct("bool", "profile","--concurrency-sweep-disable"),
+
 
         #Int/Float options
         # Options format:
