@@ -242,7 +242,7 @@ cpu_only_composing_models: <comma-delimited-string-list>
 # Number of trials without improvement before triggering early exit when using Optuna
 [ optuna_early_exit_threshold: <int> | default: 10]
 
-# Use the concurrency formula instead of searching the concurrency space in Optuna search mode
+# Use the concurrency formula (2 * batch size * instance group count) instead of searching the concurrency when using Optuna
 [ use_concurrency_formula: <bool> | default: false]
 
 # Disables the sweeping of concurrencies for the top-N models after quick/optuna search completion

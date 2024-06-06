@@ -316,7 +316,7 @@ A number of new configuration options were added to support tailoring the Optuna
 - `--min/max_percentage_of_search_space`: sets the percentage of the space you want Optuna to search
 - `--optuna-min/max-trials`: sets the number of trials Optuna will attempt
 - `--optuna-early-exit-threshold`: sets the number of trials without improvement before triggering early exit
-- `--use-concurrency-formula`: uses a formula (2 \* batch size \* instance group count), rather than sweeping concurrency
+- `--use-concurrency-formula`: uses a formula (**2 _ batch size _ instance group count**), rather than sweeping concurrency
 
 ---
 
@@ -379,6 +379,8 @@ Trial 7 of 200:
   Profiling model_A_config_6: client batch size=4, concurrency=256
   Objective score for model_A_config_6: 57 --- Best: model_A_config_4 (83)
 ```
+
+---
 
 ## Ensemble Model Search
 
