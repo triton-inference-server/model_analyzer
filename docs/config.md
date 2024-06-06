@@ -234,10 +234,10 @@ cpu_only_composing_models: <comma-delimited-string-list>
 [ max_percentage_of_search_space: <int> | default: 10]
 
 # Minimum number of trials to profile when using Optuna
-[ optuna_min_trials: <int> | default: 20]
+[ optuna_min_trials: <int> | default: None]
 
 # Maximum number of trials to profile when using Optuna
-[ optuna_max_trials: <int> | default: 200]
+[ optuna_max_trials: <int> | default: None]
 
 # Number of trials without improvement before triggering early exit when using Optuna
 [ optuna_early_exit_threshold: <int> | default: 10]

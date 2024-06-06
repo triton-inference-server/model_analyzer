@@ -311,6 +311,8 @@ profile_models:
   - model_A
 ```
 
+---
+
 A number of new configuration options were added to support tailoring the Optuna search to your needs:
 
 - `--min/max_percentage_of_search_space`: sets the percentage of the space you want Optuna to search
