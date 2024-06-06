@@ -35,10 +35,7 @@ from model_analyzer.config.generate.search_parameter import (
 )
 from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.config.input.config_defaults import (
-    DEFAULT_BATCH_SIZES,
-    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY,
-)
+from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
