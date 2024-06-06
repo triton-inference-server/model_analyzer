@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from math import log2
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -239,7 +239,7 @@ class SearchParameters:
     def _populate_list_parameter(
         self,
         parameter_name: str,
-        parameter_list: List[int | str],
+        parameter_list: List[Union[int, str]],
         parameter_category: ParameterCategory,
     ) -> None:
         usage = self._determine_parameter_usage(parameter_name)
