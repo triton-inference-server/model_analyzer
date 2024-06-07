@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright 2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,16 +16,16 @@
 
 import logging
 from copy import deepcopy
-from typing import Generator, List, Optional
+from typing import Dict, Generator, List, Optional
 
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
 )
-from model_analyzer.config.generate.quick_run_config_generator import (
-    QuickRunConfigGenerator,
+from model_analyzer.config.generate.optuna_run_config_generator import (
+    OptunaRunConfigGenerator,
 )
-from model_analyzer.config.generate.search_config import SearchConfig
+from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
@@ -38,47 +38,43 @@ from .config_generator_interface import ConfigGeneratorInterface
 logger = logging.getLogger(LOGGER_NAME)
 
 
-class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
+class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     """
-    First run QuickRunConfigGenerator for a hill climbing search, then use
+    First run OptunaConfigGenerator for an Optuna search, then use
     ParameterSearch for a concurrency sweep + binary search of the default
     and Top N results
     """
 
     def __init__(
         self,
-        search_config: SearchConfig,
         config: ConfigCommandProfile,
         gpu_count: int,
         models: List[ModelProfileSpec],
-        composing_models: List[ModelProfileSpec],
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
+        search_parameters: Dict[str, SearchParameters],
     ):
         """
         Parameters
         ----------
-        search_config: SearchConfig
-            Defines parameters and dimensions for the search
         config: ConfigCommandProfile
             Profile configuration information
         gpu_count: Number of gpus in the system
         models: List of ModelProfileSpec
             List of models to profile
-        composing_models: List of ModelProfileSpec
-            List of composing models that exist inside of the supplied models
         result_manager: ResultManager
             The object that handles storing and sorting the results from the perf analyzer
         model_variant_name_manager: ModelVariantNameManager
             Maps model variants to config names
+        search_parameters: SearchParameters
+            The object that handles the users configuration search parameters
         """
-        self._search_config = search_config
         self._config = config
         self._gpu_count = gpu_count
         self._models = models
-        self._composing_models = composing_models
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
+        self._search_parameters = search_parameters
 
     def set_last_results(
         self, measurements: List[Optional[RunConfigMeasurement]]
@@ -95,15 +91,15 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         """
 
         logger.info("")
-        logger.info("Starting quick mode search to find optimal configs")
+        logger.info("Starting Optuna mode search to find optimal configs")
         logger.info("")
-        yield from self._execute_quick_search()
+        yield from self._execute_optuna_search()
         logger.info("")
         if self._config.concurrency_sweep_disable:
-            logger.info("Done with quick mode search.")
+            logger.info("Done with Optuna mode search.")
         else:
             logger.info(
-                "Done with quick mode search. Gathering concurrency sweep measurements for reports"
+                "Done with Optuna mode search. Gathering concurrency sweep measurements for reports"
             )
             logger.info("")
             yield from self._sweep_concurrency_over_top_results()
@@ -111,19 +107,18 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             logger.info("Done gathering concurrency sweep measurements for reports")
         logger.info("")
 
-    def _execute_quick_search(self) -> Generator[RunConfig, None, None]:
-        self._rcg: ConfigGeneratorInterface = self._create_quick_run_config_generator()
+    def _execute_optuna_search(self) -> Generator[RunConfig, None, None]:
+        self._rcg: ConfigGeneratorInterface = self._create_optuna_run_config_generator()
 
         yield from self._rcg.get_configs()
 
-    def _create_quick_run_config_generator(self) -> QuickRunConfigGenerator:
-        return QuickRunConfigGenerator(
-            search_config=self._search_config,
+    def _create_optuna_run_config_generator(self) -> OptunaRunConfigGenerator:
+        return OptunaRunConfigGenerator(
             config=self._config,
             gpu_count=self._gpu_count,
             models=self._models,
-            composing_models=self._composing_models,
             model_variant_name_manager=self._model_variant_name_manager,
+            search_parameters=self._search_parameters,
         )
 
     def _sweep_concurrency_over_top_results(self) -> Generator[RunConfig, None, None]:

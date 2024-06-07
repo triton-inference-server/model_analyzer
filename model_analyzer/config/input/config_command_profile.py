@@ -43,6 +43,7 @@ from .config_defaults import (
     DEFAULT_CHECKPOINT_DIRECTORY,
     DEFAULT_CLIENT_PROTOCOL,
     DEFAULT_COLLECT_CPU_METRICS,
+    DEFAULT_CONCURRENCY_SWEEP_DISABLE,
     DEFAULT_DURATION_SECONDS,
     DEFAULT_EXPORT_PATH,
     DEFAULT_FILENAME_MODEL_GPU,
@@ -62,6 +63,11 @@ from .config_defaults import (
     DEFAULT_OFFLINE_PLOTS,
     DEFAULT_ONLINE_OBJECTIVES,
     DEFAULT_ONLINE_PLOTS,
+    DEFAULT_OPTUNA_EARLY_EXIT_THRESHOLD,
+    DEFAULT_OPTUNA_MAX_PERCENTAGE_OF_SEARCH_SPACE,
+    DEFAULT_OPTUNA_MAX_TRIALS,
+    DEFAULT_OPTUNA_MIN_PERCENTAGE_OF_SEARCH_SPACE,
+    DEFAULT_OPTUNA_MIN_TRIALS,
     DEFAULT_OUTPUT_MODEL_REPOSITORY,
     DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG,
     DEFAULT_PERF_ANALYZER_CPU_UTIL,
@@ -94,6 +100,7 @@ from .config_defaults import (
     DEFAULT_TRITON_LAUNCH_MODE,
     DEFAULT_TRITON_METRICS_URL,
     DEFAULT_TRITON_SERVER_PATH,
+    DEFAULT_USE_CONCURRENCY_FORMULA,
 )
 from .config_enum import ConfigEnum
 from .config_field import ConfigField
@@ -918,16 +925,72 @@ class ConfigCommandProfile(ConfigCommand):
         )
         self._add_config(
             ConfigField(
+                "min_percentage_of_search_space",
+                flags=["--min_percentage_of_search_space"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_OPTUNA_MIN_PERCENTAGE_OF_SEARCH_SPACE,
+                description="Minimum percentage of the search space to profile when using Optuna",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "max_percentage_of_search_space",
+                flags=["--max_percentage_of_search_space"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_OPTUNA_MAX_PERCENTAGE_OF_SEARCH_SPACE,
+                description="Maximum percentage of the search space to profile when using Optuna",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "optuna_min_trials",
+                flags=["--optuna_min_trials"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_OPTUNA_MIN_TRIALS,
+                description="Minimum number of trials to profile when using Optuna",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "optuna_max_trials",
+                flags=["--optuna_max_trials"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_OPTUNA_MAX_TRIALS,
+                description="Maximum number of trials to profile when using Optuna",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "optuna_early_exit_threshold",
+                flags=["--optuna_early_exit_threshold"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_OPTUNA_EARLY_EXIT_THRESHOLD,
+                description="Number of trials without improvement before triggering early exit when using Optuna",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "use_concurrency_formula",
+                flags=["--use-concurrency-formula"],
+                field_type=ConfigPrimitive(bool),
+                parser_args={"action": "store_true"},
+                default_value=DEFAULT_USE_CONCURRENCY_FORMULA,
+                description="Use the concurrency formula instead of searching the concurrency space in Optuna search mode",
+            )
+        )
+        self._add_config(
+            ConfigField(
                 "run_config_search_mode",
                 flags=["--run-config-search-mode"],
-                choices=["brute", "quick"],
+                choices=["brute", "quick", "optuna"],
                 field_type=ConfigPrimitive(str),
                 default_value=DEFAULT_RUN_CONFIG_SEARCH_MODE,
                 description="The search mode for Model Analyzer to find and evaluate"
                 " model configurations. 'brute' will brute force all combinations of"
                 " configuration options.  'quick' will attempt to find a near-optimal"
                 " configuration as fast as possible, but isn't guaranteed to find the"
-                " best.",
+                " best. 'optuna' is a more generalized search algorithm allowing "
+                " the user to quickly search over any set of parameters.",
             )
         )
         self._add_config(
@@ -958,6 +1021,16 @@ class ConfigCommandProfile(ConfigCommand):
                 parser_args={"action": "store_true"},
                 default_value=DEFAULT_REQUEST_RATE_SEARCH_ENABLE,
                 description="Enables the searching of request rate (instead of concurrency).",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "concurrency_sweep_disable",
+                flags=["--concurrency-sweep-disable"],
+                field_type=ConfigPrimitive(bool),
+                parser_args={"action": "store_true"},
+                default_value=DEFAULT_CONCURRENCY_SWEEP_DISABLE,
+                description="Disables the sweeping of concurrencies for the top-N models after quick/optuna search completion.",
             )
         )
 
@@ -1528,11 +1601,21 @@ class ConfigCommandProfile(ConfigCommand):
 
             # Run parameters
             if not model.parameters():
-                new_model["parameters"] = {
-                    "batch_sizes": self.batch_sizes,
-                    "concurrency": self.concurrency,
-                    "request_rate": self.request_rate,
-                }
+                if self.run_config_search_mode != "optuna":
+                    new_model["parameters"] = {
+                        "batch_sizes": self.batch_sizes,
+                        "concurrency": self.concurrency,
+                        "request_rate": self.request_rate,
+                    }
+                else:
+                    if self._fields["batch_sizes"].is_set_by_user():
+                        new_model["parameters"] = {"batch_sizes": self.batch_sizes}
+                    else:
+                        new_model["parameters"] = {"batch_sizes": []}
+
+                    new_model["parameters"]["concurrency"] = self.concurrency
+                    new_model["parameters"]["request_rate"] = self.request_rate
+
             else:
                 new_model["parameters"] = {}
                 if "batch_sizes" in model.parameters():
@@ -1540,7 +1623,12 @@ class ConfigCommandProfile(ConfigCommand):
                         {"batch_sizes": model.parameters()["batch_sizes"]}
                     )
                 else:
-                    new_model["parameters"].update({"batch_sizes": self.batch_sizes})
+                    if self.run_config_search_mode != "optuna":
+                        new_model["parameters"].update(
+                            {"batch_sizes": self.batch_sizes}
+                        )
+                    else:
+                        new_model["parameters"].update({"batch_sizes": []})
 
                 if "concurrency" in model.parameters():
                     new_model["parameters"].update(

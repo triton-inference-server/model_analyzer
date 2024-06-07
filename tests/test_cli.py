@@ -65,6 +65,9 @@ def get_test_options():
         OptionStruct("bool", "profile","--skip-summary-reports"),
         OptionStruct("bool", "profile","--skip-detailed-reports"),
         OptionStruct("bool", "profile","--always-report-gpu-metrics"),
+        OptionStruct("bool", "profile","--use-concurrency-formula"),
+        OptionStruct("bool", "profile","--concurrency-sweep-disable"),
+
 
         #Int/Float options
         # Options format:
@@ -85,6 +88,11 @@ def get_test_options():
         OptionStruct("int", "profile", "--run-config-search-min-instance-count", None, "2", "1"),
         OptionStruct("int", "profile", "--run-config-search-max-instance-count", None, "10", "5"),
         OptionStruct("int", "profile", "--run-config-search-max-binary-search-steps", None, "10", "5"),
+        OptionStruct("int", "profile", "--min_percentage_of_search_space", None, "10", "5"),
+        OptionStruct("int", "profile", "--max_percentage_of_search_space", None, "5", "10"),
+        OptionStruct("int", "profile", "--optuna_min_trials", None, "10", "20"),
+        OptionStruct("int", "profile", "--optuna_max_trials", None, "5", "200"),
+        OptionStruct("int", "profile", "--optuna_early_exit_threshold", None, "5", "10"),
         OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", "1.0"),
         OptionStruct("float", "profile", "--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0)),
         OptionStruct("int", "profile", "--num-configs-per-model", None, "10", "3"),
@@ -381,6 +389,7 @@ class TestCLI(trc.TestResultCollector):
         cli = option_struct.cli_subcommand()
         _, config = cli.parse()
         option_value = config.get_config().get(option_with_underscores).value()
+        # Boolean values must always default to False
         self.assertEqual(option_value, False)
 
         # Test boolean option

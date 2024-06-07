@@ -289,10 +289,10 @@ class ConfigCommand:
         if not "profile_models" in config:
             return
 
-        if config["run_config_search_mode"] != "quick":
+        if config["run_config_search_mode"].value() != "quick":
             return
 
-        profile_models = config()["profile_models"].value()
+        profile_models = config["profile_models"].value()
         for model in profile_models:
             model_config_params = deepcopy(model.model_config_parameters())
             if model_config_params:
