@@ -423,5 +423,14 @@ class Analyzer:
     def _populate_search_parameters(self):
         for model in self._config.profile_models:
             self._search_parameters[model.model_name()] = SearchParameters(
-                self._config, model.parameters(), model.model_config_parameters()
+                self._config,
+                model.parameters(),
+                model.model_config_parameters(),
+                is_bls_model=bool(self._config.bls_composing_models),
+            )
+        for model in self._config.bls_composing_models:
+            self._search_parameters[model.model_name()] = SearchParameters(
+                self._config,
+                model.parameters(),
+                model.model_config_parameters(),
             )

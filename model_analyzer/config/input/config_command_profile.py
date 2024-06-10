@@ -17,6 +17,7 @@
 import argparse
 import logging
 import os
+from copy import deepcopy
 
 import numba.cuda
 import psutil
@@ -1691,6 +1692,11 @@ class ConfigCommandProfile(ConfigCommand):
                 new_model["model_config_parameters"] = model.model_config_parameters()
 
             new_profile_models[model.model_name()] = new_model
+
+        # deepcopy is necessary, else it gets overwritten when updating profile_models
+        self._fields["bls_composing_models"] = deepcopy(
+            self._fields["bls_composing_models"]
+        )
         self._fields["profile_models"].set_value(new_profile_models)
 
     def _using_request_rate(self) -> bool:

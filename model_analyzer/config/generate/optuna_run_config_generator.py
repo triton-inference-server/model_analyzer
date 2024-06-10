@@ -98,6 +98,13 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         # TODO: TMA-1927: Add support for multi-model
         self._search_parameters = search_parameters[models[0].model_name()]
 
+        # TODO: need to add in ensemble support
+        self._composing_search_parameters = {}
+        for composing_model in self._config.bls_composing_models:
+            self._composing_search_parameters[
+                composing_model.model_name()
+            ] = search_parameters[composing_model.model_name()]
+
         self._model_variant_name_manager = model_variant_name_manager
 
         self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(models)

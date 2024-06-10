@@ -457,6 +457,104 @@ class TestSearchParameters(trc.TestResultCollector):
         # batch_sizes (8) * instance group (8) * concurrency (11) * size (3)
         self.assertEqual(8 * 8 * 11 * 3, total_num_of_possible_configurations)
 
+    def test_search_parameter_creation_bls_default(self):
+        """
+        Test that search parameters are correctly created in default BLS optuna case
+        """
+
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli-repository",
+            "-f",
+            "path-to-config-file",
+            "--run-config-search-mode",
+            "optuna",
+        ]
+
+        yaml_content = """
+        profile_models: add_sub
+        bls_composing_models: add,sub
+        """
+
+        config = TestConfig()._evaluate_config(args=args, yaml_content=yaml_content)
+
+        analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
+        analyzer._populate_search_parameters()
+
+        # ADD_SUB
+        # =====================================================================
+        # The top level model of a BLS can only search instance count
+
+        # max_batch_size
+        max_batch_size = analyzer._search_parameters["add_sub"].get_parameter(
+            "max_batch_size"
+        )
+        self.assertIsNone(max_batch_size)
+
+        # concurrency
+        concurrency = analyzer._search_parameters["add_sub"].get_parameter(
+            "concurrency"
+        )
+        self.assertIsNone(concurrency)
+
+        # instance_group
+        instance_group = analyzer._search_parameters["add_sub"].get_parameter(
+            "instance_group"
+        )
+        self.assertEqual(ParameterUsage.MODEL, instance_group.usage)
+        self.assertEqual(ParameterCategory.INTEGER, instance_group.category)
+        self.assertEqual(
+            default.DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT, instance_group.min_range
+        )
+        self.assertEqual(
+            default.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, instance_group.max_range
+        )
+
+        # ADD/SUB (composing models)
+        # =====================================================================
+        # The top level model of a BLS can only search instance count
+
+        # max_batch_size
+        max_batch_size = analyzer._search_parameters["add"].get_parameter(
+            "max_batch_size"
+        )
+        self.assertEqual(ParameterUsage.MODEL, max_batch_size.usage)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, max_batch_size.category)
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE),
+            max_batch_size.min_range,
+        )
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE),
+            max_batch_size.max_range,
+        )
+
+        # concurrency
+        concurrency = analyzer._search_parameters["sub"].get_parameter("concurrency")
+        self.assertEqual(ParameterUsage.RUNTIME, concurrency.usage)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, concurrency.category)
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MIN_CONCURRENCY), concurrency.min_range
+        )
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MAX_CONCURRENCY), concurrency.max_range
+        )
+
+        # instance_group
+        instance_group = analyzer._search_parameters["add"].get_parameter(
+            "instance_group"
+        )
+        self.assertEqual(ParameterUsage.MODEL, instance_group.usage)
+        self.assertEqual(ParameterCategory.INTEGER, instance_group.category)
+        self.assertEqual(
+            default.DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT, instance_group.min_range
+        )
+        self.assertEqual(
+            default.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, instance_group.max_range
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
