@@ -482,10 +482,11 @@ class TestSearchParameters(trc.TestResultCollector):
 
         analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
         analyzer._populate_search_parameters()
+        analyzer._populate_composing_search_parameters()
 
         # ADD_SUB
         # =====================================================================
-        # The top level model of a BLS can only search instance count
+        # The top level model of a BLS does not search max batch size (always 1)
 
         # max_batch_size
         max_batch_size = analyzer._search_parameters["add_sub"].get_parameter(
@@ -497,7 +498,14 @@ class TestSearchParameters(trc.TestResultCollector):
         concurrency = analyzer._search_parameters["add_sub"].get_parameter(
             "concurrency"
         )
-        self.assertIsNone(concurrency)
+        self.assertEqual(ParameterUsage.RUNTIME, concurrency.usage)
+        self.assertEqual(ParameterCategory.EXPONENTIAL, concurrency.category)
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MIN_CONCURRENCY), concurrency.min_range
+        )
+        self.assertEqual(
+            log2(default.DEFAULT_RUN_CONFIG_MAX_CONCURRENCY), concurrency.max_range
+        )
 
         # instance_group
         instance_group = analyzer._search_parameters["add_sub"].get_parameter(
@@ -514,10 +522,10 @@ class TestSearchParameters(trc.TestResultCollector):
 
         # ADD/SUB (composing models)
         # =====================================================================
-        # The top level model of a BLS can only search instance count
+        # Composing models do not search concurrency
 
         # max_batch_size
-        max_batch_size = analyzer._search_parameters["add"].get_parameter(
+        max_batch_size = analyzer._composing_search_parameters["add"].get_parameter(
             "max_batch_size"
         )
         self.assertEqual(ParameterUsage.MODEL, max_batch_size.usage)
@@ -532,18 +540,13 @@ class TestSearchParameters(trc.TestResultCollector):
         )
 
         # concurrency
-        concurrency = analyzer._search_parameters["sub"].get_parameter("concurrency")
-        self.assertEqual(ParameterUsage.RUNTIME, concurrency.usage)
-        self.assertEqual(ParameterCategory.EXPONENTIAL, concurrency.category)
-        self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MIN_CONCURRENCY), concurrency.min_range
+        concurrency = analyzer._composing_search_parameters["sub"].get_parameter(
+            "concurrency"
         )
-        self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MAX_CONCURRENCY), concurrency.max_range
-        )
+        self.assertIsNone(concurrency)
 
         # instance_group
-        instance_group = analyzer._search_parameters["add"].get_parameter(
+        instance_group = analyzer._composing_search_parameters["sub"].get_parameter(
             "instance_group"
         )
         self.assertEqual(ParameterUsage.MODEL, instance_group.usage)

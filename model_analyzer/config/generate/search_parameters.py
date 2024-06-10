@@ -46,12 +46,14 @@ class SearchParameters:
         parameters: Dict[str, Any] = {},
         model_config_parameters: Dict[str, Any] = {},
         is_bls_model: bool = False,
+        is_composing_model: bool = False,
     ):
         self._config = config
         self._parameters = parameters
         self._model_config_parameters = model_config_parameters
         self._search_parameters: Dict[str, SearchParameter] = {}
         self._is_bls_model = is_bls_model
+        self._is_composing_model = is_composing_model
 
         self._populate_search_parameters()
 
@@ -123,7 +125,7 @@ class SearchParameters:
     def _populate_parameters(self) -> None:
         self._populate_batch_sizes()
 
-        if not self._is_bls_model:
+        if not self._is_composing_model:
             self._populate_concurrency()
             # TODO: Populate request rate - TMA-1903
 
