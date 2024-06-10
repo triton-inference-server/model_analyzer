@@ -84,6 +84,7 @@ class Analyzer:
         )
 
         self._search_parameters: Dict[str, SearchParameters] = {}
+        self._composing_search_parameters: Dict[str, SearchParameters] = {}
 
     def profile(
         self, client: TritonClient, gpus: List[GPUDevice], mode: str, verbose: bool
@@ -119,6 +120,7 @@ class Analyzer:
         self._create_metrics_manager(client, gpus)
         self._create_model_manager(client, gpus)
         self._populate_search_parameters()
+        self._populate_composing_search_parameters()
 
         if self._config.triton_launch_mode == "remote":
             self._warn_if_other_models_loaded_on_remote_server(client)
@@ -423,5 +425,17 @@ class Analyzer:
     def _populate_search_parameters(self):
         for model in self._config.profile_models:
             self._search_parameters[model.model_name()] = SearchParameters(
-                self._config, model.parameters(), model.model_config_parameters()
+                self._config,
+                model.parameters(),
+                model.model_config_parameters(),
+                is_bls_model=bool(self._config.bls_composing_models),
+            )
+
+    def _populate_composing_search_parameters(self):
+        for model in self._config.bls_composing_models:
+            self._composing_search_parameters[model.model_name()] = SearchParameters(
+                self._config,
+                model.parameters(),
+                model.model_config_parameters(),
+                is_composing_model=True,
             )
