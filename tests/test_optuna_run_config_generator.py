@@ -30,8 +30,10 @@ from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
 )
 from tests.common.test_utils import evaluate_mock_config
+from tests.test_config import TestConfig
 
 from .common import test_result_collector as trc
+from .mocks.mock_model_config import MockModelConfig
 
 
 class TestOptunaRunConfigGenerator(trc.TestResultCollector):
@@ -56,12 +58,13 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             ]
 
         config = self._create_config(additional_args=["--use-concurrency-formula"])
-        model = config.profile_models[0]
-        search_parameters = SearchParameters(
-            config=config,
-            parameters={},
-            model_config_parameters=model.model_config_parameters(),
+        mock_model_config = MockModelConfig("max_batch_size: 8")
+        mock_model_config.start()
+        model = ModelProfileSpec(
+            config.profile_models[0], config, MagicMock(), MagicMock()
         )
+        search_parameters = SearchParameters(model=model, config=config)
+        mock_model_config.stop()
 
         self._rcg = OptunaRunConfigGenerator(
             config=config,
@@ -209,11 +212,16 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
 
     def test_create_run_config_with_concurrency_formula(self):
         config = self._create_config(["--use-concurrency-formula"])
-        model = config.profile_models[0]
+        mock_model_config = MockModelConfig()
+        mock_model_config.start()
+        model = ModelProfileSpec(
+            config.profile_models[0], config, MagicMock(), MagicMock()
+        )
+        self.search_parameters = SearchParameters(model=model, config=config)
+        mock_model_config.stop()
         search_parameters = SearchParameters(
+            model=model,
             config=config,
-            parameters={},
-            model_config_parameters=model.model_config_parameters(),
         )
 
         rcg = OptunaRunConfigGenerator(
@@ -268,7 +276,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+        config = TestConfig()._evaluate_config(args, yaml_str)
 
         return config
 
