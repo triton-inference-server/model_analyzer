@@ -23,6 +23,7 @@ from model_analyzer.cli.cli import CLI
 from model_analyzer.config.generate.base_model_config_generator import (
     BaseModelConfigGenerator,
 )
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
@@ -119,8 +120,8 @@ class Analyzer:
 
         self._create_metrics_manager(client, gpus)
         self._create_model_manager(client, gpus)
-        self._populate_search_parameters()
-        self._populate_composing_search_parameters()
+        self._populate_search_parameters(client, gpus)
+        self._populate_composing_search_parameters(client, gpus)
 
         if self._config.triton_launch_mode == "remote":
             self._warn_if_other_models_loaded_on_remote_server(client)
@@ -207,6 +208,7 @@ class Analyzer:
             state_manager=self._state_manager,
             constraint_manager=self._constraint_manager,
             search_parameters=self._search_parameters,
+            composing_search_parameters=self._composing_search_parameters,
         )
 
     def _get_server_only_metrics(self, client, gpus):
@@ -422,20 +424,20 @@ class Analyzer:
                     "This could impact the profile results."
                 )
 
-    def _populate_search_parameters(self):
+    def _populate_search_parameters(self, client, gpus):
         for model in self._config.profile_models:
+            model_profile_spec = ModelProfileSpec(model, self._config, client, gpus)
             self._search_parameters[model.model_name()] = SearchParameters(
-                self._config,
-                model.parameters(),
-                model.model_config_parameters(),
+                config=self._config,
+                model=model_profile_spec,
                 is_bls_model=bool(self._config.bls_composing_models),
             )
 
-    def _populate_composing_search_parameters(self):
+    def _populate_composing_search_parameters(self, client, gpus):
         for model in self._config.bls_composing_models:
+            model_profile_spec = ModelProfileSpec(model, self._config, client, gpus)
             self._composing_search_parameters[model.model_name()] = SearchParameters(
-                self._config,
-                model.parameters(),
-                model.model_config_parameters(),
+                config=self._config,
+                model=model_profile_spec,
                 is_composing_model=True,
             )

@@ -61,6 +61,7 @@ class RunConfigGeneratorFactory:
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: Dict[str, SearchParameters],
+        composing_search_parameters: Dict[str, SearchParameters],
     ) -> ConfigGeneratorInterface:
         """
         Parameters
@@ -78,6 +79,8 @@ class RunConfigGeneratorFactory:
             Maps model variants to config names
         search_parameters: SearchParameters
             The object that handles the users configuration search parameters
+        composing_search_parameters: SearchParameters
+            The object that handles the users configuration search parameters for composing models
 
         Returns
         -------
@@ -97,8 +100,10 @@ class RunConfigGeneratorFactory:
                 command_config=command_config,
                 gpu_count=len(gpus),
                 models=new_models,
+                composing_models=composing_models,
                 result_manager=result_manager,
                 search_parameters=search_parameters,
+                composing_search_parameters=composing_search_parameters,
                 model_variant_name_manager=model_variant_name_manager,
             )
         elif command_config.run_config_search_mode == "quick" or composing_models:
@@ -147,17 +152,21 @@ class RunConfigGeneratorFactory:
         command_config: ConfigCommandProfile,
         gpu_count: int,
         models: List[ModelProfileSpec],
+        composing_models: List[ModelProfileSpec],
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: Dict[str, SearchParameters],
+        composing_search_parameters: Dict[str, SearchParameters],
     ) -> ConfigGeneratorInterface:
         return OptunaPlusConcurrencySweepRunConfigGenerator(
             config=command_config,
             gpu_count=gpu_count,
+            composing_models=composing_models,
             models=models,
             result_manager=result_manager,
             model_variant_name_manager=model_variant_name_manager,
             search_parameters=search_parameters,
+            composing_search_parameters=composing_search_parameters,
         )
 
     @staticmethod

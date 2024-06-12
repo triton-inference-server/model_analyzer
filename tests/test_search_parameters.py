@@ -20,6 +20,7 @@ from unittest.mock import MagicMock, patch
 
 import model_analyzer.config.input.config_defaults as default
 from model_analyzer.analyzer import Analyzer
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.search_parameters import (
     ParameterCategory,
     ParameterUsage,
@@ -29,6 +30,7 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 from tests.test_config import TestConfig
 
 from .common import test_result_collector as trc
+from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
 
 
@@ -56,8 +58,13 @@ class TestSearchParameters(trc.TestResultCollector):
         """
 
         config = TestConfig()._evaluate_config(args=args, yaml_content=yaml_content)
-
-        self.search_parameters = SearchParameters(config)
+        mock_model_config = MockModelConfig("max_batch_size: 8")
+        mock_model_config.start()
+        model = ModelProfileSpec(
+            config.profile_models[0], config, MagicMock(), MagicMock()
+        )
+        self.search_parameters = SearchParameters(model=model, config=config)
+        mock_model_config.stop()
 
         self.search_parameters._add_search_parameter(
             name="concurrency",
@@ -207,7 +214,7 @@ class TestSearchParameters(trc.TestResultCollector):
         config = TestConfig()._evaluate_config(args=args, yaml_content=yaml_content)
 
         analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
-        analyzer._populate_search_parameters()
+        analyzer._populate_search_parameters(MagicMock(), MagicMock())
 
         # max_batch_size
         max_batch_size = analyzer._search_parameters["add_sub"].get_parameter(
@@ -274,7 +281,7 @@ class TestSearchParameters(trc.TestResultCollector):
         config = TestConfig()._evaluate_config(args=args, yaml_content=yaml_content)
 
         analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
-        analyzer._populate_search_parameters()
+        analyzer._populate_search_parameters(MagicMock(), MagicMock())
 
         concurrency = analyzer._search_parameters["add_sub"].get_parameter(
             "concurrency"
@@ -320,7 +327,10 @@ class TestSearchParameters(trc.TestResultCollector):
         config = TestConfig()._evaluate_config(args, yaml_content)
 
         analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
-        analyzer._populate_search_parameters()
+        mock_model_config = MockModelConfig()
+        mock_model_config.start()
+        analyzer._populate_search_parameters(MagicMock(), MagicMock())
+        mock_model_config.stop()
 
         # ===================================================================
         # ADD_SUB
@@ -383,16 +393,7 @@ class TestSearchParameters(trc.TestResultCollector):
         max_batch_size = analyzer._search_parameters["mult_div"].get_parameter(
             "max_batch_size"
         )
-        self.assertEqual(ParameterUsage.MODEL, max_batch_size.usage)
-        self.assertEqual(ParameterCategory.EXPONENTIAL, max_batch_size.category)
-        self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE),
-            max_batch_size.min_range,
-        )
-        self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE),
-            max_batch_size.max_range,
-        )
+        self.assertIsNone(max_batch_size)
 
         # concurrency
         # ===================================================================
@@ -454,7 +455,7 @@ class TestSearchParameters(trc.TestResultCollector):
             self.search_parameters.number_of_total_possible_configurations()
         )
 
-        # batch_sizes (8) * instance group (8) * concurrency (11) * size (3)
+        # max_batch_size (8) * instance group (8) * concurrency (11) * size (3)
         self.assertEqual(8 * 8 * 11 * 3, total_num_of_possible_configurations)
 
     def test_search_parameter_creation_bls_default(self):
@@ -481,8 +482,12 @@ class TestSearchParameters(trc.TestResultCollector):
         config = TestConfig()._evaluate_config(args=args, yaml_content=yaml_content)
 
         analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
-        analyzer._populate_search_parameters()
-        analyzer._populate_composing_search_parameters()
+
+        mock_model_config = MockModelConfig()
+        mock_model_config.start()
+        analyzer._populate_search_parameters(MagicMock(), MagicMock())
+        analyzer._populate_composing_search_parameters(MagicMock(), MagicMock())
+        mock_model_config.stop()
 
         # ADD_SUB
         # =====================================================================
@@ -522,22 +527,13 @@ class TestSearchParameters(trc.TestResultCollector):
 
         # ADD/SUB (composing models)
         # =====================================================================
-        # Composing models do not search concurrency
+        # Composing models do not search concurrency and has no max batch size
 
         # max_batch_size
         max_batch_size = analyzer._composing_search_parameters["add"].get_parameter(
             "max_batch_size"
         )
-        self.assertEqual(ParameterUsage.MODEL, max_batch_size.usage)
-        self.assertEqual(ParameterCategory.EXPONENTIAL, max_batch_size.category)
-        self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE),
-            max_batch_size.min_range,
-        )
-        self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE),
-            max_batch_size.max_range,
-        )
+        self.assertIsNone(max_batch_size)
 
         # concurrency
         concurrency = analyzer._composing_search_parameters["sub"].get_parameter(

@@ -1161,6 +1161,7 @@ class TestModelManager(trc.TestResultCollector):
             state_manager,
             MagicMock(),
             MagicMock(),
+            MagicMock(),
         )
 
         # Multiple model check
@@ -1212,6 +1213,7 @@ class TestModelManager(trc.TestResultCollector):
             state_manager,
             MagicMock(),
             MagicMock(),
+            MagicMock(),
         )
 
         models = [
@@ -1256,6 +1258,7 @@ class TestModelManager(trc.TestResultCollector):
             state_manager,
             MagicMock(),
             MagicMock(),
+            MagicMock(),
         )
 
         # RunConfigSearch check
@@ -1294,6 +1297,7 @@ class TestModelManager(trc.TestResultCollector):
             metrics_manager,
             MagicMock(),
             state_manager,
+            MagicMock(),
             MagicMock(),
             MagicMock(),
         )
