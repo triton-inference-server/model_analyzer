@@ -70,8 +70,10 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             config=config,
             gpu_count=1,
             models=self._mock_models,
+            composing_models=MagicMock(),
             model_variant_name_manager=ModelVariantNameManager(),
             search_parameters={"add_sub": search_parameters},
+            composing_search_parameters={},
             seed=100,
         )
 
@@ -193,7 +195,9 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         """
         trial = self._rcg._study.ask()
         trial_objectives = self._rcg._create_trial_objectives(trial)
-        run_config = self._rcg._create_objective_based_run_config(trial_objectives)
+        run_config = self._rcg._create_objective_based_run_config(
+            trial_objectives, None
+        )
 
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
@@ -211,13 +215,15 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(perf_config["concurrency-range"], 64)
 
     def test_create_run_config_with_concurrency_formula(self):
+        """
+        Tests that the concurrency formula option is used correctly
+        """
         config = self._create_config(["--use-concurrency-formula"])
         mock_model_config = MockModelConfig()
         mock_model_config.start()
         model = ModelProfileSpec(
             config.profile_models[0], config, MagicMock(), MagicMock()
         )
-        self.search_parameters = SearchParameters(model=model, config=config)
         mock_model_config.stop()
         search_parameters = SearchParameters(
             model=model,
@@ -228,14 +234,16 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             config=config,
             gpu_count=1,
             models=self._mock_models,
+            composing_models=MagicMock(),
             model_variant_name_manager=ModelVariantNameManager(),
             search_parameters={"add_sub": search_parameters},
+            composing_search_parameters={},
             seed=100,
         )
 
         trial = rcg._study.ask()
         trial_objectives = rcg._create_trial_objectives(trial)
-        run_config = rcg._create_objective_based_run_config(trial_objectives)
+        run_config = rcg._create_objective_based_run_config(trial_objectives, None)
 
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
@@ -251,6 +259,86 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         )
         self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
         self.assertEqual(perf_config["concurrency-range"], 64)
+
+    def test_create_run_bls_config(self):
+        """
+        Tests that the concurrency formula option is used correctly
+        """
+        config = self._create_bls_config()
+        mock_model_config = MockModelConfig()
+        mock_model_config.start()
+        bls_model = ModelProfileSpec(
+            config.profile_models[0], config, MagicMock(), MagicMock()
+        )
+        add_model = ModelProfileSpec(
+            config.bls_composing_models[0], config, MagicMock(), MagicMock()
+        )
+        sub_model = ModelProfileSpec(
+            config.bls_composing_models[1], config, MagicMock(), MagicMock()
+        )
+        mock_model_config.stop()
+        bls_search_parameters = SearchParameters(
+            model=bls_model,
+            config=config,
+        )
+        add_search_parameters = SearchParameters(
+            model=add_model,
+            config=config,
+        )
+        sub_search_parameters = SearchParameters(
+            model=sub_model,
+            config=config,
+        )
+        rcg = OptunaRunConfigGenerator(
+            config=config,
+            gpu_count=1,
+            models=[bls_model],
+            composing_models=[add_model, sub_model],
+            model_variant_name_manager=ModelVariantNameManager(),
+            search_parameters={"bls": bls_search_parameters},
+            composing_search_parameters={
+                "add": add_search_parameters,
+                "sub": sub_search_parameters,
+            },
+            seed=100,
+        )
+
+        trial = rcg._study.ask()
+        trial_objectives = rcg._create_trial_objectives(trial)
+        composing_trial_objectives = rcg._create_composing_trial_objectives(trial)
+        run_config = rcg._create_objective_based_run_config(
+            trial_objectives, composing_trial_objectives
+        )
+
+        bls_model_config = run_config.model_run_configs()[0].model_config()
+        add_model_config = run_config.model_run_configs()[0].composing_configs()[0]
+        sub_model_config = run_config.model_run_configs()[0].composing_configs()[1]
+        perf_config = run_config.model_run_configs()[0].perf_config()
+
+        # BLS (Top Level Model) + PA Config (Seed=100)
+        # =====================================================================
+        self.assertEqual(bls_model_config.to_dict()["name"], "bls")
+        self.assertEqual(bls_model_config.to_dict()["instanceGroup"][0]["count"], 3)
+        self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
+        self.assertEqual(perf_config["concurrency-range"], 8)
+
+        # ADD (composing model)
+        # =====================================================================
+        self.assertEqual(add_model_config.to_dict()["name"], "add")
+        self.assertEqual(add_model_config.to_dict()["instanceGroup"][0]["count"], 3)
+        self.assertEqual(
+            add_model_config.to_dict()["dynamicBatching"]["maxQueueDelayMicroseconds"],
+            "300",
+        )
+
+        # SUB (composing model)
+        # =====================================================================
+        self.assertEqual(sub_model_config.to_dict()["name"], "sub")
+        self.assertEqual(sub_model_config.to_dict()["instanceGroup"][0]["count"], 5)
+        self.assertEqual(
+            sub_model_config.to_dict()["dynamicBatching"]["maxQueueDelayMicroseconds"],
+            "500",
+        )
 
     def _create_config(self, additional_args=[]):
         args = [
@@ -272,6 +360,39 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
                     model_config_parameters:
                         dynamic_batching:
                             max_queue_delay_microseconds: [100, 200, 300]
+
+            """)
+        # yapf: enable
+
+        config = TestConfig()._evaluate_config(args, yaml_str)
+
+        return config
+
+    def _create_bls_config(self, additional_args=[]):
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "/tmp",
+            "--config-file",
+            "/tmp/my_config.yml",
+        ]
+
+        for arg in additional_args:
+            args.append(arg)
+
+        # yapf: disable
+        yaml_str = ("""
+            profile_models: bls
+            bls_composing_models:
+              add:
+                model_config_parameters:
+                  dynamic_batching:
+                    max_queue_delay_microseconds: [100, 200, 300]
+              sub:
+                model_config_parameters:
+                  dynamic_batching:
+                    max_queue_delay_microseconds: [400, 500, 600]
 
             """)
         # yapf: enable
