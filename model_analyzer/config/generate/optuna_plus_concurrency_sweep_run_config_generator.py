@@ -125,8 +125,10 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             config=self._config,
             gpu_count=self._gpu_count,
             models=self._models,
+            composing_models=self._composing_models,
             model_variant_name_manager=self._model_variant_name_manager,
             search_parameters=self._search_parameters,
+            composing_search_parameters=self._composing_search_parameters,
         )
 
     def _sweep_concurrency_over_top_results(self) -> Generator[RunConfig, None, None]:
