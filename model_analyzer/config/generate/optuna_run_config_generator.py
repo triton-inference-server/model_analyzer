@@ -343,6 +343,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             parameter = self._search_parameters.get_parameter(parameter_name)
 
             if parameter:
+                # TODO: TMA-1927: Add support for multi-model
                 objective_name = f"{self._models[0].model_name()}::{parameter_name}"
                 trial_objectives[parameter_name] = self._create_trial_objective(
                     trial, objective_name, parameter
