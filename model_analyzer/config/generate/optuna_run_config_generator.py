@@ -393,17 +393,18 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         return objective
 
     def _get_objective_concurrency(self, trial_objectives: TrialObjectives) -> int:
-        max_batch_size = (
-            trial_objectives["max_batch_size"]
-            if "max_batch_size" in trial_objectives
-            else 1
-        )
+        max_batch_size = trial_objectives.get("max_batch_size", 1)
         concurrency_formula = (
             2 * int(trial_objectives["instance_group"]) * max_batch_size
         )
         concurrency = (
             self._config.run_config_search_max_concurrency
             if concurrency_formula > self._config.run_config_search_max_concurrency
+            else concurrency_formula
+        )
+        concurrency = (
+            self._config.run_config_search_min_concurrency
+            if concurrency_formula < self._config.run_config_search_min_concurrency
             else concurrency_formula
         )
 
