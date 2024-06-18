@@ -50,9 +50,11 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         config: ConfigCommandProfile,
         gpu_count: int,
         models: List[ModelProfileSpec],
+        composing_models: List[ModelProfileSpec],
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: Dict[str, SearchParameters],
+        composing_search_parameters: Dict[str, SearchParameters],
     ):
         """
         Parameters
@@ -62,19 +64,25 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         gpu_count: Number of gpus in the system
         models: List of ModelProfileSpec
             List of models to profile
+        composing_models: List of ModelProfileSpec
+            List of composing models that exist inside of the supplied models
         result_manager: ResultManager
             The object that handles storing and sorting the results from the perf analyzer
         model_variant_name_manager: ModelVariantNameManager
             Maps model variants to config names
         search_parameters: SearchParameters
             The object that handles the users configuration search parameters
+        composing_search_parameters: SearchParameters
+            The object that handles the users configuration search parameters for composing models
         """
         self._config = config
         self._gpu_count = gpu_count
         self._models = models
+        self._composing_models = composing_models
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
         self._search_parameters = search_parameters
+        self._composing_search_parameters = composing_search_parameters
 
     def set_last_results(
         self, measurements: List[Optional[RunConfigMeasurement]]
@@ -117,8 +125,10 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             config=self._config,
             gpu_count=self._gpu_count,
             models=self._models,
+            composing_models=self._composing_models,
             model_variant_name_manager=self._model_variant_name_manager,
             search_parameters=self._search_parameters,
+            composing_search_parameters=self._composing_search_parameters,
         )
 
     def _sweep_concurrency_over_top_results(self) -> Generator[RunConfig, None, None]:

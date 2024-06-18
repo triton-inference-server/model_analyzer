@@ -17,6 +17,7 @@
 from math import log2
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
@@ -42,14 +43,18 @@ class SearchParameters:
 
     def __init__(
         self,
+        model: ModelProfileSpec,
         config: ConfigCommandProfile = ConfigCommandProfile(),
-        parameters: Dict[str, Any] = {},
-        model_config_parameters: Dict[str, Any] = {},
+        is_bls_model: bool = False,
+        is_composing_model: bool = False,
     ):
         self._config = config
-        self._parameters = parameters
-        self._model_config_parameters = model_config_parameters
+        self._parameters = model.parameters()
+        self._model_config_parameters = model.model_config_parameters()
+        self._supports_max_batch_size = model.supports_batching()
         self._search_parameters: Dict[str, SearchParameter] = {}
+        self._is_bls_model = is_bls_model
+        self._is_composing_model = is_composing_model
 
         self._populate_search_parameters()
 
@@ -120,8 +125,10 @@ class SearchParameters:
 
     def _populate_parameters(self) -> None:
         self._populate_batch_sizes()
-        self._populate_concurrency()
-        # TODO: Populate request rate - TMA-1903
+
+        if not self._is_composing_model:
+            self._populate_concurrency()
+            # TODO: Populate request rate - TMA-1903
 
     def _populate_model_config_parameters(self) -> None:
         self._populate_max_batch_size()
@@ -163,7 +170,7 @@ class SearchParameters:
                 parameter_list=parameter_list,
                 parameter_category=ParameterCategory.INT_LIST,
             )
-        else:
+        elif self._supports_max_batch_size and not self._is_bls_model:
             # Need to populate max_batch_size based on RCS min/max values
             # when no model config parameters are present
             self._populate_rcs_parameter(

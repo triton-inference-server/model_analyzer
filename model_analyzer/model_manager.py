@@ -61,6 +61,7 @@ class ModelManager:
         state_manager: AnalyzerStateManager,
         constraint_manager: ConstraintManager,
         search_parameters: Dict[str, SearchParameters],
+        composing_search_parameters: Dict[str, SearchParameters],
     ):
         """
         Parameters
@@ -83,6 +84,8 @@ class ModelManager:
             constraints on a given measurements
         search_parameters: SearchParameters
             The object that handles the users configuration search parameters
+        composing_search_parameters: SearchParameters
+            The object that handles the users configuration search parameters for composing models
         """
 
         self._config = config
@@ -94,6 +97,7 @@ class ModelManager:
         self._state_manager = state_manager
         self._constraint_manager = constraint_manager
         self._search_parameters = search_parameters
+        self._composing_search_parameters = composing_search_parameters
 
         if state_manager.starting_fresh_run():
             self._init_state()
@@ -137,6 +141,7 @@ class ModelManager:
             client=self._client,
             result_manager=self._result_manager,
             search_parameters=self._search_parameters,
+            composing_search_parameters=self._composing_search_parameters,
             model_variant_name_manager=self._model_variant_name_manager,
         )
 

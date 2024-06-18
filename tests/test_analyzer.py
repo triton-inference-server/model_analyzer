@@ -70,6 +70,8 @@ class TestAnalyzer(trc.TestResultCollector):
         _get_server_only_metrics=MagicMock(),
         _profile_models=MagicMock(),
         _check_for_perf_analyzer_errors=MagicMock(),
+        _populate_search_parameters=MagicMock(),
+        _populate_composing_search_parameters=MagicMock(),
     )
     def test_profile_skip_summary_reports(self, **mocks):
         """
