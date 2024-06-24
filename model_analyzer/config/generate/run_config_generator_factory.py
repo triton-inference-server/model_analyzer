@@ -95,6 +95,15 @@ class RunConfigGeneratorFactory:
             new_models, command_config, client, gpus
         )
 
+        for composing_model in composing_models:
+            composing_search_parameters[
+                composing_model.model_name()
+            ] = SearchParameters(
+                config=command_config,
+                model=composing_model,
+                is_composing_model=True,
+            )
+
         if command_config.run_config_search_mode == "optuna":
             return RunConfigGeneratorFactory._create_optuna_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
