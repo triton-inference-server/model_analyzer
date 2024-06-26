@@ -431,6 +431,7 @@ class Analyzer:
                 config=self._config,
                 model=model_profile_spec,
                 is_bls_model=bool(self._config.bls_composing_models),
+                is_ensemble_model=model_profile_spec.is_ensemble(),
             )
 
     def _populate_composing_search_parameters(self, client, gpus):

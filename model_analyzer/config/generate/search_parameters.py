@@ -46,6 +46,7 @@ class SearchParameters:
         model: ModelProfileSpec,
         config: ConfigCommandProfile = ConfigCommandProfile(),
         is_bls_model: bool = False,
+        is_ensemble_model: bool = False,
         is_composing_model: bool = False,
     ):
         self._config = config
@@ -53,6 +54,7 @@ class SearchParameters:
         self._model_config_parameters = model.model_config_parameters()
         self._supports_max_batch_size = model.supports_batching()
         self._search_parameters: Dict[str, SearchParameter] = {}
+        self._is_ensemble_model = is_ensemble_model
         self._is_bls_model = is_bls_model
         self._is_composing_model = is_composing_model
 
@@ -196,7 +198,7 @@ class SearchParameters:
                 parameter_list=parameter_list,
                 parameter_category=ParameterCategory.INT_LIST,
             )
-        else:
+        elif not self._is_ensemble_model:
             # Need to populate instance_group based on RCS min/max values
             # when no model config parameters are present
             self._populate_rcs_parameter(

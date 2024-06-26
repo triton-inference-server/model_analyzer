@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import logging
+from sys import maxsize
 from typing import Any, Dict, Generator, List, Optional, TypeAlias, Union
 
 import optuna
@@ -183,7 +184,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             yield run_config
 
             score = self._calculate_score()
-            self._set_best_measurement(run_config, score)
+            self._set_best_measurement(run_config, score, trial_number)
 
             if logging.DEBUG:
                 self._print_debug_score_info(run_config, score)
@@ -429,13 +430,16 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
     ) -> RunConfig:
         run_config = RunConfig(self._triton_env)
 
-        # TODO: TMA-1927: Add support for multi-model
-        model_config_variant = self._create_model_config_variant(
-            self._models[0], trial_objectives
-        )
-
         composing_model_config_variants = self._create_composing_model_config_variants(
             composing_trial_objectives
+        )
+
+        # TODO: TMA-1927: Add support for multi-model
+        model_config_variant = self._create_model_config_variant(
+            model=self._models[0],
+            trial_objectives=trial_objectives,
+            composing_trial_objectives=composing_trial_objectives,
+            composing_model_config_variants=composing_model_config_variants,
         )
 
         # TODO: TMA-1927: Add support for multi-model
@@ -451,6 +455,44 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         return run_config
 
     def _create_parameter_combo(
+        self,
+        model: ModelProfileSpec,
+        trial_objectives: TrialObjectives,
+        composing_trial_objectives: ComposingTrialObjectives,
+    ) -> ParameterCombo:
+        if model.is_ensemble():
+            param_combo = self._create_ensemble_parameter_combo(
+                composing_trial_objectives
+            )
+        else:
+            param_combo = self._create_non_ensemble_parameter_combo(trial_objectives)
+
+        return param_combo
+
+    def _create_ensemble_parameter_combo(
+        self,
+        composing_trial_objectives: ComposingTrialObjectives,
+    ) -> ParameterCombo:
+        """
+        For the ensemble model the only parameter we need to set
+        is the max batch size; which will be the minimum batch size
+        found in the composing_model max batch sizes
+        """
+
+        min_val_of_max_batch_size = maxsize
+        for composing_trial_objective in composing_trial_objectives.values():
+            min_val_of_max_batch_size = int(
+                min(
+                    composing_trial_objective.get("max_batch_size", 1),
+                    min_val_of_max_batch_size,
+                )
+            )
+
+        param_combo = {"max_batch_size": min_val_of_max_batch_size}
+
+        return param_combo
+
+    def _create_non_ensemble_parameter_combo(
         self, trial_objectives: TrialObjectives
     ) -> ParameterCombo:
         param_combo: ParameterCombo = {}
@@ -481,16 +523,31 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         return param_combo
 
     def _create_model_config_variant(
-        self, model: ModelProfileSpec, trial_objectives: TrialObjectives
+        self,
+        model: ModelProfileSpec,
+        trial_objectives: TrialObjectives,
+        composing_trial_objectives: ComposingTrialObjectives = {},
+        composing_model_config_variants: List[ModelConfigVariant] = [],
     ) -> ModelConfigVariant:
-        param_combo = self._create_parameter_combo(trial_objectives)
-
-        model_config_variant = BaseModelConfigGenerator.make_model_config_variant(
-            param_combo=param_combo,
-            model=model,
-            model_variant_name_manager=self._model_variant_name_manager,
-            c_api_mode=self._c_api_mode,
+        param_combo = self._create_parameter_combo(
+            model, trial_objectives, composing_trial_objectives
         )
+
+        if model.is_ensemble():
+            model_config_variant = BaseModelConfigGenerator.make_ensemble_model_config_variant(
+                model=model,
+                ensemble_composing_model_config_variants=composing_model_config_variants,
+                model_variant_name_manager=self._model_variant_name_manager,
+                param_combo=param_combo,
+                c_api_mode=self._c_api_mode,
+            )
+        else:
+            model_config_variant = BaseModelConfigGenerator.make_model_config_variant(
+                param_combo=param_combo,
+                model=model,
+                model_variant_name_manager=self._model_variant_name_manager,
+                c_api_mode=self._c_api_mode,
+            )
 
         return model_config_variant
 
@@ -500,8 +557,10 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         composing_model_config_variants = []
         for composing_model in self._composing_models:
             composing_model_config_variant = self._create_model_config_variant(
-                composing_model,
-                composing_trial_objectives[composing_model.model_name()],
+                model=composing_model,
+                trial_objectives=composing_trial_objectives[
+                    composing_model.model_name()
+                ],
             )
             composing_model_config_variants.append(composing_model_config_variant)
 
