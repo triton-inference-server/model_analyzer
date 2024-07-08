@@ -22,4 +22,4 @@ limitations under the License.
 >
 > ##### LATEST RELEASE
 >
-> You are currently on the `r24.06` branch which tracks under-development progress towards the next release. <br>
+> You are currently on the `r24.07` branch which tracks under-development progress towards the next release. <br>
