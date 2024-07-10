@@ -262,7 +262,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
 
     def test_create_run_bls_config(self):
         """
-        Tests that the concurrency formula option is used correctly
+        Tests that a BLS run config is created correctly
         """
         config = self._create_bls_config()
         mock_model_config = MockModelConfig()
@@ -340,6 +340,80 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             "500",
         )
 
+    def test_create_run_multi_model_config(self):
+        """
+        Tests that a multi-model run config is created correctly
+        """
+        config = self._create_multi_model_config()
+        mock_model_config = MockModelConfig()
+        mock_model_config.start()
+        add_model = ModelProfileSpec(
+            config.profile_models[0], config, MagicMock(), MagicMock()
+        )
+        vgg_model = ModelProfileSpec(
+            config.profile_models[1], config, MagicMock(), MagicMock()
+        )
+        mock_model_config.stop()
+        add_search_parameters = SearchParameters(
+            model=add_model,
+            config=config,
+        )
+        vgg_search_parameters = SearchParameters(
+            model=vgg_model,
+            config=config,
+        )
+        rcg = OptunaRunConfigGenerator(
+            config=config,
+            gpu_count=1,
+            models=[add_model, vgg_model],
+            composing_models=[],
+            model_variant_name_manager=ModelVariantNameManager(),
+            search_parameters={
+                "add_sub": add_search_parameters,
+                "vgg19_libtorch": vgg_search_parameters,
+            },
+            composing_search_parameters={},
+            seed=100,
+        )
+
+        trial = rcg._study.ask()
+        trial_objectives = rcg._create_trial_objectives(trial)
+        composing_trial_objectives = rcg._create_composing_trial_objectives(trial)
+        run_config = rcg._create_objective_based_run_config(
+            trial_objectives, composing_trial_objectives
+        )
+
+        add_model_config = run_config.model_run_configs()[0].model_config()
+        vgg_model_config = run_config.model_run_configs()[1].model_config()
+        add_perf_config = run_config.model_run_configs()[0].perf_config()
+        vgg_perf_config = run_config.model_run_configs()[0].perf_config()
+
+        # PA Config (Seed=100)
+        # =====================================================================
+
+        # ADD_SUB + PA Config (Seed=100)
+        # =====================================================================
+        self.assertEqual(add_model_config.to_dict()["name"], "add_sub")
+        self.assertEqual(add_model_config.to_dict()["maxBatchSize"], 16)
+        self.assertEqual(add_model_config.to_dict()["instanceGroup"][0]["count"], 2)
+        self.assertEqual(
+            add_model_config.to_dict()["dynamicBatching"]["maxQueueDelayMicroseconds"],
+            "100",
+        )
+        self.assertEqual(add_perf_config["batch-size"], DEFAULT_BATCH_SIZES)
+        self.assertEqual(add_perf_config["concurrency-range"], 16)
+
+        # VGG19_LIBTORCH + PA Config (Seed=100)
+        # =====================================================================
+        self.assertEqual(vgg_model_config.to_dict()["name"], "vgg19_libtorch")
+        self.assertEqual(vgg_model_config.to_dict()["instanceGroup"][0]["count"], 4)
+        self.assertEqual(
+            vgg_model_config.to_dict()["dynamicBatching"]["maxQueueDelayMicroseconds"],
+            "600",
+        )
+        self.assertEqual(vgg_perf_config["batch-size"], DEFAULT_BATCH_SIZES)
+        self.assertEqual(vgg_perf_config["concurrency-range"], 16)
+
     def _create_config(self, additional_args=[]):
         args = [
             "model-analyzer",
@@ -394,6 +468,37 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
                   dynamic_batching:
                     max_queue_delay_microseconds: [400, 500, 600]
 
+            """)
+        # yapf: enable
+
+        config = TestConfig()._evaluate_config(args, yaml_str)
+
+        return config
+
+    def _create_multi_model_config(self, additional_args=[]):
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "/tmp",
+            "--config-file",
+            "/tmp/my_config.yml",
+        ]
+
+        for arg in additional_args:
+            args.append(arg)
+
+        # yapf: disable
+        yaml_str = ("""
+            profile_models:
+                add_sub:
+                    model_config_parameters:
+                        dynamic_batching:
+                            max_queue_delay_microseconds: [100, 200, 300]
+                vgg19_libtorch:
+                    model_config_parameters:
+                        dynamic_batching:
+                            max_queue_delay_microseconds: [400, 500, 600]
             """)
         # yapf: enable
 
