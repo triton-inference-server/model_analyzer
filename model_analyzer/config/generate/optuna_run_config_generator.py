@@ -357,7 +357,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
                 )
 
                 if parameter:
-                    objective_name = objective_name = self._create_trial_objective_name(
+                    objective_name = self._create_trial_objective_name(
                         model_name=model_name, parameter_name=parameter_name
                     )
 

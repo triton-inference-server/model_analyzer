@@ -388,9 +388,6 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         add_perf_config = run_config.model_run_configs()[0].perf_config()
         vgg_perf_config = run_config.model_run_configs()[0].perf_config()
 
-        # PA Config (Seed=100)
-        # =====================================================================
-
         # ADD_SUB + PA Config (Seed=100)
         # =====================================================================
         self.assertEqual(add_model_config.to_dict()["name"], "add_sub")
