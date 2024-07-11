@@ -1469,10 +1469,6 @@ class ConfigCommandProfile(ConfigCommand):
             if len(self.concurrency) == 0 and len(self.request_rate) == 0:
                 self.concurrency = [1]
 
-        # Change default RCS mode to quick for multi-model concurrent profiling
-        if self.run_config_profile_models_concurrently_enable:
-            self.run_config_search_mode = "quick"
-
         if not self.export_path:
             logger.warning(
                 f"--export-path not specified. Using {self._fields['export_path'].default_value()}"

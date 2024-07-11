@@ -50,9 +50,15 @@ from .config_generator_interface import ConfigGeneratorInterface
 
 logger = logging.getLogger(LOGGER_NAME)
 
+ModelName: TypeAlias = str
+ParameterName: TypeAlias = str
+ObjectiveName: TypeAlias = str
+
 TrialObjective: TypeAlias = Union[str | int]
-TrialObjectives: TypeAlias = Dict[str, TrialObjective]
-ComposingTrialObjectives: TypeAlias = Dict[str, Dict[str, TrialObjective]]
+ModelTrialObjectives: TypeAlias = Dict[ParameterName, TrialObjective]
+AllTrialObjectives: TypeAlias = Dict[ModelName, ModelTrialObjectives]
+ComposingTrialObjectives: TypeAlias = AllTrialObjectives
+
 ParameterCombo: TypeAlias = Dict[str, Any]
 
 
@@ -104,9 +110,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         self._gpu_count = gpu_count
         self._models = models
         self._composing_models = composing_models
-
-        # TODO: TMA-1927: Add support for multi-model
-        self._search_parameters = search_parameters[models[0].model_name()]
+        self._search_parameters = search_parameters
 
         self._composing_search_parameters = {}
         for composing_model in composing_models:
@@ -133,8 +137,10 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         else:
             self._sampler = optuna.samplers.TPESampler()
 
+        self._study_name = ",".join([model.model_name() for model in self._models])
+
         self._study = optuna.create_study(
-            study_name=self._models[0].model_name(),
+            study_name=self._study_name,
             direction="maximize",
             sampler=self._sampler,
         )
@@ -172,7 +178,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         min_configs_to_search = self._determine_minimum_number_of_configs_to_search()
         max_configs_to_search = self._determine_maximum_number_of_configs_to_search()
-        # TODO: TMA-1885: Need an early exit strategy
+
         for trial_number in range(1, max_configs_to_search + 1):
             trial = self._study.ask()
             trial_objectives = self._create_trial_objectives(trial)
@@ -338,25 +344,31 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         return min_configs_to_search
 
-    def _create_trial_objectives(self, trial: optuna.Trial) -> TrialObjectives:
-        trial_objectives: TrialObjectives = {}
-        for parameter_name in OptunaRunConfigGenerator.optuna_parameter_list:
-            parameter = self._search_parameters.get_parameter(parameter_name)
+    def _create_trial_objectives(self, trial: optuna.Trial) -> AllTrialObjectives:
+        trial_objectives: AllTrialObjectives = {}
 
-            if parameter:
-                # TODO: TMA-1927: Add support for multi-model
-                objective_name = self._create_trial_objective_name(
-                    model_name=self._models[0].model_name(),
-                    objective_name=parameter_name,
-                )
-                trial_objectives[parameter_name] = self._create_trial_objective(
-                    trial, objective_name, parameter
+        for model in self._models:
+            model_name = model.model_name()
+            trial_objectives[model_name] = {}
+
+            for parameter_name in OptunaRunConfigGenerator.optuna_parameter_list:
+                parameter = self._search_parameters[model_name].get_parameter(
+                    parameter_name
                 )
 
-        if self._config.use_concurrency_formula:
-            trial_objectives["concurrency"] = self._get_objective_concurrency(
-                trial_objectives
-            )
+                if parameter:
+                    objective_name = self._create_trial_objective_name(
+                        model_name=model_name, parameter_name=parameter_name
+                    )
+
+                    trial_objectives[model_name][
+                        parameter_name
+                    ] = self._create_trial_objective(trial, objective_name, parameter)
+
+            if self._config.use_concurrency_formula:
+                trial_objectives[model_name][
+                    "concurrency"
+                ] = self._get_objective_concurrency(model_name, trial_objectives)
 
         return trial_objectives
 
@@ -374,7 +386,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
                 if parameter:
                     objective_name = self._create_trial_objective_name(
                         model_name=composing_model.model_name(),
-                        objective_name=parameter_name,
+                        parameter_name=parameter_name,
                     )
                     composing_trial_objectives[composing_model.model_name()][
                         parameter_name
@@ -382,13 +394,17 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         return composing_trial_objectives
 
-    def _create_trial_objective_name(self, model_name: str, objective_name: str) -> str:
-        objective_name = f"{model_name}::{objective_name}"
+    def _create_trial_objective_name(
+        self, model_name: ModelName, parameter_name: ParameterName
+    ) -> ObjectiveName:
+        # This ensures that Optuna has a unique name
+        # for each objective we are searching
+        objective_name = f"{model_name}::{parameter_name}"
 
         return objective_name
 
     def _create_trial_objective(
-        self, trial: optuna.Trial, name: str, parameter: SearchParameter
+        self, trial: optuna.Trial, name: ObjectiveName, parameter: SearchParameter
     ) -> TrialObjective:
         if parameter.category is ParameterCategory.INTEGER:
             objective = trial.suggest_int(
@@ -405,10 +421,12 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         return objective
 
-    def _get_objective_concurrency(self, trial_objectives: TrialObjectives) -> int:
-        max_batch_size = trial_objectives.get("max_batch_size", 1)
+    def _get_objective_concurrency(
+        self, model_name: str, trial_objectives: AllTrialObjectives
+    ) -> int:
+        max_batch_size = trial_objectives[model_name].get("max_batch_size", 1)
         concurrency_formula = (
-            2 * int(trial_objectives["instance_group"]) * max_batch_size
+            2 * int(trial_objectives[model_name]["instance_group"]) * max_batch_size
         )
         concurrency = (
             self._config.run_config_search_max_concurrency
@@ -425,7 +443,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
     def _create_objective_based_run_config(
         self,
-        trial_objectives: TrialObjectives,
+        trial_objectives: AllTrialObjectives,
         composing_trial_objectives: ComposingTrialObjectives,
     ) -> RunConfig:
         run_config = RunConfig(self._triton_env)
@@ -434,30 +452,29 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             composing_trial_objectives
         )
 
-        # TODO: TMA-1927: Add support for multi-model
-        model_config_variant = self._create_model_config_variant(
-            model=self._models[0],
-            trial_objectives=trial_objectives,
-            composing_trial_objectives=composing_trial_objectives,
-            composing_model_config_variants=composing_model_config_variants,
-        )
+        for model in self._models:
+            model_config_variant = self._create_model_config_variant(
+                model=model,
+                trial_objectives=trial_objectives[model.model_name()],
+                composing_trial_objectives=composing_trial_objectives,
+                composing_model_config_variants=composing_model_config_variants,
+            )
 
-        # TODO: TMA-1927: Add support for multi-model
-        model_run_config = self._create_model_run_config(
-            model=self._models[0],
-            model_config_variant=model_config_variant,
-            composing_model_config_variants=composing_model_config_variants,
-            trial_objectives=trial_objectives,
-        )
+            model_run_config = self._create_model_run_config(
+                model=model,
+                model_config_variant=model_config_variant,
+                composing_model_config_variants=composing_model_config_variants,
+                trial_objectives=trial_objectives[model.model_name()],
+            )
 
-        run_config.add_model_run_config(model_run_config=model_run_config)
+            run_config.add_model_run_config(model_run_config=model_run_config)
 
         return run_config
 
     def _create_parameter_combo(
         self,
         model: ModelProfileSpec,
-        trial_objectives: TrialObjectives,
+        trial_objectives: ModelTrialObjectives,
         composing_trial_objectives: ComposingTrialObjectives,
     ) -> ParameterCombo:
         if model.is_ensemble():
@@ -465,7 +482,9 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
                 composing_trial_objectives
             )
         else:
-            param_combo = self._create_non_ensemble_parameter_combo(trial_objectives)
+            param_combo = self._create_non_ensemble_parameter_combo(
+                model, trial_objectives
+            )
 
         return param_combo
 
@@ -493,16 +512,15 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         return param_combo
 
     def _create_non_ensemble_parameter_combo(
-        self, trial_objectives: TrialObjectives
+        self, model: ModelProfileSpec, trial_objectives: ModelTrialObjectives
     ) -> ParameterCombo:
         param_combo: ParameterCombo = {}
 
-        if self._models[0].supports_dynamic_batching():
+        if model.supports_dynamic_batching():
             param_combo["dynamic_batching"] = []
 
-        # TODO: TMA-1927: Add support for multi-model
         if "instance_group" in trial_objectives:
-            kind = "KIND_CPU" if self._models[0].cpu_only() else "KIND_GPU"
+            kind = "KIND_CPU" if model.cpu_only() else "KIND_GPU"
             param_combo["instance_group"] = [
                 {
                     "count": trial_objectives["instance_group"],
@@ -525,7 +543,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
     def _create_model_config_variant(
         self,
         model: ModelProfileSpec,
-        trial_objectives: TrialObjectives,
+        trial_objectives: ModelTrialObjectives,
         composing_trial_objectives: ComposingTrialObjectives = {},
         composing_model_config_variants: List[ModelConfigVariant] = [],
     ) -> ModelConfigVariant:
@@ -578,11 +596,9 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
     def _create_default_run_config(self) -> RunConfig:
         default_run_config = RunConfig(self._triton_env)
-        # TODO: TMA-1927: Add support for multi-model
-        default_model_run_config = self._create_default_model_run_config(
-            self._models[0]
-        )
-        default_run_config.add_model_run_config(default_model_run_config)
+        for model in self._models:
+            default_model_run_config = self._create_default_model_run_config(model)
+            default_run_config.add_model_run_config(default_model_run_config)
 
         return default_run_config
 
@@ -669,7 +685,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         model: ModelProfileSpec,
         model_config_variant: ModelConfigVariant,
         composing_model_config_variants: List[ModelConfigVariant],
-        trial_objectives: TrialObjectives,
+        trial_objectives: ModelTrialObjectives,
     ) -> ModelRunConfig:
         trial_batch_sizes = (
             int(trial_objectives["batch_sizes"])
@@ -738,9 +754,11 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         logger.info("")
 
     def _calculate_num_of_configs_in_search_space(self) -> int:
-        num_of_configs_in_search_space = (
-            self._search_parameters.number_of_total_possible_configurations()
-        )
+        num_of_configs_in_search_space = 1
+        for search_parameter in self._search_parameters.values():
+            num_of_configs_in_search_space *= (
+                search_parameter.number_of_total_possible_configurations()
+            )
 
         for composing_search_parameter in self._composing_search_parameters.values():
             num_of_configs_in_search_space *= (
@@ -750,21 +768,19 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         return num_of_configs_in_search_space
 
     def _print_debug_model_search_space_info(self) -> None:
-        if self._composing_models is None:
-            for name in self._search_parameters.get_search_parameters():
-                logger.debug(self._search_parameters.print_info(name))
-        else:
-            logger.debug(f"Model - {self._models[0].model_name()}:")
-            for name in self._search_parameters.get_search_parameters():
-                logger.debug(self._search_parameters.print_info(name))
+        for model in self._models:
+            model_name = model.model_name()
+            logger.debug(f"Model - {model_name}:")
+            for name in self._search_parameters[model_name].get_search_parameters():
+                logger.debug(self._search_parameters[model_name].print_info(name))
 
-            for (
-                composing_model_name,
-                composing_search_parameters,
-            ) in self._composing_search_parameters.items():
-                logger.debug(f"Composing model - {composing_model_name}:")
-                for name in composing_search_parameters.get_search_parameters():
-                    logger.debug(composing_search_parameters.print_info(name))
+        for (
+            composing_model_name,
+            composing_search_parameters,
+        ) in self._composing_search_parameters.items():
+            logger.debug(f"Composing model - {composing_model_name}:")
+            for name in composing_search_parameters.get_search_parameters():
+                logger.debug(composing_search_parameters.print_info(name))
 
     def _print_debug_score_info(
         self,
