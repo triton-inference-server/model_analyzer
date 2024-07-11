@@ -15,7 +15,7 @@
 
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-create_logs_dir "L0_quick_search_multi_model"
+create_logs_dir "L0_optuna_multi_model"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -51,7 +51,7 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --run-config-search-mode optuna --skip-summary-reports"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --min-percentage-search-space 2 --max-percentage-search-space 4"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --min-percentage-of-search-space 2 --max-percentage-of-search-space 4"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 run_analyzer
 if [ $? -ne 0 ]; then
