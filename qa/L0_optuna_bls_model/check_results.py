@@ -49,20 +49,19 @@ class TestOutputValidator:
         with open(self._analyzer_log, "r") as f:
             log_contents = f.read()
 
-        # Model - ensemble_add_sub:
-        #   concurrency: 1 to 1024 (11)
-        # Composing model - add:
-        #   instance_group: 1 to 5 (5)
-        # Composing model - sub:
-        #   instance_group: 1 to 5 (5)
+        #  Number of configs in search space: 25
+        #  Model - bls:
+        #    instance_group: 1 to 5 (5)
+        #  Composing model - add:
+        #    instance_group: 1 to 5 (5)
         #
-        # Minimum number of trials: 13 (5% of search space)
-        # Maximum number of trials: 27 (10% of search space)
+        #  Minimum number of trials: 10 (40% of search space)
+        #  Maximum number of trials: 20 (80% of search space)
         #
         # Then you have 4 x (0-9) for the concurrency sweep on Top 3 + default
         # 0 because all concurrencies could have been tested during the optuna run
-        expected_min_num_measurements = 13 + 0
-        expected_max_num_measurements = 27 + 36
+        expected_min_num_measurements = 10 + 0
+        expected_max_num_measurements = 20 + 36
 
         for model in self._models:
             token = f"Profiling {model}_config"
