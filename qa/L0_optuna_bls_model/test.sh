@@ -53,9 +53,10 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --run-config-search-mode optuna --min-percentage-of-search-space 40 --max-percentage-of-search-space 80"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --run-config-search-mode optuna --min-percentage-of-search-space 20 --max-percentage-of-search-space 40"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --skip-detailed-reports --triton-output-path=$SERVER_LOG"
 MODEL_ANALYZER_SUBCOMMAND="profile"
+MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
 run_analyzer
 
