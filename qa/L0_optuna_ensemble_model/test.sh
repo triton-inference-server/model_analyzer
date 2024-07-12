@@ -55,6 +55,7 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_I
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --run-config-search-mode optuna"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --skip-detailed-reports --triton-output-path=$SERVER_LOG"
 MODEL_ANALYZER_SUBCOMMAND="profile"
+MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
 run_analyzer
 

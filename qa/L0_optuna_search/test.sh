@@ -54,6 +54,8 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --run-config-search-mode optuna"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --latency-budget 10"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --skip-summary-reports"
 MODEL_ANALYZER_SUBCOMMAND="profile"
+MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
+
 run_analyzer
 if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
