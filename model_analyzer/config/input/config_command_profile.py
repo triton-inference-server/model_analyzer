@@ -927,7 +927,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 "min_percentage_of_search_space",
-                flags=["--min_percentage_of_search_space"],
+                flags=["--min-percentage-of-search-space"],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_OPTUNA_MIN_PERCENTAGE_OF_SEARCH_SPACE,
                 description="Minimum percentage of the search space to profile when using Optuna",
@@ -936,7 +936,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 "max_percentage_of_search_space",
-                flags=["--max_percentage_of_search_space"],
+                flags=["--max-percentage-of-search-space"],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_OPTUNA_MAX_PERCENTAGE_OF_SEARCH_SPACE,
                 description="Maximum percentage of the search space to profile when using Optuna",
@@ -945,7 +945,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 "optuna_min_trials",
-                flags=["--optuna_min_trials"],
+                flags=["--optuna-min-trials"],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_OPTUNA_MIN_TRIALS,
                 description="Minimum number of trials to profile when using Optuna",
@@ -954,7 +954,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 "optuna_max_trials",
-                flags=["--optuna_max_trials"],
+                flags=["--optuna-max-trials"],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_OPTUNA_MAX_TRIALS,
                 description="Maximum number of trials to profile when using Optuna",
@@ -963,7 +963,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 "optuna_early_exit_threshold",
-                flags=["--optuna_early_exit_threshold"],
+                flags=["--optuna-early-exit-threshold"],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_OPTUNA_EARLY_EXIT_THRESHOLD,
                 description="Number of trials without improvement before triggering early exit when using Optuna",
