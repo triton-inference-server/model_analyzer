@@ -29,6 +29,7 @@ from model_analyzer.constants import MIN_INITIALIZED, RADIUS
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.result.result_manager import ResultManager
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
 
@@ -55,6 +56,7 @@ class RunConfigGeneratorFactory:
     @staticmethod
     def create_run_config_generator(
         command_config: ConfigCommandProfile,
+        state_manager: AnalyzerStateManager,
         gpus: List[GPUDevice],
         models: List[ConfigModelProfileSpec],
         client: TritonClient,
@@ -68,6 +70,8 @@ class RunConfigGeneratorFactory:
         ----------
         command_config: ConfigCommandProfile
             The Model Analyzer config file for the profile step
+        state_manager: AnalyzerStateManager
+            The object that allows control and update of checkpoint state
         gpus: List of GPUDevices
         models: list of ConfigModelProfileSpec
             The models to generate RunConfigs for
@@ -107,6 +111,7 @@ class RunConfigGeneratorFactory:
         if command_config.run_config_search_mode == "optuna":
             return RunConfigGeneratorFactory._create_optuna_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
+                state_manager=state_manager,
                 gpu_count=len(gpus),
                 models=new_models,
                 composing_models=composing_models,
@@ -159,6 +164,7 @@ class RunConfigGeneratorFactory:
     @staticmethod
     def _create_optuna_plus_concurrency_sweep_run_config_generator(
         command_config: ConfigCommandProfile,
+        state_manager: AnalyzerStateManager,
         gpu_count: int,
         models: List[ModelProfileSpec],
         composing_models: List[ModelProfileSpec],
@@ -169,6 +175,7 @@ class RunConfigGeneratorFactory:
     ) -> ConfigGeneratorInterface:
         return OptunaPlusConcurrencySweepRunConfigGenerator(
             config=command_config,
+            state_manager=state_manager,
             gpu_count=gpu_count,
             composing_models=composing_models,
             models=models,
