@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import logging
+from random import randint
 from sys import maxsize
 from typing import Any, Dict, Generator, List, Optional, TypeAlias, Union
 
@@ -132,10 +133,10 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         self._done = False
 
-        if seed is not None:
-            self._sampler = optuna.samplers.TPESampler(seed=seed)
-        else:
-            self._sampler = optuna.samplers.TPESampler()
+        if seed is None:
+            seed = randint(0, maxsize)
+
+        self._sampler = optuna.samplers.TPESampler(seed=seed)
 
         self._study_name = ",".join([model.model_name() for model in self._models])
 
