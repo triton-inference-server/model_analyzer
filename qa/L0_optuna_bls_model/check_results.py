@@ -58,9 +58,8 @@ class TestOutputValidator:
         #  Minimum number of trials: 14 (5% of search space)
         #  Maximum number of trials: 28 (10% of search space)
         #
-        # Then you have 4 configs (top-3 + default) x (0-9) concurrencies
-        # 0 because all concurrencies could have been profiled during the optuna run
-        # 9 because all but one of the concurrencies from 1..1024 still need profiling
+        # Then you have 4 x (0-9) for the concurrency sweep on Top 3 + default
+        # 0 because all concurrencies could have been tested during the optuna run
         expected_min_num_measurements = 14 + 0
         expected_max_num_measurements = 28 + 36
 
