@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #!/bin/bash
 # Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -49,9 +48,22 @@ class TestOutputValidator:
         with open(self._analyzer_log, "r") as f:
             log_contents = f.read()
 
-        expected_min_num_measurements = 20
-        expected_max_num_measurements = 80
+        #  Number of configs in search space: 1600
+        #  Model - add_sub:
+        #    max_batch_size: 1 to 128 (8)
+        #    instance_group: 1 to 5 (5)
+        #  Model - vgg19_libtorch:
+        #    max_batch_size: 1 to 128 (8)
+        #    instance_group: 1 to 5 (5)
+        #
+        #  Minimum number of trials: 32 (2% of search space)
+        #  Maximum number of trials: 64 (4% of search space)
+        #
+        # Then you have 4 x (0-9) for the concurrency sweep on Top 3 + default
+        # 0 because all concurrencies could have been tested during the optuna run
 
+        expected_min_num_measurements = 32 + 0
+        expected_max_num_measurements = 64 + 36
         for model in self._models:
             token = f"Profiling {model}_config"
             token_idx = 0

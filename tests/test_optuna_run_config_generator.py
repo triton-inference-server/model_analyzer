@@ -93,7 +93,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         """
         Test count based max num of configs to search
         """
-        config = self._create_config(additional_args=["--optuna_max_trials", "6"])
+        config = self._create_config(additional_args=["--optuna-max-trials", "6"])
 
         self._rcg._config = config
 
@@ -109,9 +109,9 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         """
         config = self._create_config(
             additional_args=[
-                "--optuna_max_trials",
+                "--optuna-max-trials",
                 "6",
-                "--max_percentage_of_search_space",
+                "--max-percentage-of-search-space",
                 "3",
             ]
         )
@@ -141,7 +141,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         """
         Test count based min num of configs to search
         """
-        config = self._create_config(additional_args=["--optuna_min_trials", "12"])
+        config = self._create_config(additional_args=["--optuna-min-trials", "12"])
 
         self._rcg._config = config
 
@@ -157,9 +157,9 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         """
         config = self._create_config(
             additional_args=[
-                "--optuna_min_trials",
+                "--optuna-min-trials",
                 "6",
-                "--min_percentage_of_search_space",
+                "--min-percentage-of-search-space",
                 "3",
             ]
         )
