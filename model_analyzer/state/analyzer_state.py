@@ -60,9 +60,9 @@ class AnalyzerState:
         state._state_dict["MetricsManager.gpus"] = state_dict["MetricsManager.gpus"]
 
         # Optuna Seed
-        state._state_dict["OptunaRunConfigGenerator.seed"] = state_dict[
-            "OptunaRunConfigGenerator.seed"
-        ]
+        state._state_dict["OptunaRunConfigGenerator.seed"] = state_dict.get(
+            "OptunaRunConfigGenerator.seed", 0
+        )
 
         return state
 
