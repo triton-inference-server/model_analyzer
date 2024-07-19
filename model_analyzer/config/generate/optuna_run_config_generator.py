@@ -76,6 +76,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         "instance_group",
         "concurrency",
         "max_queue_delay_microseconds",
+        "request_rate"
     ]
 
     # TODO: TMA-1927: Figure out the correct value for this
@@ -669,6 +670,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         )
 
         default_concurrency = self._calculate_default_concurrency(model_config)
+        default_request_rate_range = 1.0
 
         perf_config_params = {
             "batch-size": DEFAULT_BATCH_SIZES,

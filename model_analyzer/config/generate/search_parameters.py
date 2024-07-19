@@ -31,7 +31,7 @@ class SearchParameters:
 
     # These map to the run-config-search fields
     # See github.com/triton-inference-server/model_analyzer/blob/main/docs/config.md
-    exponential_rcs_parameters = ["max_batch_size", "batch_sizes", "concurrency"]
+    exponential_rcs_parameters = ["max_batch_size", "batch_sizes", "concurrency", "request_rate"]
     linear_rcs_parameters = ["instance_group"]
 
     model_parameters = [
@@ -39,7 +39,7 @@ class SearchParameters:
         "instance_group",
         "max_queue_delay_microseconds",
     ]
-    runtime_parameters = ["batch_sizes", "concurrency"]
+    runtime_parameters = ["batch_sizes", "concurrency", "request_rate"]
 
     def __init__(
         self,
@@ -130,7 +130,7 @@ class SearchParameters:
 
         if not self._is_composing_model:
             self._populate_concurrency()
-            # TODO: Populate request rate - TMA-1903
+            self._populate_request_rate()
 
     def _populate_model_config_parameters(self) -> None:
         self._populate_max_batch_size()
@@ -159,6 +159,20 @@ class SearchParameters:
                 parameter_name="concurrency",
                 rcs_parameter_min_value=self._config.run_config_search_min_concurrency,
                 rcs_parameter_max_value=self._config.run_config_search_max_concurrency,
+            )
+    
+    def _populate_request_rate(self) -> None:
+        if self._parameters and self._parameters["request_rate"]:
+            self._populate_list_parameter(
+                parameter_name="request_rate",
+                parameter_list=self._parameters["request_rate"],
+                parameter_category=ParameterCategory.INT_LIST,
+            )
+        else:
+            self._populate_rcs_parameter(
+                parameter_name="request_rate",
+                rcs_parameter_min_value=self._config.run_config_search_min_request_rate,
+                rcs_parameter_max_value=self._config.run_config_search_max_request_rate
             )
 
     def _populate_max_batch_size(self) -> None:
