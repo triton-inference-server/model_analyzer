@@ -472,7 +472,7 @@ class TestSearchParameters(trc.TestResultCollector):
         self.assertEqual(
             default.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, instance_group.max_range
         )
-    
+
     def test_search_parameter_request_rate(self):
         """
         Test that request rate is correctly set in
@@ -513,7 +513,7 @@ class TestSearchParameters(trc.TestResultCollector):
         )
         self.assertEqual(ParameterUsage.RUNTIME, request_rate.usage)
         self.assertEqual(ParameterCategory.INT_LIST, request_rate.category)
-        self.assertEqual([1,8,64,256], request_rate.enumerated_list)
+        self.assertEqual([1, 8, 64, 256], request_rate.enumerated_list)
 
     def test_number_of_configs_range(self):
         """

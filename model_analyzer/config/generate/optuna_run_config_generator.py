@@ -76,7 +76,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         "instance_group",
         "concurrency",
         "max_queue_delay_microseconds",
-        "request_rate"
+        "request_rate",
     ]
 
     # TODO: TMA-1927: Figure out the correct value for this

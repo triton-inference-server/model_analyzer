@@ -31,7 +31,12 @@ class SearchParameters:
 
     # These map to the run-config-search fields
     # See github.com/triton-inference-server/model_analyzer/blob/main/docs/config.md
-    exponential_rcs_parameters = ["max_batch_size", "batch_sizes", "concurrency", "request_rate"]
+    exponential_rcs_parameters = [
+        "max_batch_size",
+        "batch_sizes",
+        "concurrency",
+        "request_rate",
+    ]
     linear_rcs_parameters = ["instance_group"]
 
     model_parameters = [
@@ -160,7 +165,7 @@ class SearchParameters:
                 rcs_parameter_min_value=self._config.run_config_search_min_concurrency,
                 rcs_parameter_max_value=self._config.run_config_search_max_concurrency,
             )
-    
+
     def _populate_request_rate(self) -> None:
         if self._parameters and self._parameters["request_rate"]:
             self._populate_list_parameter(
@@ -172,7 +177,7 @@ class SearchParameters:
             self._populate_rcs_parameter(
                 parameter_name="request_rate",
                 rcs_parameter_min_value=self._config.run_config_search_min_request_rate,
-                rcs_parameter_max_value=self._config.run_config_search_max_request_rate
+                rcs_parameter_max_value=self._config.run_config_search_max_request_rate,
             )
 
     def _populate_max_batch_size(self) -> None:
