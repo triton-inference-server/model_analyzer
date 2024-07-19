@@ -134,8 +134,10 @@ class SearchParameters:
         self._populate_batch_sizes()
 
         if not self._is_composing_model:
-            self._populate_concurrency()
-            self._populate_request_rate()
+            if self._config.is_request_rate_specified(self._parameters):
+                self._populate_request_rate()
+            else:
+                self._populate_concurrency()
 
     def _populate_model_config_parameters(self) -> None:
         self._populate_max_batch_size()

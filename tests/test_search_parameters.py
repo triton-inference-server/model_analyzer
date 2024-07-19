@@ -75,14 +75,6 @@ class TestSearchParameters(trc.TestResultCollector):
         )
 
         self.search_parameters._add_search_parameter(
-            name="request_rate",
-            usage=ParameterUsage.RUNTIME,
-            category=ParameterCategory.EXPONENTIAL,
-            min_range=1,
-            max_range=10,
-        )
-
-        self.search_parameters._add_search_parameter(
             name="instance_group",
             usage=ParameterUsage.MODEL,
             category=ParameterCategory.INTEGER,
@@ -112,14 +104,6 @@ class TestSearchParameters(trc.TestResultCollector):
         self.assertEqual(ParameterUsage.RUNTIME, parameter.usage)
         self.assertEqual(ParameterCategory.EXPONENTIAL, parameter.category)
         self.assertEqual(0, parameter.min_range)
-        self.assertEqual(10, parameter.max_range)
-
-        # request_rate
-        parameter = self.search_parameters.get_parameter("request_rate")
-
-        self.assertEqual(ParameterUsage.RUNTIME, parameter.usage)
-        self.assertEqual(ParameterCategory.EXPONENTIAL, parameter.category)
-        self.assertEqual(1, parameter.min_range)
         self.assertEqual(10, parameter.max_range)
 
     def test_integer_parameter(self):
@@ -177,31 +161,6 @@ class TestSearchParameters(trc.TestResultCollector):
         with self.assertRaises(TritonModelAnalyzerException):
             self.search_parameters._add_search_parameter(
                 name="concurrency",
-                usage=ParameterUsage.RUNTIME,
-                category=ParameterCategory.EXPONENTIAL,
-                min_range=10,
-                max_range=9,
-            )
-
-        with self.assertRaises(TritonModelAnalyzerException):
-            self.search_parameters._add_search_parameter(
-                name="request_rate",
-                usage=ParameterUsage.RUNTIME,
-                category=ParameterCategory.EXPONENTIAL,
-                max_range=10,
-            )
-
-        with self.assertRaises(TritonModelAnalyzerException):
-            self.search_parameters._add_search_parameter(
-                name="request_rate",
-                usage=ParameterUsage.RUNTIME,
-                category=ParameterCategory.EXPONENTIAL,
-                min_range=1,
-            )
-
-        with self.assertRaises(TritonModelAnalyzerException):
-            self.search_parameters._add_search_parameter(
-                name="request_rate",
                 usage=ParameterUsage.RUNTIME,
                 category=ParameterCategory.EXPONENTIAL,
                 min_range=10,
@@ -284,19 +243,6 @@ class TestSearchParameters(trc.TestResultCollector):
         )
         self.assertEqual(
             log2(default.DEFAULT_RUN_CONFIG_MAX_CONCURRENCY), concurrency.max_range
-        )
-
-        # request_rate
-        request_rate = analyzer._search_parameters["add_sub"].get_parameter(
-            "request_rate"
-        )
-        self.assertEqual(ParameterUsage.RUNTIME, request_rate.usage)
-        self.assertEqual(ParameterCategory.EXPONENTIAL, request_rate.category)
-        self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE), request_rate.min_range
-        )
-        self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE), request_rate.max_range
         )
 
         # instance_group
@@ -552,8 +498,8 @@ class TestSearchParameters(trc.TestResultCollector):
             self.search_parameters.number_of_total_possible_configurations()
         )
 
-        # max_batch_size (8) * instance group (8) * concurrency (11) * size (3) * request_rate(10)
-        self.assertEqual(8 * 8 * 11 * 3 * 10, total_num_of_possible_configurations)
+        # max_batch_size (8) * instance group (8) * concurrency (11) * size (3)
+        self.assertEqual(8 * 8 * 11 * 3, total_num_of_possible_configurations)
 
     def test_search_parameter_creation_bls_default(self):
         """
@@ -609,19 +555,6 @@ class TestSearchParameters(trc.TestResultCollector):
             log2(default.DEFAULT_RUN_CONFIG_MAX_CONCURRENCY), concurrency.max_range
         )
 
-        # request_rate
-        request_rate = analyzer._search_parameters["add_sub"].get_parameter(
-            "request_rate"
-        )
-        self.assertEqual(ParameterUsage.RUNTIME, request_rate.usage)
-        self.assertEqual(ParameterCategory.EXPONENTIAL, request_rate.category)
-        self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE), request_rate.min_range
-        )
-        self.assertEqual(
-            log2(default.DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE), request_rate.max_range
-        )
-
         # instance_group
         instance_group = analyzer._search_parameters["add_sub"].get_parameter(
             "instance_group"
@@ -650,12 +583,6 @@ class TestSearchParameters(trc.TestResultCollector):
             "concurrency"
         )
         self.assertIsNone(concurrency)
-
-        # request_rate
-        request_rate = analyzer._composing_search_parameters["sub"].get_parameter(
-            "request_rate"
-        )
-        self.assertIsNone(request_rate)
 
         # instance_group
         instance_group = analyzer._composing_search_parameters["sub"].get_parameter(
