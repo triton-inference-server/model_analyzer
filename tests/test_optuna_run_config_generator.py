@@ -68,13 +68,14 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
 
         self._rcg = OptunaRunConfigGenerator(
             config=config,
+            state_manager=MagicMock(),
             gpu_count=1,
             models=self._mock_models,
             composing_models=[],
             model_variant_name_manager=ModelVariantNameManager(),
             search_parameters={"add_sub": search_parameters},
             composing_search_parameters={},
-            seed=100,
+            user_seed=100,
         )
 
     def test_max_number_of_configs_to_search_percentage(self):
@@ -204,7 +205,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(model_config.to_dict()["name"], self._test_config_dict["name"])
 
-        # These values are the result of using a fixed seed of 100
+        # These values are the result of using a fixed user_seed of 100
         self.assertEqual(model_config.to_dict()["maxBatchSize"], 16)
         self.assertEqual(model_config.to_dict()["instanceGroup"][0]["count"], 2)
         self.assertEqual(
@@ -232,13 +233,14 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
 
         rcg = OptunaRunConfigGenerator(
             config=config,
+            state_manager=MagicMock(),
             gpu_count=1,
             models=self._mock_models,
             composing_models=[],
             model_variant_name_manager=ModelVariantNameManager(),
             search_parameters={"add_sub": search_parameters},
             composing_search_parameters={},
-            seed=100,
+            user_seed=100,
         )
 
         trial = rcg._study.ask()
@@ -250,7 +252,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(model_config.to_dict()["name"], self._test_config_dict["name"])
 
-        # These values are the result of using a fixed seed of 100
+        # These values are the result of using a fixed user_seed of 100
         self.assertEqual(model_config.to_dict()["maxBatchSize"], 16)
         self.assertEqual(model_config.to_dict()["instanceGroup"][0]["count"], 2)
         self.assertEqual(
@@ -291,6 +293,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         )
         rcg = OptunaRunConfigGenerator(
             config=config,
+            state_manager=MagicMock(),
             gpu_count=1,
             models=[bls_model],
             composing_models=[add_model, sub_model],
@@ -300,7 +303,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
                 "add": add_search_parameters,
                 "sub": sub_search_parameters,
             },
-            seed=100,
+            user_seed=100,
         )
 
         trial = rcg._study.ask()
@@ -315,7 +318,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         sub_model_config = run_config.model_run_configs()[0].composing_configs()[1]
         perf_config = run_config.model_run_configs()[0].perf_config()
 
-        # BLS (Top Level Model) + PA Config (Seed=100)
+        # BLS (Top Level Model) + PA Config (user_seed=100)
         # =====================================================================
         self.assertEqual(bls_model_config.to_dict()["name"], "bls")
         self.assertEqual(bls_model_config.to_dict()["instanceGroup"][0]["count"], 3)
@@ -364,6 +367,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         )
         rcg = OptunaRunConfigGenerator(
             config=config,
+            state_manager=MagicMock(),
             gpu_count=1,
             models=[add_model, vgg_model],
             composing_models=[],
@@ -373,7 +377,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
                 "vgg19_libtorch": vgg_search_parameters,
             },
             composing_search_parameters={},
-            seed=100,
+            user_seed=100,
         )
 
         trial = rcg._study.ask()
@@ -388,7 +392,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         add_perf_config = run_config.model_run_configs()[0].perf_config()
         vgg_perf_config = run_config.model_run_configs()[0].perf_config()
 
-        # ADD_SUB + PA Config (Seed=100)
+        # ADD_SUB + PA Config (user_seed=100)
         # =====================================================================
         self.assertEqual(add_model_config.to_dict()["name"], "add_sub")
         self.assertEqual(add_model_config.to_dict()["maxBatchSize"], 16)
@@ -400,7 +404,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(add_perf_config["batch-size"], DEFAULT_BATCH_SIZES)
         self.assertEqual(add_perf_config["concurrency-range"], 16)
 
-        # VGG19_LIBTORCH + PA Config (Seed=100)
+        # VGG19_LIBTORCH + PA Config (user_seed=100)
         # =====================================================================
         self.assertEqual(vgg_model_config.to_dict()["name"], "vgg19_libtorch")
         self.assertEqual(vgg_model_config.to_dict()["instanceGroup"][0]["count"], 4)

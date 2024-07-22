@@ -136,6 +136,7 @@ class ModelManager:
 
         rcg = RunConfigGeneratorFactory.create_run_config_generator(
             command_config=self._config,
+            state_manager=self._state_manager,
             gpus=self._gpus,
             models=models,
             client=self._client,

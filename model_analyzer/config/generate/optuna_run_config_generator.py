@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import logging
+from random import randint
 from sys import maxsize
 from typing import Any, Dict, Generator, List, Optional, TypeAlias, Union
 
@@ -43,6 +44,7 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
@@ -82,19 +84,22 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
     def __init__(
         self,
         config: ConfigCommandProfile,
+        state_manager: AnalyzerStateManager,
         gpu_count: int,
         models: List[ModelProfileSpec],
         composing_models: List[ModelProfileSpec],
         model_variant_name_manager: ModelVariantNameManager,
         search_parameters: Dict[str, SearchParameters],
         composing_search_parameters: Dict[str, SearchParameters],
-        seed: Optional[int] = None,
+        user_seed: Optional[int] = None,
     ):
         """
         Parameters
         ----------
         config: ConfigCommandProfile
             Profile configuration information
+        state_manager: AnalyzerStateManager
+            The object that allows control and update of checkpoint state
         gpu_count: Number of gpus in the system
         models: List of ModelProfileSpec
             List of models to profile
@@ -105,8 +110,11 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             The object that handles the users configuration search parameters
         composing_search_parameters: SearchParameters
             The object that handles the users configuration search parameters for composing models
+        user_seed: int
+            The seed to use. If not provided, one will be generated (fresh run) or read from checkpoint
         """
         self._config = config
+        self._state_manager = state_manager
         self._gpu_count = gpu_count
         self._models = models
         self._composing_models = composing_models
@@ -132,10 +140,9 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
 
         self._done = False
 
-        if seed is not None:
-            self._sampler = optuna.samplers.TPESampler(seed=seed)
-        else:
-            self._sampler = optuna.samplers.TPESampler()
+        self._seed = self._create_seed(user_seed)
+
+        self._sampler = optuna.samplers.TPESampler(seed=self._seed)
 
         self._study_name = ",".join([model.model_name() for model in self._models])
 
@@ -143,6 +150,24 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             study_name=self._study_name,
             direction="maximize",
             sampler=self._sampler,
+        )
+
+        self._init_state()
+
+    def _get_seed(self) -> int:
+        return self._state_manager.get_state_variable("OptunaRunConfigGenerator.seed")
+
+    def _create_seed(self, user_seed: Optional[int]) -> int:
+        if self._state_manager.starting_fresh_run():
+            seed = randint(0, 10000) if user_seed is None else user_seed
+        else:
+            seed = self._get_seed() if user_seed is None else user_seed
+
+        return seed
+
+    def _init_state(self) -> None:
+        self._state_manager.set_state_variable(
+            "OptunaRunConfigGenerator.seed", self._seed
         )
 
     def _is_done(self) -> bool:

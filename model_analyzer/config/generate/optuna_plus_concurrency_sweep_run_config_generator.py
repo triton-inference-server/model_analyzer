@@ -32,6 +32,7 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
 from .config_generator_interface import ConfigGeneratorInterface
 
@@ -48,6 +49,7 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     def __init__(
         self,
         config: ConfigCommandProfile,
+        state_manager: AnalyzerStateManager,
         gpu_count: int,
         models: List[ModelProfileSpec],
         composing_models: List[ModelProfileSpec],
@@ -61,6 +63,8 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         ----------
         config: ConfigCommandProfile
             Profile configuration information
+        state_manager: AnalyzerStateManager
+            The object that allows control and update of checkpoint state
         gpu_count: Number of gpus in the system
         models: List of ModelProfileSpec
             List of models to profile
@@ -76,6 +80,7 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             The object that handles the users configuration search parameters for composing models
         """
         self._config = config
+        self._state_manager = state_manager
         self._gpu_count = gpu_count
         self._models = models
         self._composing_models = composing_models
@@ -123,6 +128,7 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     def _create_optuna_run_config_generator(self) -> OptunaRunConfigGenerator:
         return OptunaRunConfigGenerator(
             config=self._config,
+            state_manager=self._state_manager,
             gpu_count=self._gpu_count,
             models=self._models,
             composing_models=self._composing_models,
