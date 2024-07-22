@@ -37,7 +37,10 @@ from model_analyzer.config.generate.search_parameter import (
 )
 from model_analyzer.config.generate.search_parameters import SearchParameters
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES
+from model_analyzer.config.input.config_defaults import (
+    DEFAULT_BATCH_SIZES,
+    DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
+)
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
@@ -669,12 +672,17 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             model_config.get_field("name"), self._config
         )
 
-        default_concurrency = self._calculate_default_concurrency(model_config)
-
-        perf_config_params = {
-            "batch-size": DEFAULT_BATCH_SIZES,
-            "concurrency-range": default_concurrency,
-        }
+        if self._config.is_request_rate_specified(self._search_parameters):
+            perf_config_params = {
+                "batch-size": DEFAULT_BATCH_SIZES,
+                "request-rate-range": DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
+            }
+        else:
+            default_concurrency = self._calculate_default_concurrency(model_config)
+            perf_config_params = {
+                "batch-size": DEFAULT_BATCH_SIZES,
+                "concurrency-range": default_concurrency,
+            }
         default_perf_analyzer_config.update_config(perf_config_params)
 
         default_perf_analyzer_config.update_config(model.perf_analyzer_flags())
@@ -713,16 +721,10 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         composing_model_config_variants: List[ModelConfigVariant],
         trial_objectives: ModelTrialObjectives,
     ) -> ModelRunConfig:
-        trial_batch_sizes = (
-            int(trial_objectives["batch_sizes"])
-            if "batch_sizes" in trial_objectives
-            else DEFAULT_BATCH_SIZES
-        )
         perf_analyzer_config = self._create_perf_analyzer_config(
             model_name=model.model_name(),
             model=model,
-            concurrency=int(trial_objectives["concurrency"]),
-            batch_sizes=trial_batch_sizes,
+            trial_objectives=trial_objectives,
         )
         model_run_config = ModelRunConfig(
             model.model_name(), model_config_variant, perf_analyzer_config
@@ -739,17 +741,29 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         self,
         model_name: str,
         model: ModelProfileSpec,
-        concurrency: int,
-        batch_sizes: int,
+        trial_objectives: ModelTrialObjectives,
     ) -> PerfAnalyzerConfig:
         perf_analyzer_config = PerfAnalyzerConfig()
 
         perf_analyzer_config.update_config_from_profile_config(model_name, self._config)
 
-        perf_config_params = {
-            "batch-size": batch_sizes,
-            "concurrency-range": concurrency,
-        }
+        batch_sizes = (
+            int(trial_objectives["batch_sizes"])
+            if "batch_sizes" in trial_objectives
+            else DEFAULT_BATCH_SIZES
+        )
+
+        perf_config_params = {"batch-size": batch_sizes}
+
+        if "concurrency" in trial_objectives:
+            perf_config_params["concurrency-range"] = int(
+                trial_objectives["concurrency"]
+            )
+        elif "request_rate" in trial_objectives:
+            perf_config_params["request-rate-range"] = int(
+                trial_objectives["request_rate"]
+            )
+
         perf_analyzer_config.update_config(perf_config_params)
 
         perf_analyzer_config.update_config(model.perf_analyzer_flags())

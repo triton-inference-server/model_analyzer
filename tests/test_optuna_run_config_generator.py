@@ -272,6 +272,8 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         bls_model = ModelProfileSpec(
             config.profile_models[0], config, MagicMock(), MagicMock()
         )
+        print("BLS Model: ")
+        print(bls_model)
         add_model = ModelProfileSpec(
             config.bls_composing_models[0], config, MagicMock(), MagicMock()
         )
