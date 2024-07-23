@@ -25,7 +25,7 @@ from model_analyzer.config.generate.optuna_run_config_generator import (
     OptunaRunConfigGenerator,
 )
 from model_analyzer.config.generate.search_parameters import SearchParameters
-from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES
+from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES,DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE
 from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
 )
@@ -174,9 +174,9 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         # Since both are specified we will use the larger of the two (trials=6)
         self.assertEqual(min_configs_to_search, 6)
 
-    def test_create_default_run_config(self):
+    def test_create_default_run_config_with_concurrency(self):
         """
-        Test that a default run config is properly created
+        Test that a default run config with concurrency is properly created
         """
         default_run_config = self._rcg._create_default_run_config()
 
@@ -190,9 +190,48 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             perf_config["concurrency-range"], 2 * self._default_max_batch_size
         )
 
-    def test_create_objective_based_run_config(self):
+    def test_create_default_run_config_with_request_rate(self):
         """
-        Test that an objective based run config is properly created
+        Test that a default run config with request rate is properly created
+        """
+        config = self._create_config(["--request-rate-search-enable"])
+        mock_model_config = MockModelConfig()
+        mock_model_config.start()
+        model = ModelProfileSpec(
+            config.profile_models[0], config, MagicMock(), MagicMock()
+        )
+        mock_model_config.stop()
+        search_parameters = SearchParameters(
+            model=model,
+            config=config,
+        )
+
+        rcg = OptunaRunConfigGenerator(
+            config=config,
+            gpu_count=1,
+            models=self._mock_models,
+            composing_models=[],
+            model_variant_name_manager=ModelVariantNameManager(),
+            search_parameters={"add_sub": search_parameters},
+            composing_search_parameters={},
+            seed=100,
+        )
+        
+        default_run_config = rcg._create_default_run_config()
+        self.assertEqual(len(default_run_config.model_run_configs()), 1)
+
+        model_config = default_run_config.model_run_configs()[0].model_config()
+        perf_config = default_run_config.model_run_configs()[0].perf_config()
+
+        self.assertEqual(model_config.to_dict()["name"], self._test_config_dict["name"])
+        self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
+        self.assertEqual(
+            perf_config["request-rate-range"], DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE
+        )
+
+    def test_create_objective_based_run_config_with_concurrency(self):
+        """
+        Test that an objective based run config with concurrency is properly created
         """
         trial = self._rcg._study.ask()
         trial_objectives = self._rcg._create_trial_objectives(trial)
@@ -214,6 +253,47 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         )
         self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
         self.assertEqual(perf_config["concurrency-range"], 64)
+
+    def test_create_objective_based_run_config_with_request_rate(self):
+        """
+        Test that an objective based run config with request rate is properly created
+        """
+        config = self._create_config(["--request-rate", "1024,2048"])
+        mock_model_config = MockModelConfig()
+        mock_model_config.start()
+        model = ModelProfileSpec(
+            config.profile_models[0], config, MagicMock(), MagicMock()
+        )
+        mock_model_config.stop()
+        search_parameters = SearchParameters(
+            model=model,
+            config=config,
+        )
+
+        rcg = OptunaRunConfigGenerator(
+            config=config,
+            gpu_count=1,
+            models=self._mock_models,
+            composing_models=[],
+            model_variant_name_manager=ModelVariantNameManager(),
+            search_parameters={"add_sub": search_parameters},
+            composing_search_parameters={},
+            seed=100,
+        )
+        
+        trial = rcg._study.ask()
+        trial_objectives = rcg._create_trial_objectives(trial)
+        run_config = rcg._create_objective_based_run_config(trial_objectives, None)
+
+        model_config = run_config.model_run_configs()[0].model_config()
+        perf_config = run_config.model_run_configs()[0].perf_config()
+
+        # These values are the result of using a fixed seed of 100
+        self.assertEqual(model_config.to_dict()["name"], self._test_config_dict["name"])
+        self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
+        self.assertEqual(
+            perf_config["request-rate-range"], 2048
+        )
 
     def test_create_run_config_with_concurrency_formula(self):
         """
@@ -272,8 +352,6 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         bls_model = ModelProfileSpec(
             config.profile_models[0], config, MagicMock(), MagicMock()
         )
-        print("BLS Model: ")
-        print(bls_model)
         add_model = ModelProfileSpec(
             config.bls_composing_models[0], config, MagicMock(), MagicMock()
         )
@@ -288,10 +366,12 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         add_search_parameters = SearchParameters(
             model=add_model,
             config=config,
+            is_composing_model=True
         )
         sub_search_parameters = SearchParameters(
             model=sub_model,
             config=config,
+            is_composing_model=True
         )
         rcg = OptunaRunConfigGenerator(
             config=config,
@@ -333,16 +413,16 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(add_model_config.to_dict()["instanceGroup"][0]["count"], 3)
         self.assertEqual(
             add_model_config.to_dict()["dynamicBatching"]["maxQueueDelayMicroseconds"],
-            "300",
+            "100",
         )
 
         # SUB (composing model)
         # =====================================================================
         self.assertEqual(sub_model_config.to_dict()["name"], "sub")
-        self.assertEqual(sub_model_config.to_dict()["instanceGroup"][0]["count"], 5)
+        self.assertEqual(sub_model_config.to_dict()["instanceGroup"][0]["count"], 4)
         self.assertEqual(
             sub_model_config.to_dict()["dynamicBatching"]["maxQueueDelayMicroseconds"],
-            "500",
+            "400",
         )
 
     def test_create_run_multi_model_config(self):
