@@ -670,12 +670,16 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         default_perf_analyzer_config.update_config_from_profile_config(
             model_config.get_field("name"), self._config
         )
-
-        if self._config.is_request_rate_specified(self._search_parameters):
+        if self._config.is_request_rate_specified(
+            self._search_parameters[
+                model_config.get_field("name")
+            ].get_search_parameters()
+        ):
             perf_config_params = {
                 "batch-size": DEFAULT_BATCH_SIZES,
                 "request-rate-range": DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
             }
+            self._config.concurrency_sweep_disable = True
         else:
             default_concurrency = self._calculate_default_concurrency(model_config)
             perf_config_params = {
@@ -683,7 +687,6 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
                 "concurrency-range": default_concurrency,
             }
         default_perf_analyzer_config.update_config(perf_config_params)
-
         default_perf_analyzer_config.update_config(model.perf_analyzer_flags())
 
         return default_perf_analyzer_config
@@ -762,6 +765,7 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             perf_config_params["request-rate-range"] = int(
                 trial_objectives["request_rate"]
             )
+            self._config.concurrency_sweep_disable = True
 
         perf_analyzer_config.update_config(perf_config_params)
 

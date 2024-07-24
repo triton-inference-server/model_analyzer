@@ -232,7 +232,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(
             perf_config["request-rate-range"], DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE
         )
-        self.assertNotIn("concurrency", perf_config)
+        self.assertEqual(perf_config["concurrency-range"], None)
 
     def test_create_objective_based_run_config_with_concurrency(self):
         """
@@ -298,7 +298,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(model_config.to_dict()["name"], self._test_config_dict["name"])
         self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
         self.assertEqual(perf_config["request-rate-range"], 2048)
-        self.assertNotIn("concurrency", perf_config)
+        self.assertEqual(perf_config["concurrency-range"], None)
 
     def test_create_run_config_with_concurrency_formula(self):
         """
