@@ -25,7 +25,10 @@ from model_analyzer.config.generate.optuna_run_config_generator import (
     OptunaRunConfigGenerator,
 )
 from model_analyzer.config.generate.search_parameters import SearchParameters
-from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES,DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE
+from model_analyzer.config.input.config_defaults import (
+    DEFAULT_BATCH_SIZES,
+    DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
+)
 from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
 )
@@ -216,7 +219,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             composing_search_parameters={},
             seed=100,
         )
-        
+
         default_run_config = rcg._create_default_run_config()
         self.assertEqual(len(default_run_config.model_run_configs()), 1)
 
@@ -280,7 +283,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             composing_search_parameters={},
             seed=100,
         )
-        
+
         trial = rcg._study.ask()
         trial_objectives = rcg._create_trial_objectives(trial)
         run_config = rcg._create_objective_based_run_config(trial_objectives, None)
@@ -291,9 +294,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         # These values are the result of using a fixed seed of 100
         self.assertEqual(model_config.to_dict()["name"], self._test_config_dict["name"])
         self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
-        self.assertEqual(
-            perf_config["request-rate-range"], 2048
-        )
+        self.assertEqual(perf_config["request-rate-range"], 2048)
 
     def test_create_run_config_with_concurrency_formula(self):
         """
@@ -364,14 +365,10 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
             config=config,
         )
         add_search_parameters = SearchParameters(
-            model=add_model,
-            config=config,
-            is_composing_model=True
+            model=add_model, config=config, is_composing_model=True
         )
         sub_search_parameters = SearchParameters(
-            model=sub_model,
-            config=config,
-            is_composing_model=True
+            model=sub_model, config=config, is_composing_model=True
         )
         rcg = OptunaRunConfigGenerator(
             config=config,
