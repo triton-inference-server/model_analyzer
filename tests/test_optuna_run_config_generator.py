@@ -212,7 +212,6 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         rcg = OptunaRunConfigGenerator(
             config=config,
             state_manager=MagicMock(),
-            state_manager=MagicMock(),
             gpu_count=1,
             models=self._mock_models,
             composing_models=[],
@@ -233,11 +232,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(
             perf_config["request-rate-range"], DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE
         )
-<<<<<<< HEAD
         self.assertEqual(perf_config["concurrency-range"], None)
-=======
-        self.assertNotIn("concurrency", perf_config)
->>>>>>> 62fde56 (Fix codeql errors)
 
     def test_create_objective_based_run_config_with_concurrency(self):
         """
@@ -303,11 +298,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(model_config.to_dict()["name"], self._test_config_dict["name"])
         self.assertEqual(perf_config["batch-size"], DEFAULT_BATCH_SIZES)
         self.assertEqual(perf_config["request-rate-range"], 2048)
-<<<<<<< HEAD
         self.assertEqual(perf_config["concurrency-range"], None)
-=======
-        self.assertNotIn("concurrency", perf_config)
->>>>>>> 62fde56 (Fix codeql errors)
 
     def test_create_run_config_with_concurrency_formula(self):
         """
