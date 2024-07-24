@@ -212,6 +212,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         rcg = OptunaRunConfigGenerator(
             config=config,
             state_manager=MagicMock(),
+            state_manager=MagicMock(),
             gpu_count=1,
             models=self._mock_models,
             composing_models=[],
