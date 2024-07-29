@@ -25,8 +25,6 @@ from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
-from .config_generator_interface import ConfigGeneratorInterface
-
 logger = logging.getLogger(LOGGER_NAME)
 
 
