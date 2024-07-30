@@ -670,8 +670,10 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
         default_perf_analyzer_config.update_config_from_profile_config(
             model_config.get_field("name"), self._config
         )
-        if self._config.is_request_rate_specified(
-            self._search_parameters[
+
+        if (
+            "request_rate"
+            in self._search_parameters[
                 model_config.get_field("name")
             ].get_search_parameters()
         ):
