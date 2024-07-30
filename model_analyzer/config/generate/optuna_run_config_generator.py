@@ -671,11 +671,8 @@ class OptunaRunConfigGenerator(ConfigGeneratorInterface):
             model_config.get_field("name"), self._config
         )
 
-        if (
+        if self._search_parameters[model_config.get_field("name")].get_parameter(
             "request_rate"
-            in self._search_parameters[
-                model_config.get_field("name")
-            ].get_search_parameters()
         ):
             perf_config_params = {
                 "batch-size": DEFAULT_BATCH_SIZES,
