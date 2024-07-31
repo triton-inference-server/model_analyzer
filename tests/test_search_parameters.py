@@ -98,6 +98,7 @@ class TestSearchParameters(trc.TestResultCollector):
         Test exponential parameter, accessing dataclass directly
         """
 
+        # concurrency
         parameter = self.search_parameters.get_parameter("concurrency")
 
         self.assertEqual(ParameterUsage.RUNTIME, parameter.usage)
@@ -322,10 +323,10 @@ class TestSearchParameters(trc.TestResultCollector):
             mult_div:
                 parameters:
                     concurrency: [1, 8, 64, 256]
+
         """
 
         config = TestConfig()._evaluate_config(args, yaml_content)
-
         analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
         mock_model_config = MockModelConfig()
         mock_model_config.start()
@@ -417,6 +418,48 @@ class TestSearchParameters(trc.TestResultCollector):
         self.assertEqual(
             default.DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, instance_group.max_range
         )
+
+    def test_search_parameter_request_rate(self):
+        """
+        Test that request rate is correctly set in
+        a non-default optuna case
+        """
+
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli-repository",
+            "-f",
+            "path-to-config-file",
+            "--run-config-search-mode",
+            "optuna",
+        ]
+
+        yaml_content = """
+        run_config_search_mode: optuna
+        profile_models:
+            mult_div:
+                parameters:
+                    request_rate: [1, 8, 64, 256]
+
+        """
+        config = TestConfig()._evaluate_config(args, yaml_content)
+        analyzer = Analyzer(config, MagicMock(), MagicMock(), MagicMock())
+        mock_model_config = MockModelConfig()
+        mock_model_config.start()
+        analyzer._populate_search_parameters(MagicMock(), MagicMock())
+        mock_model_config.stop()
+
+        # request_rate
+        # ===================================================================
+
+        request_rate = analyzer._search_parameters["mult_div"].get_parameter(
+            "request_rate"
+        )
+        self.assertEqual(ParameterUsage.RUNTIME, request_rate.usage)
+        self.assertEqual(ParameterCategory.INT_LIST, request_rate.category)
+        self.assertEqual([1, 8, 64, 256], request_rate.enumerated_list)
 
     def test_number_of_configs_range(self):
         """
