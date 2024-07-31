@@ -106,31 +106,33 @@ model, the Model Analyzer will save the measurements it has collected into the
 Some example profile commands are shown here. For a full example see the
 [quick start](./quick_start.md) section.
 
-1. Run auto config search on a model called `resnet50_libtorch` located in `/home/model_repo`
+**Note: All commands assume that you are running in directory where MA was installed**
+
+1. Run auto config search on a model called `add_sub` located in `examples/quick-start`
 
 ```
-$ model-analyzer profile -m /home/model_repo --profile-models resnet50_libtorch
+$ model-analyzer profile -m examples/quick-start --profile-models add_sub
 ```
 
-2. Run quick search on a model called `resnet50_libtorch` located in `/home/model_repo`
+2. Run quick search on a model called `add_sub` located in `examples/quick-start`
 
 ```
-$ model-analyzer profile -m /home/model_repo --profile-models resnet50_libtorch --run-config-search-mode quick
+$ model-analyzer profile -m examples/quick-start --profile-models add_sub --run-config-search-mode quick
 ```
 
-3. Run auto config search on 2 models called `resnet50_libtorch` and `vgg16_graphdef` located in `/home/model_repo` and save checkpoints to `checkpoints`
+3. Run auto config search on 2 models called `add` and `sub` located in `examples/quick-start` and save checkpoints to `checkpoints`
 
 ```
-$ model-analyzer profile -m /home/model_repo --profile-models resnet50_libtorch,vgg16_graphdef --checkpoint-directory=checkpoints
+$ model-analyzer profile -m examples/quick-start --profile-models add,sub --checkpoint-directory=checkpoints
 ```
 
-4.  Run auto config search on a model called `resnet50_libtorch` located in `/home/model_repo`, but change the repository where model config variants are stored to `/home/output_repo`
+4.  Run auto config search on a model called `add_sub` located in `examples/quick-start`, but change the repository where model config variants are stored to `/home/output_repo`
 
 ```
-$ model-analyzer profile -m /home/model_repo --output-model-repository-path=/home/output_repo --profile-models resnet50_libtorch
+$ model-analyzer profile -m examples/quick-start --output-model-repository-path=/home/output_repo --profile-models add_sub
 ```
 
-5. Run profile over manually defined configurations for a models `classification_malaria_v1` and `classification_chestxray_v1` located in `/home/model_repo` using the YAML config file
+5. Run profile over manually defined configurations for a models `add` and `sub` located in `examples/quick-start` using the YAML config file
 
 ```
 $ model-analyzer profile -f /path/to/config.yaml
@@ -139,7 +141,7 @@ $ model-analyzer profile -f /path/to/config.yaml
 The contents of `config.yaml` are shown below.
 
 ```yaml
-model_repository: /home/model_repo
+model_repository: examples/quick-start
 
 run_config_search_disable: True
 
@@ -147,14 +149,14 @@ concurrency: [2, 4, 8, 16, 32]
 batch_sizes: [8, 16, 64]
 
 profile_models:
-  classification_malaria_v1:
+  add:
     model_config_parameters:
       instance_group:
         - kind: KIND_GPU
           count: [1, 2]
       dynamic_batching:
         max_queue_delay_microseconds: [100]
-  classification_chestxray_v1:
+  sub:
     model_config_parameters:
       instance_group:
         - kind: KIND_GPU
@@ -176,13 +178,13 @@ checkpoint_directory: ./checkpoints/
 export_path: ./export_directory/
 
 profile_models:
-  resnet50_libtorch:
+  add:
     objectives:
       - perf_throughput
     constraints:
       perf_latency_p99:
         max: 15
-  vgg16_graphdef:
+  sub:
     objectives:
       - gpu_used_memory
     constraints:
@@ -210,13 +212,13 @@ for more details).
 
 ### Examples
 
-1. Generate detailed reports for a model configs of `resnet50_libtorch` called `resnet50_libtorch_config_1` and `resnet50_libtorch_config_2`. Read from `checkpoints` and write to `export_directory`.
+1. Generate detailed reports for a model configs of `add_sub` called `add_sub_config_1` and `add_sub_config_2`. Read from `checkpoints` and write to `export_directory`.
 
 ```
-$ model-analyzer --report-model-configs resnet50_libtorch_config_1,resnet50_libtorch_config_2 --checkpoint-directory checkpoints -e export_directory
+$ model-analyzer --report-model-configs add_sub_config_1,add_sub_config_2 --checkpoint-directory checkpoints -e export_directory
 ```
 
-2. Generate detailed report for `resnet50_libtorch_config_2` with a custom plot using YAML config file
+2. Generate detailed report for `add_sub_config_2` with a custom plot using YAML config file
 
 ```
 $ model-analyzer report -f /path/to/config.yaml
@@ -228,7 +230,7 @@ The contents of the `config.yaml` are shown below
 checkpoint_directory: ./checkpoints/
 export_path: "./export_directory"
 report_model_configs:
-  resnet50_libtorch_config_2:
+  add_sub_config_2:
     plots:
       throughput_v_memory:
         title: Thoughput vs GPU Memory

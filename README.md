@@ -49,17 +49,17 @@ Triton Model Analyzer is a CLI tool which can help you find a more optimal confi
 
 ### Model Types
 
-- [Ensemble Model Search](docs/config_search.md#ensemble-model-search): Model Analyzer can help you find the optimal
-  settings when profiling an ensemble model, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
+- [Ensemble](docs/model_types.md#ensemble): Model Analyzer can help you find the optimal
+  settings when profiling an ensemble model
 
-- [BLS Model Search](docs/config_search.md#bls-model-search): Model Analyzer can help you find the optimal
-  settings when profiling a BLS model, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
+- [BLS](docs/model_types.md#bls): Model Analyzer can help you find the optimal
+  settings when profiling a BLS model
 
-- [Multi-Model Search](docs/config_search.md#multi-model-search-mode): Model Analyzer can help you
-  find the optimal settings when profiling multiple concurrent models, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
+- [Multi-Model](docs/model_types.md#multi-model): Model Analyzer can help you
+  find the optimal settings when profiling multiple concurrent models
 
-- [LLM Search](docs/config_search.md#llm-search-mode): Model Analyzer can help you
-  find the optimal settings when profiling large language models, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
+- [LLM](docs/model_types.md#llm): Model Analyzer can help you
+  find the optimal settings when profiling Large Language Models
 
 ### Other Features
 
@@ -104,6 +104,15 @@ See the [BLS Model Quick Start](docs/bls_quick_start.md) for a guide on how to u
 - [Model Analyzer Reports](docs/report.md)
 - [Deployment with Kubernetes](docs/kubernetes_deploy.md)
   <br><br>
+
+# Terminology
+
+Below are definitions of some commonly used terms in Model Analyzer:
+
+- **Model Type** - Category of model being profiled. Examples of this include single, multi, ensemble, BLS, etc..
+- **Search Mode** - How Model Analyzer explores the possible configuration space when profiling. This is either exhaustive (brute) or heuristic (quick/optuna).
+- **Model Config Search** - The cross product of model type and search mode.
+- **Launch Mode** - How the Triton Server is deployed and used by Model Analyzer.
 
 # Reporting problems, asking questions
 

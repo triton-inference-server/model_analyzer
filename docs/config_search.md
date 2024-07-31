@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020-2023, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2024, NVIDIA CORPORATION. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,14 +23,20 @@ limitations under the License.
   - [Manual Brute Search](#manual-brute-search)
 - [Quick Search Mode](#quick-search-mode)
 - [Optuna Search Mode](#optuna-search-mode)
-- [Ensemble Model Search](#ensemble-model-search)
-- [BLS Model Search](#bls-model-search)
-- [LLM Search](#llm-search)
-- [Multi-Model Search Mode](#multi-model-search-mode)
 
 <br>
 
 # Model Config Search
+
+## Support Matrix
+
+The table below illustrates shows which search modes are available based on the model type:
+
+|            | Single Model | Multi-Model | BLS | Ensemble | LLM |
+| ---------- | ------------ | ----------- | --- | -------- | --- |
+| **Brute**  | o            | o           | -   | -        | -   |
+| **Quick**  | o            | o           | o   | o        | o   |
+| **Optuna** | o            | o           | o   | o        | o   |
 
 ## Search Modes
 
