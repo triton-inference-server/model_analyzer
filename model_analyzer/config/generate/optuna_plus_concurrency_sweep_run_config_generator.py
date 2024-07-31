@@ -18,6 +18,7 @@ import logging
 from copy import deepcopy
 from typing import Dict, Generator, List, Optional
 
+from model_analyzer.config.generate.concurrency_sweeper import ConcurrencySweeper
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
@@ -115,7 +116,9 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
                 "Done with Optuna mode search. Gathering concurrency sweep measurements for reports"
             )
             logger.info("")
-            yield from self._sweep_concurrency_over_top_results()
+            yield from ConcurrencySweeper(
+                config=self._config, result_manager=self._result_manager
+            ).get_configs()
             logger.info("")
             logger.info("Done gathering concurrency sweep measurements for reports")
         logger.info("")
@@ -136,26 +139,3 @@ class OptunaPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             search_parameters=self._search_parameters,
             composing_search_parameters=self._composing_search_parameters,
         )
-
-    def _sweep_concurrency_over_top_results(self) -> Generator[RunConfig, None, None]:
-        for model_name in self._result_manager.get_model_names():
-            top_results = self._result_manager.top_n_results(
-                model_name=model_name,
-                n=self._config.num_configs_per_model,
-                include_default=True,
-            )
-
-            for result in top_results:
-                run_config = deepcopy(result.run_config())
-                parameter_search = ParameterSearch(self._config)
-                for concurrency in parameter_search.search_parameters():
-                    run_config = self._set_concurrency(run_config, concurrency)
-                    yield run_config
-                    parameter_search.add_run_config_measurement(self._last_measurement)
-
-    def _set_concurrency(self, run_config: RunConfig, concurrency: int) -> RunConfig:
-        for model_run_config in run_config.model_run_configs():
-            perf_config = model_run_config.perf_config()
-            perf_config.update_config({"concurrency-range": concurrency})
-
-        return run_config
