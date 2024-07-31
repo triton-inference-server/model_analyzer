@@ -100,6 +100,7 @@ See the [BLS Model Quick Start](docs/bls_quick_start.md) for a guide on how to u
 - [Configuring Model Analyzer](docs/config.md)
 - [Model Analyzer Metrics](docs/metrics.md)
 - [Model Config Search](docs/config_search.md)
+- [Model Types](docs/model_types.md)
 - [Checkpointing](docs/checkpoints.md)
 - [Model Analyzer Reports](docs/report.md)
 - [Deployment with Kubernetes](docs/kubernetes_deploy.md)
