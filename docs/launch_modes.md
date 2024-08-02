@@ -30,6 +30,8 @@ Inference Server.
 
 Note: A full step by step example of docker mode can be found in the [Quick Start Guide](quick_start.md).
 
+**If your model requires a custom backend when running on the Triton Inference Server please use either `local` or `remote` mode.**
+
 In this mode, Model Analyzer uses the Python Docker API to launch the Triton
 Inference Server container. If you are running Model Analyzer inside a Docker
 container, make sure that the container is launched with appropriate flags. The
