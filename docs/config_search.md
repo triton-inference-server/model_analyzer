@@ -98,7 +98,7 @@ It has two modes:
 
 The parameters that are automatically searched are
 [model maximum batch size](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#maximum-batch-size),
-[model instance groups](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#instance-groups), and [request concurrencies](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/perf_analyzer.md#request-concurrency).
+[model instance groups](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#instance-groups), and [request concurrencies](https://github.com/triton-inference-server/perf_analyzer/blob/main/docs/cli.md#measurement-options).
 Additionally, [dynamic_batching](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#dynamic-batcher) will be enabled if it is legal to do so.
 
 _An example model analyzer YAML config that performs an Automatic Brute Search:_
@@ -128,13 +128,13 @@ You can also modify the minimum/maximum values that the automatic search space w
 
 ---
 
-### [Request Concurrency Search Space](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/docs/inference_load_modes.md#concurrency-mode))
+### [Request Concurrency Search Space](https://github.com/triton-inference-server/perf_analyzer/blob/main/docs/inference_load_modes.md#concurrency-mode)
 
 - `Default:` 1 to 1024 concurrencies, sweeping over powers of 2 (i.e. 1, 2, 4, 8, ...)
 - `--run-config-search-min-concurrency: <val>`: Changes the request concurrency minimum automatic search space value
 - `--run-config-search-max-concurrency: <val>`: Changes the request concurrency maximum automatic search space value
 
-### [Request Rate Search Space](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/docs/inference_load_modes.md#request-rate-mode)
+### [Request Rate Search Space](https://github.com/triton-inference-server/perf_analyzer/blob/main/docs/inference_load_modes.md#request-rate-mode)
 
 - `Default:` 1 to 1024 concurrencies, sweeping over powers of 2 (i.e. 1, 2, 4, 8, ...)
 - `--run-config-search-min-request-rate: <val>`: Changes the request rate minimum automatic search space value
@@ -422,7 +422,7 @@ _This mode has the following limitations:_
 
 - Summary/Detailed reports do not include the new metrics
 
-In order to profile LLMs you must tell MA that the model type is LLM by setting `--model-type LLM` in the CLI/config file. You can specify CLI options to the GenAI-Perf tool using `genai_perf_flags`. See the [GenAI-Perf CLI](https://github.com/triton-inference-server/client/blob/main/src/c%2B%2B/perf_analyzer/genai-perf/README.md#cli) documentation for a list of the flags that can be specified.
+In order to profile LLMs you must tell MA that the model type is LLM by setting `--model-type LLM` in the CLI/config file. You can specify CLI options to the GenAI-Perf tool using `genai_perf_flags`. See the [GenAI-Perf CLI](https://github.com/triton-inference-server/perf_analyzer/blob/main/genai-perf/README.md#command-line-options) documentation for a list of the flags that can be specified.
 
 LLMs can be optimized using either Quick or Brute search mode.
 

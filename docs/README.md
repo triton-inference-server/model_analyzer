@@ -47,4 +47,4 @@ The User Guide describes how to configure Model Analyzer, choose launch and sear
 
 The following resources are recommended:
 
-- [Perf Analyzer](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/README.md): Perf Analyzer is a CLI application built to generate inference requests and measures the latency of those requests and throughput of the model being served.
+- [Perf Analyzer](https://github.com/triton-inference-server/perf_analyzer/blob/main/README.md): Perf Analyzer is a CLI application built to generate inference requests and measures the latency of those requests and throughput of the model being served.

@@ -119,7 +119,7 @@ _Profiling this model type has the following limitations:_
 
 - Summary/Detailed reports do not include the new metrics
 
-In order to profile LLMs you must tell MA that the model type is LLM by setting `--model-type LLM` in the CLI/config file. You can specify CLI options to the GenAI-Perf tool using `genai_perf_flags`. See the [GenAI-Perf CLI](https://github.com/triton-inference-server/client/blob/main/src/c%2B%2B/perf_analyzer/genai-perf/README.md#cli) documentation for a list of the flags that can be specified.
+In order to profile LLMs you must tell MA that the model type is LLM by setting `--model-type LLM` in the CLI/config file. You can specify CLI options to the GenAI-Perf tool using `genai_perf_flags`. See the [GenAI-Perf CLI](https://github.com/triton-inference-server/perf_analyzer/blob/main/genai-perf/README.md) documentation for a list of the flags that can be specified.
 
 LLMs can be optimized using either Quick or Brute search mode.
 
