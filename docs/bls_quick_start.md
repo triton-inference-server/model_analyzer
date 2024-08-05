@@ -78,7 +78,7 @@ profile_models:
   - bls
 bls_composing_models: add
 perf_analyzer_flags:
-  input-data: <path-to-examples-bls_input_data.json>
+  input-data: <path-to-examples-quick-start>/bls_input_data.json
 triton_launch_mode: docker
 triton_docker_shm_size: 2G
 output_model_repository_path: <path-to-output-model-repo>/<output_dir>
