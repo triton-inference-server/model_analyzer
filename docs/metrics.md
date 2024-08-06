@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+Copyright (c) 2020-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ tags, which are used in various places to configure Model Analyzer.
 
 These metrics come from the perf analyzer and are parsed and processed by the
 model analyzer. See the [perf analyzer
-docs](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/README.md)
+docs](https://github.com/triton-inference-server/perf_analyzer/blob/main/README.md)
 for more info on these
 
 * `perf_throughput`: The number of inferences per second measured by the perf
