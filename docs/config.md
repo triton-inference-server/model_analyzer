@@ -153,7 +153,7 @@ cpu_only_composing_models: <comma-delimited-string-list>
 [ reload_model_disable: <bool> | default: false]
 
 # Triton Docker image tag used when launching using Docker mode
-[ triton_docker_image: <string> | default: nvcr.io/nvidia/tritonserver:24.07-py3 ]
+[ triton_docker_image: <string> | default: nvcr.io/nvidia/tritonserver:24.08-py3 ]
 
 # Triton Server HTTP endpoint url used by Model Analyzer client"
 [ triton_http_endpoint: <string> | default: localhost:8000 ]
