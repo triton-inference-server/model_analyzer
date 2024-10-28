@@ -18,6 +18,9 @@ limitations under the License.
 
 # Triton Model Analyzer
 
+> [!WARNING]
+> The current release is version [1.45.0](https://github.com/triton-inference-server/model_analyzer/releases/latest) and corresponds to the 24.10 container release on NVIDIA GPU Cloud (NGC).
+
 Triton Model Analyzer is a CLI tool which can help you find a more optimal configuration, on a given piece of hardware, for single, multiple, ensemble, or BLS models running on a [Triton Inference Server](https://github.com/triton-inference-server/server/). Model Analyzer will also generate reports to help you better understand the trade-offs of the different configurations along with their compute and memory requirements.
 <br><br>
 
