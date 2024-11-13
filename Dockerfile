@@ -26,7 +26,7 @@ ARG BASE_IMAGE
 ARG TRITONSDK_BASE_IMAGE
 
 # DCGM version to install for Model Analyzer
-ENV DCGM_VERSION=3.2.6
+ENV DCGM_VERSION=3.3.6
 
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
@@ -41,7 +41,7 @@ RUN mkdir -p /opt/triton-model-analyzer
 
 RUN [ "$(uname -m)" != "x86_64" ] && arch="sbsa" || arch="x86_64" && \
     curl -o /tmp/cuda-keyring.deb \
-    https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/$arch/cuda-keyring_1.0-1_all.deb && \
+    https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/$arch/cuda-keyring_1.1-1_all.deb && \
     apt-get install /tmp/cuda-keyring.deb && rm /tmp/cuda-keyring.deb && \
     apt-get update && apt-get install -y --no-install-recommends software-properties-common && \
     apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION};
