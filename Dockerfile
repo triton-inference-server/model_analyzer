@@ -70,8 +70,7 @@ RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
 RUN chmod +x build_wheel.sh && \
     ./build_wheel.sh perf_analyzer true && \
     rm -f perf_analyzer
-RUN python3 -m pip install --upgrade pip && \
-    python3 -m pip install nvidia-pyindex && \
+RUN python3 -m pip install nvidia-pyindex && \
     python3 -m pip install wheels/triton_model_analyzer-*-manylinux*.whl
 #Other pip packages
 RUN python3 -m pip install coverage
