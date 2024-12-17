@@ -260,7 +260,11 @@ def main():
                 )
 
             # Set up devices
-            gpus = GPUDeviceFactory().verify_requested_gpus(config.gpus)
+            foo = config.dcgm_disable
+            if config.dcgm_disable:
+                gpus = []
+            else:
+                gpus = GPUDeviceFactory().verify_requested_gpus(config.gpus)
 
             # Check/create output model repository
             create_output_model_repository(config)

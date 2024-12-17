@@ -129,6 +129,7 @@ class ConfigCommand:
         self._check_for_bls_incompatibility(args, yaml_config)
         self._check_for_concurrency_rate_request_conflicts(args, yaml_config)
         self._check_for_config_search_rate_request_conflicts(args, yaml_config)
+        self._check_for_dcgm_disable_launch_mode_conflict(args, yaml_config)
 
     def _set_field_values(
         self, args: Namespace, yaml_config: Optional[Dict[str, List]]
@@ -396,6 +397,19 @@ class ConfigCommand:
             ):
                 raise TritonModelAnalyzerException(
                     f"\nCannot have both `run-config-search-max-request-rate` and `run-config-search-min/max-concurrency` specified in the config/CLI."
+                )
+
+    def _check_for_dcgm_disable_launch_mode_conflict(
+        self, args: Namespace, yaml_config: Optional[Dict[str, List]]
+    ) -> None:
+        if self._get_config_value("dcgm_disable", args, yaml_config):
+            launch_mode = self._get_config_value(
+                "triton_launch_mode", args, yaml_config
+            )
+
+            if launch_mode != "remote":
+                raise TritonModelAnalyzerException(
+                    f"\nIf `dcgm-disable` then `triton-launch-mode` must be set to remote"
                 )
 
     def _preprocess_and_verify_arguments(self):
