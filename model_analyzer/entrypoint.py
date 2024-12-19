@@ -260,7 +260,6 @@ def main():
                 )
 
             # Set up devices
-            foo = config.dcgm_disable
             if config.dcgm_disable:
                 gpus = []
             else:
