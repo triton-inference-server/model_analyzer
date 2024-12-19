@@ -45,6 +45,7 @@ from .config_defaults import (
     DEFAULT_CLIENT_PROTOCOL,
     DEFAULT_COLLECT_CPU_METRICS,
     DEFAULT_CONCURRENCY_SWEEP_DISABLE,
+    DEFAULT_DCGM_DISABLE,
     DEFAULT_DURATION_SECONDS,
     DEFAULT_EXPORT_PATH,
     DEFAULT_FILENAME_MODEL_GPU,
@@ -286,6 +287,16 @@ class ConfigCommandProfile(ConfigCommand):
                 parser_args={"action": "store_true"},
                 default_value=DEFAULT_ALWAYS_REPORT_GPU_METRICS,
                 description="Report GPU metrics, even when the model is `cpu_only`.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "dcgm_disable",
+                field_type=ConfigPrimitive(bool),
+                flags=["--dcgm-disable"],
+                parser_args={"action": "store_true"},
+                default_value=DEFAULT_DCGM_DISABLE,
+                description="Disables DCGM, which prevents obtaining information about GPUs",
             )
         )
         self._add_config(

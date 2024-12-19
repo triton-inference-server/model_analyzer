@@ -126,7 +126,9 @@ class TritonServerFactory:
         """
 
         if config.triton_launch_mode == "remote":
-            server = TritonServerFactory._get_remote_server_handle(config)
+            server = TritonServerFactory._get_remote_server_handle(
+                config, print_warning_message=use_model_repository
+            )
         elif config.triton_launch_mode == "local":
             server = TritonServerFactory._get_local_server_handle(
                 config, gpus, use_model_repository=True
@@ -147,7 +149,7 @@ class TritonServerFactory:
         return server
 
     @staticmethod
-    def _get_remote_server_handle(config):
+    def _get_remote_server_handle(config, print_warning_message=True):
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
         triton_config["model-repository"] = "remote-model-repository"
@@ -155,14 +157,15 @@ class TritonServerFactory:
         server = TritonServerFactory.create_server_local(
             path=None, config=triton_config, gpus=[], log_path=""
         )
-        logger.warning(
-            "GPU memory metrics reported in the remote mode are not"
-            " accurate. Model Analyzer uses Triton explicit model control to"
-            " load/unload models. Some frameworks do not release the GPU"
-            " memory even when the memory is not being used. Consider"
-            ' using the "local" or "docker" mode if you want to accurately'
-            " monitor the GPU memory usage for different models."
-        )
+        if print_warning_message:
+            logger.warning(
+                "GPU memory metrics reported in the remote mode are not"
+                " accurate. Model Analyzer uses Triton explicit model control to"
+                " load/unload models. Some frameworks do not release the GPU"
+                " memory even when the memory is not being used. Consider"
+                ' using the "local" or "docker" mode if you want to accurately'
+                " monitor the GPU memory usage for different models."
+            )
 
         return server
 

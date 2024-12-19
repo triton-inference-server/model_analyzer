@@ -188,6 +188,9 @@ cpu_only_composing_models: <comma-delimited-string-list>
 # List of GPU UUIDs to be used for the profiling. Use 'all' to profile all the GPUs visible by CUDA
 [ gpus: <string|comma-delimited-list-string> | default: 'all' ]
 
+# Disables DCGM (used to verify info about GPUs)
+[ dcgm_disable: <bool> | default: false ]
+
 # Search mode. Options are "brute", "quick", and "optuna"
 [ run_config_search_mode: <string> | default: brute]
 

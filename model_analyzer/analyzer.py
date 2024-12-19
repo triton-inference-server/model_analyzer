@@ -214,7 +214,11 @@ class Analyzer:
     def _get_server_only_metrics(self, client, gpus):
         if self._config.triton_launch_mode != "c_api":
             if not self._state_manager._starting_fresh_run:
-                if self._do_checkpoint_gpus_match(gpus):
+                if self._config.dcgm_disable:
+                    logger.info(
+                        "DCGM is disabled - cannot verify that GPU devices match checkpoint"
+                    )
+                elif self._do_checkpoint_gpus_match(gpus):
                     logger.info(
                         "GPU devices match checkpoint - skipping server metric acquisition"
                     )
