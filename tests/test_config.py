@@ -2388,6 +2388,82 @@ profile_models:
             config.inference_output_fields, DEFAULT_LLM_INFERENCE_OUTPUT_FIELDS
         )
 
+    def test_dcgm_disable_and_launch_mode(self):
+        """
+        Test that launch mode is set to remote when dcgm is disabled
+        """
+
+        # Should raise an exception for docker, local, and c_api launch modes
+        args = [
+            "model-analyzer",
+            "profile",
+            "--profile-models",
+            "modelA",
+            "--model-repository",
+            "cli-repository",
+            "-f",
+            "path-to-config-file",
+            "--dcgm-disable",
+            "--triton-launch-mode",
+            "docker",
+        ]
+
+        yaml_content = ""
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand="profile")
+
+        args = [
+            "model-analyzer",
+            "profile",
+            "--profile-models",
+            "modelA",
+            "--model-repository",
+            "cli-repository",
+            "-f",
+            "path-to-config-file",
+            "--dcgm-disable",
+            "--triton-launch-mode",
+            "local",
+        ]
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand="profile")
+
+        args = [
+            "model-analyzer",
+            "profile",
+            "--profile-models",
+            "modelA",
+            "--model-repository",
+            "cli-repository",
+            "-f",
+            "path-to-config-file",
+            "--dcgm-disable",
+            "--triton-launch-mode",
+            "c_api",
+        ]
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand="profile")
+
+        # Should not raise an exception for remote mode
+        args = [
+            "model-analyzer",
+            "profile",
+            "--profile-models",
+            "modelA",
+            "--model-repository",
+            "cli-repository",
+            "-f",
+            "path-to-config-file",
+            "--dcgm-disable",
+            "--triton-launch-mode",
+            "remote",
+        ]
+
+        _ = self._evaluate_config(args, yaml_content, subcommand="profile")
+
     def _test_request_rate_config_conflicts(
         self, base_args: List[Any], yaml_content: str
     ) -> None:
