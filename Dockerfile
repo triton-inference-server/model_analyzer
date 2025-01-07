@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.11-py3
-ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.11-py3-sdk
+ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.12-py3
+ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.12-py3-sdk
 
-ARG MODEL_ANALYZER_VERSION=1.47.0dev
-ARG MODEL_ANALYZER_CONTAINER_VERSION=24.12dev
+ARG MODEL_ANALYZER_VERSION=1.48.0dev
+ARG MODEL_ANALYZER_CONTAINER_VERSION=25.01dev
 FROM ${TRITONSDK_BASE_IMAGE} as sdk
 
 FROM $BASE_IMAGE
