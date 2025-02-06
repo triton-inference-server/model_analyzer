@@ -325,7 +325,7 @@ class PerfAnalyzer:
 
     def _get_single_model_cmd(self, index):
         if self._model_type == "LLM":
-            cmd = ["genai-perf", "profile -m", self._config.models_name()]
+            cmd = ["genai-perf", "profile", "-m", self._config.models_name()]
             cmd += self._get_genai_perf_cli_command(index).replace("=", " ").split()
             cmd += ["--"]
             cmd += (
