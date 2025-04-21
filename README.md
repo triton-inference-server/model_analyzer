@@ -18,6 +18,9 @@ limitations under the License.
 
 # Triton Model Analyzer
 
+> [!IMPORTANT]
+> Model Analyzer support is deprecated and excluded from Triton Inference Server starting in 25.05
+
 > [!Warning]
 >
 > ##### LATEST RELEASE
