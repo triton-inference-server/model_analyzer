@@ -1,5 +1,5 @@
-#!/bin/bash
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env bash
+# Copyright 2021-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,17 +14,6 @@
 # limitations under the License.
 
 set -e
-cat <<EOF
-=============================
-=== Triton Model Analyzer ===
-=============================
-NVIDIA Release ${MODEL_ANALYZER_CONTAINER_VERSION} (build ${NVIDIA_BUILD_ID})
-Copyright (c) 2020-2021, NVIDIA CORPORATION.  All rights reserved.
-Various files include modifications (c) NVIDIA CORPORATION.  All rights reserved.
-This container image and its contents are governed by the NVIDIA Deep Learning Container License.
-By pulling and using the container, you accept the terms and conditions of this license:
-https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
-EOF
 
 if [[ "$(find -L /usr -name libcuda.so.1 | grep -v "compat") " == " " || "$(ls /dev/nvidiactl 2>/dev/null) " == " " ]]; then
   echo
@@ -34,7 +23,6 @@ if [[ "$(find -L /usr -name libcuda.so.1 | grep -v "compat") " == " " || "$(ls /
   ln -s `find / -name libnvidia-ml.so -print -quit` /opt/tritonserver/lib/libnvidia-ml.so.1
   export TRITON_SERVER_CPU_ONLY=1
 else
-  ( /usr/local/bin/checkSMVER.sh )
   DRIVER_VERSION=$(sed -n 's/^NVRM.*Kernel Module *\([0-9.]*\).*$/\1/p' /proc/driver/nvidia/version 2>/dev/null || true)
   if [[ ! "$DRIVER_VERSION" =~ ^[0-9]*.[0-9]*(.[0-9]*)?$ ]]; then
     echo "Failed to detect NVIDIA driver version."
