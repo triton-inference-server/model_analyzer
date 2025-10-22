@@ -31,7 +31,7 @@ class GPUPowerUsage(DecreasingGPURecord):
         """
         Parameters
         ----------
-        value : float
+        value : float-compatible value
             The value of the GPU metrtic
         device_uuid : str
             The  GPU device uuid this metric is associated
@@ -39,7 +39,7 @@ class GPUPowerUsage(DecreasingGPURecord):
         timestamp : int
             The timestamp for the record in nanoseconds
         """
-
+        value = float(value)
         super().__init__(value, device_uuid, timestamp)
 
     @staticmethod

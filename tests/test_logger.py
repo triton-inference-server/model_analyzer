@@ -83,7 +83,9 @@ class TestLogger(trc.TestResultCollector):
             setup_logging(verbose=True, quiet=False)
             logger.info("ABC")
             output = out.getvalue().strip()
-            self.assertTrue(re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] ABC$", output))
+            self.assertTrue(
+                re.match(r"^\d\d:\d\d:\d\d \[Model Analyzer\] ABC$", output)
+            )
 
     def test_debug_normal(self):
         """
@@ -119,7 +121,7 @@ class TestLogger(trc.TestResultCollector):
             logger.debug("ABC")
             output = out.getvalue().strip()
             self.assertTrue(
-                re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] DEBUG: ABC$", output)
+                re.match(r"^\d\d:\d\d:\d\d \[Model Analyzer\] DEBUG: ABC$", output)
             )
 
     def test_error_normal(self):
@@ -155,7 +157,7 @@ class TestLogger(trc.TestResultCollector):
             logger.error("ABC")
             output = out.getvalue().strip()
             self.assertTrue(
-                re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] ERROR: ABC$", output)
+                re.match(r"^\d\d:\d\d:\d\d \[Model Analyzer\] ERROR: ABC$", output)
             )
 
     def test_quiet_trumps_verbose(self):
