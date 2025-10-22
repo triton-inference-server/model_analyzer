@@ -516,7 +516,7 @@ class PerfAnalyzer:
             outputs = ["" for mrc in self._config.model_run_configs()]
             for line in self._output.splitlines():
                 # Example would find the '2': [1,2]<stdout>: fake output ***
-                rank = re.search("^\[\d+,(\d+)\]", line)
+                rank = re.search(r"^\[\d+,(\d+)\]", line)
 
                 if rank:
                     index = int(rank.group(1))
