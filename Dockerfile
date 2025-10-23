@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.12-py3
-ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.12-py3-sdk
+ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:25.10-py3
+ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:25.10-py3-sdk
 
 ARG MODEL_ANALYZER_VERSION=1.48.0dev
-ARG MODEL_ANALYZER_CONTAINER_VERSION=25.01dev
+ARG MODEL_ANALYZER_CONTAINER_VERSION=25.11dev
 FROM ${TRITONSDK_BASE_IMAGE} AS sdk
 
 FROM ${BASE_IMAGE}
@@ -26,7 +26,7 @@ ARG BASE_IMAGE
 ARG TRITONSDK_BASE_IMAGE
 
 # DCGM version to install for Model Analyzer
-ENV DCGM_VERSION=3.3.6
+ENV DCGM_VERSION=4.2.3-2
 
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive

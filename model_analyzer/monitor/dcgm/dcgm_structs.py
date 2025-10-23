@@ -655,15 +655,15 @@ def _LoadDcgmLibrary(libDcgmPath=None):
                         )
                     else:
                         if libDcgmPath:
-                            lib_file = os.path.join(libDcgmPath, "libdcgm.so.3")
+                            lib_file = os.path.join(libDcgmPath, "libdcgm.so.4")
                         else:
                             # Try Debian-based distros
-                            lib_file = "/usr/lib/{}-linux-gnu/libdcgm.so.3".format(
+                            lib_file = "/usr/lib/{}-linux-gnu/libdcgm.so.4".format(
                                 platform.machine()
                             )
                             if not os.path.isfile(lib_file):
                                 # Presume Redhat-based distros
-                                lib_file = "/usr/lib64/libdcgm.so.3"
+                                lib_file = "/usr/lib64/libdcgm.so.4"
 
                     dcgmLib = CDLL(lib_file)
 
