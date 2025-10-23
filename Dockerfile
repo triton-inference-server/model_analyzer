@@ -35,14 +35,17 @@ RUN mkdir -p /opt/triton-model-analyzer
 
 # Install architecture-specific components
 
-# Install DCGM. Steps from https://developer.nvidia.com/dcgm#Downloads
-ENV DCGM_VERSION 4.2.3-2
-RUN if [[ "${BUILDX_ARCH}" == "amd64" ]]; then dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo; else dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa/cuda-rhel8.repo; fi
-RUN dnf clean expire-cache \
-    && dnf install --assumeyes \
-           datacenter-gpu-manager-4-core=1:${DCGM_VERSION} \
-           datacenter-gpu-manager-4-devel=1:${DCGM_VERSION}
+# Install DCGM version 4.x. Steps from https://developer.nvidia.com/dcgm#Downloads
+# Remove any old DCGM installations
+RUN dpkg --list datacenter-gpu-manager &> /dev/null && \
+      apt purge --yes datacenter-gpu-manager || true && \
+    dpkg --list datacenter-gpu-manager-config &> /dev/null && \
+      apt purge --yes datacenter-gpu-manager-config || true
 
+RUN apt-get update && \
+    apt-get install --yes \
+      --install-recommends \
+      datacenter-gpu-manager-4-cuda13
 
 # Install Docker
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
