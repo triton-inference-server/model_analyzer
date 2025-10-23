@@ -25,9 +25,6 @@ ARG MODEL_ANALYZER_CONTAINER_VERSION
 ARG BASE_IMAGE
 ARG TRITONSDK_BASE_IMAGE
 
-# DCGM version to install for Model Analyzer
-ENV DCGM_VERSION=4.2.3-2
-
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -37,16 +34,17 @@ RUN apt-get update && \
 RUN mkdir -p /opt/triton-model-analyzer
 
 # Install architecture-specific components
-    # Install DCGM
 
-RUN [ "$(uname -m)" != "x86_64" ] && arch="sbsa" || arch="x86_64" && \
-    curl -o /tmp/cuda-keyring.deb \
-    https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/$arch/cuda-keyring_1.1-1_all.deb && \
-    apt-get install /tmp/cuda-keyring.deb && rm /tmp/cuda-keyring.deb && \
-    apt-get update && apt-get install -y --no-install-recommends software-properties-common && \
-    apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION};
+# Install DCGM. Steps from https://developer.nvidia.com/dcgm#Downloads
+ENV DCGM_VERSION 4.2.3-2
+RUN if [[ "${BUILDX_ARCH}" == "amd64" ]]; then dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo; else dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa/cuda-rhel8.repo; fi
+RUN dnf clean expire-cache \
+    && dnf install --assumeyes \
+           datacenter-gpu-manager-4-core=1:${DCGM_VERSION} \
+           datacenter-gpu-manager-4-devel=1:${DCGM_VERSION}
 
-    # Install Docker
+
+# Install Docker
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
     echo \
       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
@@ -72,7 +70,7 @@ RUN chmod +x build_wheel.sh && \
     rm -f perf_analyzer
 RUN python3 -m pip install nvidia-pyindex && \
     python3 -m pip install wheels/triton_model_analyzer-*-manylinux*.whl
-#Other pip packages
+# Install other pip packages
 RUN python3 -m pip install coverage
 RUN python3 -m pip install mypy
 RUN python3 -m pip install types-PyYAML
