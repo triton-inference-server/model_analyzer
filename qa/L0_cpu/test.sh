@@ -20,7 +20,7 @@ create_logs_dir "L0_cpu"
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/tf_model_store"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/opt/triton-model-analyzer/examples/quick-start"}
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
@@ -32,7 +32,7 @@ MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 rm -rf $OUTPUT_MODEL_REPOSITORY
 create_result_paths
 
-python3 test_config_generator.py --model-names resnet_v1_50_cpu_graphdef
+python3 test_config_generator.py --model-names add
 
 # Compute expected rows: concurrency * (instance count * dynamic batch size + 1)
 # concurrency:          3       ->  [1, 2, 4]; set in config-profile.yml

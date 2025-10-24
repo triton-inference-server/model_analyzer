@@ -31,8 +31,24 @@ on:
 
 jobs:
   pre-commit:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v3
-    - uses: pre-commit/action@v3.0.0
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Fetch base commit
+      run: |
+        git remote add base "${{ github.event.pull_request.base.repo.clone_url }}"
+        git fetch --no-tags --depth=1 base ${{ github.event.pull_request.base.sha }}
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+
+    - uses: pre-commit/action@v3.0.1
+      with:
+        extra_args: >-
+          --from-ref ${{ github.event.pull_request.base.sha }}
+          --to-ref   ${{ github.sha }}
