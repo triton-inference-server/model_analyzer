@@ -66,7 +66,7 @@ class TestOutputValidator:
 
             # In contents, search for "stabilizing with px latency"
             percentile = self._config["perf_analyzer_flags"]["percentile"]
-            token = f"Stabilizing using p{percentile} latency"
+            token = f"Stabilizing using p{percentile}latency"
 
             # Ensure the token appears the correct number of times in the output contents
             next_token_idx = 0
@@ -124,7 +124,7 @@ class TestOutputValidator:
 
                 # In contents, search for "stabilizing with px latency"
                 percentile = config_model["perf_analyzer_flags"]["percentile"]
-                token = f"Stabilizing using p{percentile} latency"
+                token = f"Stabilizing using p{percentile}latency"
                 if contents.find(token) == -1:
                     print(
                         f"\n***\n***  Perf Analyzer not stabilizing on p{percentile} latency"
