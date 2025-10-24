@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.12-py3
-ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:24.12-py3-sdk
+ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:25.10-py3
+ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:25.10-py3-sdk
 
 ARG MODEL_ANALYZER_VERSION=1.48.0dev
-ARG MODEL_ANALYZER_CONTAINER_VERSION=25.01dev
+ARG MODEL_ANALYZER_CONTAINER_VERSION=25.11dev
 FROM ${TRITONSDK_BASE_IMAGE} AS sdk
 
 FROM ${BASE_IMAGE}
@@ -24,9 +24,6 @@ ARG MODEL_ANALYZER_VERSION
 ARG MODEL_ANALYZER_CONTAINER_VERSION
 ARG BASE_IMAGE
 ARG TRITONSDK_BASE_IMAGE
-
-# DCGM version to install for Model Analyzer
-ENV DCGM_VERSION=3.3.6
 
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
@@ -37,16 +34,20 @@ RUN apt-get update && \
 RUN mkdir -p /opt/triton-model-analyzer
 
 # Install architecture-specific components
-    # Install DCGM
 
-RUN [ "$(uname -m)" != "x86_64" ] && arch="sbsa" || arch="x86_64" && \
-    curl -o /tmp/cuda-keyring.deb \
-    https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/$arch/cuda-keyring_1.1-1_all.deb && \
-    apt-get install /tmp/cuda-keyring.deb && rm /tmp/cuda-keyring.deb && \
-    apt-get update && apt-get install -y --no-install-recommends software-properties-common && \
-    apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION};
+# Install DCGM version 4.x. Steps from https://developer.nvidia.com/dcgm#Downloads
+# Remove any old DCGM installations
+RUN dpkg --list datacenter-gpu-manager &> /dev/null && \
+      apt purge --yes datacenter-gpu-manager || true && \
+    dpkg --list datacenter-gpu-manager-config &> /dev/null && \
+      apt purge --yes datacenter-gpu-manager-config || true
 
-    # Install Docker
+RUN apt-get update && \
+    apt-get install --yes \
+      --install-recommends \
+      datacenter-gpu-manager-4-cuda13
+
+# Install Docker
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
     echo \
       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
@@ -72,7 +73,7 @@ RUN chmod +x build_wheel.sh && \
     rm -f perf_analyzer
 RUN python3 -m pip install nvidia-pyindex && \
     python3 -m pip install wheels/triton_model_analyzer-*-manylinux*.whl
-#Other pip packages
+# Install other pip packages
 RUN python3 -m pip install coverage
 RUN python3 -m pip install mypy
 RUN python3 -m pip install types-PyYAML
