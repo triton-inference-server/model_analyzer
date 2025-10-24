@@ -48,7 +48,7 @@ MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS -e $PROFILE_EXPORT_PAT
 MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 2"
 
 set +e
-$MODEL_ANALYZER -v profile $MODEL_ANALYZER_PROFILE_ARGS >> $TEST_LOG_DIR/profile.log 2>&1
+$MODEL_ANALYZER profile -v $MODEL_ANALYZER_PROFILE_ARGS >> $TEST_LOG_DIR/profile.log 2>&1
 PROFILE_RET=$?
 set -e
 

@@ -74,6 +74,33 @@ class CLI:
             "--version", action="store_true", help="Show the Model Analyzer version."
         )
 
+    def _add_global_options_to_subparser(self, subparser):
+        """
+        Adds the same global options to a subparser so they can be
+        used after the subcommand (e.g., 'model-analyzer profile -v')
+        """
+
+        subparser.add_argument(
+            "-q",
+            "--quiet",
+            action="store_true",
+            help="Suppress all output except for error messages.",
+        )
+        subparser.add_argument(
+            "-v",
+            "--verbose",
+            action="store_true",
+            help="Show detailed logs, messages and status.",
+        )
+        subparser.add_argument(
+            "-m",
+            "--mode",
+            type=str,
+            default="online",
+            choices=["online", "offline"],
+            help="Choose a preset configuration mode.",
+        )
+
     def add_subcommand(self, cmd, help, config=None):
         """
         Adds a subparser to the main parser representing
@@ -92,6 +119,10 @@ class CLI:
         """
 
         subparser = self._subparsers.add_parser(cmd, help=help)
+
+        # Add global options to subparser so they can be used after the subcommand
+        self._add_global_options_to_subparser(subparser)
+
         if config:
             self._add_config_arguments(subparser, config)
             self._subcommand_configs[cmd] = config
