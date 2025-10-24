@@ -380,6 +380,38 @@ class PerfAnalyzer:
             raise TritonModelAnalyzerException(f"perf_analyzer binary not found : {e}")
         return process
 
+    def _verify_output_files_exist(self):
+        """
+        Verify that perf_analyzer created the expected output files.
+        Waits briefly to handle filesystem buffering delays.
+        Returns True if all expected files exist, False otherwise.
+        """
+        import time
+
+        max_wait_time = 2.0  # seconds
+        wait_interval = 0.1  # seconds
+        max_attempts = int(max_wait_time / wait_interval)
+
+        for perf_config in [
+            mrc.perf_config() for mrc in self._config.model_run_configs()
+        ]:
+            latency_file = perf_config["latency-report-file"]
+
+            # Retry with brief delay to handle filesystem buffering
+            file_found = False
+            for attempt in range(max_attempts):
+                if os.path.isfile(latency_file):
+                    file_found = True
+                    break
+                if attempt < max_attempts - 1:  # Don't sleep on last attempt
+                    time.sleep(wait_interval)
+
+            if not file_found:
+                logger.error(f"Expected output file not found: {latency_file}")
+                return False
+
+        return True
+
     def _resolve_process(self, process):
         if self._poll_perf_analyzer(process) == 1:
             return self.PA_FAIL
@@ -394,6 +426,17 @@ class PerfAnalyzer:
                 "perf_analyzer was terminated by signal: "
                 f"{signal.Signals(abs(process.returncode)).name}"
             )
+            return self.PA_FAIL
+
+        if not self._verify_output_files_exist():
+            logger.error(
+                "perf_analyzer returned success but did not create expected output files"
+            )
+            logger.error("perf_analyzer output:")
+            if self._output:
+                logger.error(self._output)
+            else:
+                logger.error("(no output captured)")
             return self.PA_FAIL
 
         return self.PA_SUCCESS
@@ -545,10 +588,10 @@ class PerfAnalyzer:
         for perf_config in [
             mrc.perf_config() for mrc in self._config.model_run_configs()
         ]:
-            logger.debug(
-                f"Reading PA results from {perf_config['latency-report-file']}"
-            )
-            with open(perf_config["latency-report-file"], mode="r") as f:
+            latency_file = perf_config["latency-report-file"]
+            logger.debug(f"Reading PA results from {latency_file}")
+
+            with open(latency_file, mode="r") as f:
                 csv_reader = csv.DictReader(f, delimiter=",")
 
                 for row in csv_reader:
