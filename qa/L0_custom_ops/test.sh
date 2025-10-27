@@ -31,7 +31,8 @@ MODEL_NAMES="libtorch_modulo"
 WAIT_TIMEOUT=1200
 
 # Generate test configs
-python3 test_config_generator.py --profile-models $MODEL_NAMES --preload-path "/usr/lib/$(uname -m)-linux-gnu/libpython3.10.so.1:$MODEL_REPOSITORY/libtorch_modulo/custom_modulo.so" --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH'
+PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+python3 test_config_generator.py --profile-models $MODEL_NAMES --preload-path "/usr/lib/$(uname -m)-linux-gnu/libpython${PYTHON_VERSION}.so.1:$MODEL_REPOSITORY/libtorch_modulo/custom_modulo.so" --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH'
 
 LIST_OF_CONFIG_FILES=(`ls | grep .yaml`)
 
@@ -41,8 +42,8 @@ if [ ${#LIST_OF_CONFIG_FILES[@]} -le 0 ]; then
 fi
 
 MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint 127.0.0.1:${PORTS[0]} --triton-grpc-endpoint 127.0.0.1:${PORTS[1]}"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://127.0.0.1:${PORTS[2]}/metrics"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL"
 MODEL_ANALYZER_SUBCOMMAND="profile"

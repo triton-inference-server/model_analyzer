@@ -60,7 +60,7 @@ class TestOutputValidator:
         with open(self._analyzer_log, "r") as f:
             log_contents = f.read()
 
-        matches = re.findall("Profiling (\S+)", log_contents)
+        matches = re.findall(r"Profiling (\S+)", log_contents)
         for match in matches:
             # "Profiling server only metrics" is ok. No other "Profiling" lines should exist
             if match != "server":
@@ -132,7 +132,7 @@ class TestOutputValidator:
             log_contents = f.read()
 
         found_models_count = defaultdict(int)
-        matches = re.findall("Profiling (\S+)", log_contents)
+        matches = re.findall(r"Profiling (\S+)", log_contents)
         for match in matches:
             base_model_name = match.rsplit("_", 2)[0]
             found_models_count[base_model_name] += 1

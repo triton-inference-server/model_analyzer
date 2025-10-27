@@ -65,12 +65,19 @@ if [ -z "$GENERATED_CKPT" ]; then
     ls -la $CHECKPOINT_DIRECTORY
     exit 1
 fi
-cp $GENERATED_CKPT $CHECKPOINT_DIRECTORY/0.ckpt
+# Only copy if the checkpoint isn't already in the right location
+if [ "$GENERATED_CKPT" != "$CHECKPOINT_DIRECTORY/0.ckpt" ]; then
+    cp $GENERATED_CKPT $CHECKPOINT_DIRECTORY/0.ckpt
+fi
 echo "Checkpoint generated successfully: $GENERATED_CKPT"
 
 
-MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="-m $MODEL_REPOSITORY -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-launch-mode=$TRITON_LAUNCH_MODE --client-protocol=$CLIENT_PROTOCOL"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 
 python3 test_config_generator.py -m $MODEL_NAMES
 

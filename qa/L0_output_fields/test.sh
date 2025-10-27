@@ -65,7 +65,10 @@ if [ -z "$GENERATED_CKPT" ]; then
     ls -la $CHECKPOINT_DIRECTORY
     exit 1
 fi
-cp $GENERATED_CKPT $CHECKPOINT_DIRECTORY/0.ckpt
+# Only copy if the checkpoint isn't already named 0.ckpt
+if [ "$GENERATED_CKPT" != "$CHECKPOINT_DIRECTORY/0.ckpt" ]; then
+    cp $GENERATED_CKPT $CHECKPOINT_DIRECTORY/0.ckpt
+fi
 echo "Checkpoint generated successfully: $GENERATED_CKPT"
 
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="--checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
