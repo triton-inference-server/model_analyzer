@@ -69,8 +69,10 @@ repos:
   # More details about these pre-commit hooks here:
   # https://pre-commit.com/hooks.html
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=5000']
       - id: check-case-conflict
       - id: check-executables-have-shebangs
       - id: check-merge-conflict
@@ -80,8 +82,10 @@ repos:
         exclude: ^helm-chart/templates\/.*$
       - id: check-shebang-scripts-are-executable
       - id: end-of-file-fixer
-        types_or: [c, c++, cuda, proto, textproto, java, python]
+        types_or: [c, c++, cuda, proto, textproto, proto, java, python, shell, bash]
       - id: mixed-line-ending
+      - id: no-commit-to-branch
+        args: [--branch, main]
       - id: requirements-txt-fixer
       - id: trailing-whitespace
 
