@@ -92,14 +92,6 @@ class CLI:
             action="store_true",
             help="Show detailed logs, messages and status.",
         )
-        subparser.add_argument(
-            "-m",
-            "--mode",
-            type=str,
-            default="online",
-            choices=["online", "offline"],
-            help="Choose a preset configuration mode.",
-        )
 
     def add_subcommand(self, cmd, help, config=None):
         """
