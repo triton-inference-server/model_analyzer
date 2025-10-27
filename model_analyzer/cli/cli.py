@@ -51,18 +51,6 @@ class CLI:
         """
 
         self._parser.add_argument(
-            "-q",
-            "--quiet",
-            action="store_true",
-            help="Suppress all output except for error messages.",
-        )
-        self._parser.add_argument(
-            "-v",
-            "--verbose",
-            action="store_true",
-            help="Show detailed logs, messages and status.",
-        )
-        self._parser.add_argument(
             "-m",
             "--mode",
             type=str,
@@ -76,7 +64,7 @@ class CLI:
 
     def _add_global_options_to_subparser(self, subparser):
         """
-        Adds the same global options to a subparser so they can be
+        Adds global options to a subparser so they can be
         used after the subcommand (e.g., 'model-analyzer profile -v')
         """
 

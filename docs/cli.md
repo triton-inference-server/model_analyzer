@@ -23,9 +23,6 @@ command line interface.
 $ model-analyzer -h
 ```
 
-Options like `-q`, `--quiet` and `-v`, `--verbose` are global and apply to all
-model analyzer subcommands.
-
 ## Model Analyzer Modes
 
 The `-m` or `--mode` flag is global and is accessible to all subcommands. It tells the model analyzer the context
