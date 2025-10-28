@@ -67,8 +67,8 @@ create_result_paths -test-name $TEST_NAME
 
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $WORKING_CONFIG_FILE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint 127.0.0.1:${PORTS[0]} --triton-grpc-endpoint 127.0.0.1:${PORTS[1]}"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://127.0.0.1:${PORTS[2]}/metrics"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 run_analyzer
@@ -85,8 +85,8 @@ create_result_paths -test-name $TEST_NAME
 
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $BROKEN_CONFIG_FILE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint 127.0.0.1:${PORTS[0]} --triton-grpc-endpoint 127.0.0.1:${PORTS[1]}"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://127.0.0.1:${PORTS[2]}/metrics"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 run_analyzer

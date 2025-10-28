@@ -38,8 +38,8 @@ rm -rf $OUTPUT_MODEL_REPOSITORY *.log
 
 MODEL_REPOSITORY=$(get_output_directory)
 rm -rf $MODEL_REPOSITORY
-mkdir $MODEL_REPOSITORY
-cp -R /opt/triton-model-analyzer/examples/quick-start/bls $MODEL_REPOSITORY
+mkdir -p $MODEL_REPOSITORY
+cp -R /opt/triton-model-analyzer/examples/quick-start/add $MODEL_REPOSITORY
 cp -R /mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store/vgg19_libtorch $MODEL_REPOSITORY
 rm $MODEL_REPOSITORY/*/config.pbtxt
 
@@ -70,7 +70,7 @@ RET=0
 
 function run_models() {
     # Python backend model should be able to create a default config
-    PROFILE_MODEL="bls"
+    PROFILE_MODEL="add"
     MA_EXPECTED_RESULT="EP"
     run_server_launch_modes
 
@@ -174,7 +174,7 @@ function _check_analyzer_exit_status() {
 
 run_models
 
-rm -rf $MODEL_REPOSITORY
+rm -rf $MODEL_REPOSITORY *.yaml
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

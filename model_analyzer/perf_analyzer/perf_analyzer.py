@@ -397,7 +397,6 @@ class PerfAnalyzer:
         ]:
             latency_file = perf_config["latency-report-file"]
 
-            # Retry with brief delay to handle filesystem buffering
             file_found = False
             for attempt in range(max_attempts):
                 if os.path.isfile(latency_file):
@@ -437,7 +436,11 @@ class PerfAnalyzer:
                 logger.error(self._output)
             else:
                 logger.error("(no output captured)")
-            return self.PA_FAIL
+            # Check if this is due to measurement window being too small
+            if self._auto_adjust_parameters(process) == self.PA_FAIL:
+                return self.PA_FAIL
+            else:
+                return self.PA_RETRY
 
         return self.PA_SUCCESS
 
@@ -495,10 +498,14 @@ class PerfAnalyzer:
         """
         Attempt to update PA parameters based on the output
         """
+        logger.debug(
+            f"_auto_adjust_parameters called. returncode={process.returncode}, output_length={len(self._output)}, has_failed_msg={'Failed to obtain stable measurement' in self._output}, has_larger_window_msg={'Please use a larger time window' in self._output}"
+        )
         if (
             self._output.find("Failed to obtain stable measurement") != -1
             or self._output.find("Please use a larger time window") != -1
         ):
+            logger.debug("Found error message, will adjust parameters")
             per_rank_logs = self._split_output_per_rank()
 
             for index, log in enumerate(per_rank_logs):
@@ -519,6 +526,9 @@ class PerfAnalyzer:
             log.find("Failed to obtain stable measurement") != -1
             or log.find("Please use a larger time window") != -1
         ):
+            logger.debug(
+                f"Found measurement error in log, will adjust parameters. measurement-mode={perf_config['measurement-mode']}, current measurement-interval={perf_config['measurement-interval']}"
+            )
             if perf_config["measurement-mode"] == "time_windows":
                 if perf_config["measurement-interval"] is None:
                     perf_config["measurement-interval"] = (

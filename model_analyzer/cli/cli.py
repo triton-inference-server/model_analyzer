@@ -100,7 +100,6 @@ class CLI:
 
         subparser = self._subparsers.add_parser(cmd, help=help)
 
-        # Add global options to subparser so they can be used after the subcommand
         self._add_global_options_to_subparser(subparser)
 
         if config:
