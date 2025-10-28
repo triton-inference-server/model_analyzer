@@ -303,9 +303,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.os.path.isfile",
-            return_value=True,
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
         ):
             perf_analyzer.run(perf_metrics)
 
@@ -354,9 +353,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.os.path.isfile",
-            return_value=True,
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
         ):
             perf_analyzer.run(gpu_metrics)
 
@@ -375,9 +373,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.os.path.isfile",
-            return_value=True,
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
         ):
             perf_analyzer.run(gpu_metrics)
 
@@ -394,9 +391,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.os.path.isfile",
-            return_value=True,
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
         ):
             perf_analyzer.run(gpu_metrics)
 
@@ -416,9 +412,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.os.path.isfile",
-            return_value=True,
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
         ):
             perf_analyzer.run(gpu_metrics)
 
@@ -444,9 +439,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.os.path.isfile",
-            return_value=True,
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
         ):
             perf_analyzer.run(perf_metrics)
 
@@ -488,9 +482,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.os.path.isfile",
-            return_value=True,
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
         ):
             perf_analyzer.run(gpu_metrics)
 
@@ -694,9 +687,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=read_data),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.os.path.isfile",
-            return_value=True,
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
         ):
             perf_analyzer.run(metrics)
 

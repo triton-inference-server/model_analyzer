@@ -75,6 +75,7 @@ class MockTritonClientMethods(MockBase):
         root_certificates=None,
         private_key=None,
         certificate_chain=None,
+        channel_args=None,
     ):
         """
         Assert that the correct InferServerClient was
@@ -87,6 +88,7 @@ class MockTritonClientMethods(MockBase):
             root_certificates=root_certificates,
             private_key=private_key,
             certificate_chain=certificate_chain,
+            channel_args=channel_args,
         )
 
     def assert_created_http_client_with_args(

@@ -39,7 +39,7 @@ rm -rf $OUTPUT_MODEL_REPOSITORY *.log
 MODEL_REPOSITORY=$(get_output_directory)
 rm -rf $MODEL_REPOSITORY
 mkdir -p $MODEL_REPOSITORY
-cp -R /opt/triton-model-analyzer/examples/quick-start/add $MODEL_REPOSITORY
+cp -R /mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/qa_model_repository/onnx_int32_int32_int32 $MODEL_REPOSITORY
 cp -R /mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store/vgg19_libtorch $MODEL_REPOSITORY
 rm $MODEL_REPOSITORY/*/config.pbtxt
 
@@ -69,8 +69,8 @@ fi
 RET=0
 
 function run_models() {
-    # Python backend model should be able to create a default config
-    PROFILE_MODEL="add"
+    # ONNX model should be able to create a default config
+    PROFILE_MODEL="onnx_int32_int32_int32"
     MA_EXPECTED_RESULT="EP"
     run_server_launch_modes
 

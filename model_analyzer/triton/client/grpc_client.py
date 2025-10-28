@@ -49,19 +49,13 @@ class TritonGRPCClient(TritonClient):
         if "ssl-grpc-certificate-chain-file" in ssl_options:
             certificate_chain = ssl_options["ssl-grpc-certificate-chain-file"]
 
-        # Add channel args to help with SSL connections in newer gRPC versions (1.60.0+)
-        # These options help prevent connection timeouts during SSL handshake
+        # Fix for gRPC 1.60.0+: Force IPv4 resolution when using SSL with localhost
+        # to avoid timeout during SSL handshake in IPv6.
         channel_args = None
-        if ssl:
-            channel_args = [
-                ("grpc.keepalive_time_ms", 30000),
-                ("grpc.keepalive_timeout_ms", 10000),
-                ("grpc.http2.max_pings_without_data", 0),
-                ("grpc.keepalive_permit_without_calls", 1),
-                # Override SSL target name to "localhost" to match certificate CN
-                # This allows connecting via 127.0.0.1 with certificates issued for localhost
-                ("grpc.ssl_target_name_override", "localhost"),
-            ]
+        if ssl and "localhost" in server_url:
+            server_url = server_url.replace("localhost", "127.0.0.1")
+            # Override SSL target name to match certificate CN (issued for "localhost")
+            channel_args = [("grpc.ssl_target_name_override", "localhost")]
 
         self._client = grpcclient.InferenceServerClient(
             url=server_url,
