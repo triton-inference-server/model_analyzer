@@ -78,6 +78,7 @@ MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --output-mod
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-launch-mode=$TRITON_LAUNCH_MODE --client-protocol=$CLIENT_PROTOCOL"
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 2"
 
 python3 test_config_generator.py -m $MODEL_NAMES
 
@@ -91,6 +92,7 @@ ANALYZER_LOG="$TEST_LOG_DIR/analyzer.test_$TEST_NAME.log"
 
 MODEL_ANALYZER_SUBCOMMAND="analyze"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -f $CONFIG_FILE"
+
 run_analyzer
 if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"

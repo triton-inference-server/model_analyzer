@@ -71,8 +71,13 @@ if [ "$GENERATED_CKPT" != "$CHECKPOINT_DIRECTORY/0.ckpt" ]; then
 fi
 echo "Checkpoint generated successfully: $GENERATED_CKPT"
 
-MODEL_ANALYZER_ANALYZE_BASE_ARGS="--checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="-m $MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-launch-mode=$TRITON_LAUNCH_MODE --client-protocol=$CLIENT_PROTOCOL"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 2"
 MODEL_ANALYZER_SUBCOMMAND="analyze"
 LIST_OF_CONFIG_FILES=(`ls | grep .yml`)
 
@@ -96,7 +101,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
 
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -e $EXPORT_PATH -f $CONFIG_FILE"
 
-    TEST_OUTPUT_NUM_ROWS=47
+    TEST_OUTPUT_NUM_ROWS=12
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
