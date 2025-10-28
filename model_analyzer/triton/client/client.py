@@ -65,6 +65,11 @@ class TritonClient:
                     time.sleep(sleep_time)
                     retries -= 1
             except Exception as e:
+                # Log connection failures with more detail for debugging
+                if retries == num_retries or retries % 10 == 0:
+                    logger.debug(
+                        f"Failed to connect to Triton server (attempt {num_retries - retries + 1}/{num_retries}): {e}"
+                    )
                 self._check_for_triton_log_errors(log_file)
                 time.sleep(sleep_time)
                 retries -= 1
