@@ -51,7 +51,7 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --run-config-search-mode optuna --skip-summary-reports"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --min-percentage-of-search-space 2 --max-percentage-of-search-space 4"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --min-percentage-of-search-space 1 --max-percentage-of-search-space 1"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 

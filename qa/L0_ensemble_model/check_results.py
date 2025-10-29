@@ -48,6 +48,22 @@ class TestOutputValidator:
         with open(self._analyzer_log, "r") as f:
             log_contents = f.read()
 
+        # Quick search (hill-climbing algorithm) with default search space
+        # Model - ensemble:
+        #   concurrency: 1 to 1024 (11) [default max_concurrency]
+        #   max_batch_size: model-dependent (~8)
+        #   instance_group: 1 to 5 (5) [default max_instance_count]
+        # Composing models also have instance_group configurations
+        #
+        # Quick search explores the space using hill-climbing, starting from
+        # a default configuration and moving to better neighbors until convergence.
+        # Ensemble models have additional composing models that are profiled together.
+        #
+        # With default max values, the search space is large, resulting in
+        # more measurements as the algorithm explores different configurations.
+        #
+        # Minimum number of measurements: 20
+        # Maximum number of measurements: 80
         expected_min_num_measurements = 20
         expected_max_num_measurements = 80
 
