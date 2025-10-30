@@ -106,6 +106,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Environment :: Console",
         "Natural Language :: English",
         "Operating System :: POSIX :: Linux",

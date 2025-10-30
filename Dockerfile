@@ -39,17 +39,19 @@ WORKDIR /opt/triton-model-analyzer
 COPY . .
 RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
 
-RUN python3 -m pip install nvidia-pyindex && \
-    python3 -m pip install .
-# Install other pip packages
-RUN python3 -m pip install coverage
-RUN python3 -m pip install mypy
-RUN python3 -m pip install types-PyYAML
-RUN python3 -m pip install types-requests
-RUN python3 -m pip install types-protobuf
-RUN python3 -m pip install mkdocs
-RUN python3 -m pip install mkdocs-htmlproofer-plugin==0.10.3
-RUN python3 -m pip install yapf==0.32.0
+RUN python3 setup.py bdist_wheel \
+    && python3 -m pip install ./dist/triton_model_analyzer*.whl
+
+RUN python3 -m pip install \
+        nvidia-pyindex \
+        coverage \
+        mypy \
+        types-PyYAML \
+        types-requests \
+        types-protobuf \
+        mkdocs \
+        mkdocs-htmlproofer-plugin==0.10.3 \
+        yapf==0.32.0
 
 ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
 ENV MODEL_ANALYZER_VERSION=${MODEL_ANALYZER_VERSION}
