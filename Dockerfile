@@ -51,8 +51,6 @@ RUN python3 -m pip install mkdocs
 RUN python3 -m pip install mkdocs-htmlproofer-plugin==0.10.3
 RUN python3 -m pip install yapf==0.32.0
 
-RUN apt-get update -qq && apt-get install -y wkhtmltopdf
-
 ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
 ENV MODEL_ANALYZER_VERSION=${MODEL_ANALYZER_VERSION}
 ENV MODEL_ANALYZER_CONTAINER_VERSION=${MODEL_ANALYZER_CONTAINER_VERSION}
