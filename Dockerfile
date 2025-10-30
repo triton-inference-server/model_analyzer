@@ -43,14 +43,15 @@ RUN python3 setup.py bdist_wheel \
     && python3 -m pip install ./dist/triton_model_analyzer*.whl
 
 RUN python3 -m pip install \
-        nvidia-pyindex \
         coverage \
-        mypy \
-        types-PyYAML \
-        types-requests \
-        types-protobuf \
+        docker \
         mkdocs \
         mkdocs-htmlproofer-plugin==0.10.3 \
+        mypy \
+        nvidia-pyindex \
+        types-protobuf \
+        types-PyYAML \
+        types-requests \
         yapf==0.32.0
 
 ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
