@@ -71,17 +71,11 @@ RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
 RUN chmod +x build_wheel.sh && \
     ./build_wheel.sh perf_analyzer true && \
     rm -f perf_analyzer
-RUN python3 -m pip install nvidia-pyindex && \
-    python3 -m pip install wheels/triton_model_analyzer-*-manylinux*.whl
-# Install other pip packages
-RUN python3 -m pip install coverage
-RUN python3 -m pip install mypy
-RUN python3 -m pip install types-PyYAML
-RUN python3 -m pip install types-requests
-RUN python3 -m pip install types-protobuf
-RUN python3 -m pip install mkdocs
-RUN python3 -m pip install mkdocs-htmlproofer-plugin==0.10.3
-RUN python3 -m pip install yapf==0.32.0
+
+# Install model analyzer and development dependencies
+# Note: nvidia-pyindex is not needed as tritonclient dependencies handle this
+RUN python3 -m pip install --no-cache-dir wheels/triton_model_analyzer-*-manylinux*.whl && \
+    python3 -m pip install --no-cache-dir -r requirements-dev.txt
 
 RUN apt-get install -y wkhtmltopdf
 

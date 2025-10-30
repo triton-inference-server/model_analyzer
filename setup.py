@@ -35,18 +35,21 @@ else:
 
 def version(filename="VERSION"):
     with open(os.path.join(filename)) as f:
-        project_version = f.read()
+        project_version = f.read().strip()
     return project_version
 
 
 def req_file(filename):
     with open(os.path.join(filename)) as f:
         content = f.readlines()
-    return [x.strip() for x in content if not x.startswith("#")]
+    return [x.strip() for x in content if not x.startswith("#") and x.strip()]
 
 
 project_version = version()
 install_requires = req_file("requirements.txt")
+dev_requires = (
+    req_file("requirements-dev.txt") if os.path.exists("requirements-dev.txt") else []
+)
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
@@ -114,6 +117,9 @@ setup(
         "console_scripts": ["model-analyzer = model_analyzer.entrypoint:main"]
     },
     install_requires=install_requires,
+    extras_require={
+        "dev": dev_requires,
+    },
     dependency_links=["https://pypi.ngc.nvidia.com/tritonclient"],
     packages=find_packages(exclude=("tests",)),
     zip_safe=False,

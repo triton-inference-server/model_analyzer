@@ -1,0 +1,33 @@
+# Copyright 2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Development and testing dependencies
+# Install with: pip install -r requirements-dev.txt
+
+# Testing
+coverage>=7.0.0
+
+# Documentation
+mkdocs>=1.5.0
+mkdocs-htmlproofer-plugin==0.10.3
+
+# Type checking
+mypy>=1.9.0
+types-protobuf>=4.24.0
+types-PyYAML>=6.0.0
+types-requests>=2.31.0
+unittest-parallel>=1.6.0
+
+# Code formatting (legacy - pre-commit hooks use black/isort)
+yapf==0.32.0
