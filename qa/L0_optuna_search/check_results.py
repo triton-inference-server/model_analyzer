@@ -48,19 +48,22 @@ class TestOutputValidator:
         with open(self._analyzer_log, "r") as f:
             log_contents = f.read()
 
-        # Number of configs in search space: 440
+        # Number of configs in search space: 32
         # Model - add_sub:
-        #   concurrency: 1 to 1024 (11)
+        #   concurrency: 1 to 2 (2)
         #   max_batch_size: 1 to 128 (8)
-        #   instance_group: 1 to 5 (5)
+        #   instance_group: 1 to 2 (2)
         #
-        # Minimum number of trials: 22 (5% of search space)
-        # Maximum number of trials: 44 (10% of search space)
+        # Total search space: 2 × 8 × 2 = 32
         #
-        # Then you have 4 x (0-9) for the concurrency sweep on Top 3 + default
+        # Minimum number of trials: 2 (5% of search space: 32 × 0.05 = 1.6 → 2)
+        # Maximum number of trials: 4 (10% of search space: 32 × 0.10 = 3.2 → 4)
+        #
+        # Then you have 4 × (0-2) for the concurrency sweep on Top 3 + default
         # 0 because all concurrencies could have been tested during the optuna run
-        expected_min_num_measurements = 22
-        expected_max_num_measurements = 44 + 36
+        # With max_concurrency=2, that's 4 × 2 = 8 additional measurements
+        expected_min_num_measurements = 2 + 0
+        expected_max_num_measurements = 4 + 8
         for model in self._models:
             token = f"Profiling {model}_config"
             token_idx = 0

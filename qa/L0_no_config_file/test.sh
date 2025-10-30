@@ -38,8 +38,8 @@ rm -rf $OUTPUT_MODEL_REPOSITORY *.log
 
 MODEL_REPOSITORY=$(get_output_directory)
 rm -rf $MODEL_REPOSITORY
-mkdir $MODEL_REPOSITORY
-cp -R /mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/tf_model_store/resnet_v1_50_cpu_savedmodel $MODEL_REPOSITORY
+mkdir -p $MODEL_REPOSITORY
+cp -R /mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/qa_model_repository/onnx_int32_int32_int32 $MODEL_REPOSITORY
 cp -R /mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store/vgg19_libtorch $MODEL_REPOSITORY
 rm $MODEL_REPOSITORY/*/config.pbtxt
 
@@ -56,6 +56,7 @@ MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --override-output-model-repositor
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:$metrics_port/metrics"
+MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 2"
 
 python3 test_config_generator.py --protocols "`echo $CLIENT_PROTOCOLS | sed 's/ /,/g'`" --launch-modes "`echo $TRITON_LAUNCH_MODES | sed 's/ /,/g'`"
 
@@ -69,8 +70,8 @@ fi
 RET=0
 
 function run_models() {
-    # SavedModel should be able to create a default config
-    PROFILE_MODEL="resnet_v1_50_cpu_savedmodel"
+    # ONNX model should be able to create a default config
+    PROFILE_MODEL="onnx_int32_int32_int32"
     MA_EXPECTED_RESULT="EP"
     run_server_launch_modes
 
@@ -174,7 +175,7 @@ function _check_analyzer_exit_status() {
 
 run_models
 
-rm -rf $MODEL_REPOSITORY
+rm -rf $MODEL_REPOSITORY *.yaml
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

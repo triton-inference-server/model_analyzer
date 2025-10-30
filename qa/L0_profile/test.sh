@@ -55,6 +55,7 @@ MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --filename-server-only=$FILE
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --skip-summary-reports"
+MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 2"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 
 run_analyzer

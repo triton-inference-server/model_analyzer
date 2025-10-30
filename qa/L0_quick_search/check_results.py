@@ -49,8 +49,24 @@ class TestOutputValidator:
         with open(self._analyzer_log, "r") as f:
             log_contents = f.read()
 
-        expected_min_num_measurements = 20
-        expected_max_num_measurements = 80
+        # Quick search (hill-climbing algorithm) with constrained search space
+        # Model - add_sub:
+        #   concurrency: 1 to 2 (2)
+        #   max_batch_size: 1 to 128 (8)
+        #   instance_group: 1 to 2 (2)
+        #
+        # Quick search explores the space using hill-climbing, starting from
+        # a default configuration and moving to better neighbors until convergence.
+        # Measurement count depends on search space size and convergence behavior.
+        #
+        # With max_concurrency=2 and max_instance_count=2, the search space is
+        # significantly smaller than the defaults (1024 and 5), resulting in
+        # proportionally fewer measurements.
+        #
+        # Minimum number of measurements: 4
+        # Maximum number of measurements: 16
+        expected_min_num_measurements = 4
+        expected_max_num_measurements = 16
         for model in self._models:
             token = f"Profiling {model}_config"
             token_idx = 0

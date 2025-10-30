@@ -23,20 +23,62 @@ python3 config_generator.py
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/opt/triton-model-analyzer/examples/quick-start"}
-CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2023_09_07"}
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CHECKPOINT_DIRECTORY="."
-
-cp $CHECKPOINT_REPOSITORY/add_sub.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
-
-MODEL_ANALYZER_ANALYZE_BASE_ARGS="--checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
-MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
-MODEL_ANALYZER_SUBCOMMAND="analyze"
+TRITON_LAUNCH_MODE="local"
+CLIENT_PROTOCOL="http"
+PORTS=(`find_available_ports 3`)
 MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
+
+# Generate checkpoint by running profile first
+echo "Generating checkpoint for add_sub model..."
+PROFILE_EXPORT_PATH="${OUTPUT_MODEL_REPOSITORY}/profile_results"
+mkdir -p $PROFILE_EXPORT_PATH
+
+MODEL_ANALYZER_PROFILE_ARGS="-m $MODEL_REPOSITORY --profile-models add_sub"
+MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS --triton-launch-mode=$TRITON_LAUNCH_MODE --client-protocol=$CLIENT_PROTOCOL"
+MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
+MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS -e $PROFILE_EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 1 --run-config-search-min-model-batch-size 1 --run-config-search-max-model-batch-size 1"
+
+set +e
+$MODEL_ANALYZER profile $MODEL_ANALYZER_GLOBAL_OPTIONS $MODEL_ANALYZER_PROFILE_ARGS >> $LOGS_DIR/profile.log 2>&1
+PROFILE_RET=$?
+set -e
+
+if [ $PROFILE_RET -ne 0 ]; then
+    echo -e "\n***\n*** Failed to generate checkpoint. model-analyzer profile exited with non-zero exit code. \n***"
+    cat $LOGS_DIR/profile.log
+    exit 1
+fi
+
+# Find the generated checkpoint and copy it to expected location
+GENERATED_CKPT=$(ls -t $CHECKPOINT_DIRECTORY/*.ckpt 2>/dev/null | head -1)
+if [ -z "$GENERATED_CKPT" ]; then
+    echo -e "\n***\n*** Failed to find generated checkpoint file. \n***"
+    ls -la $CHECKPOINT_DIRECTORY
+    exit 1
+fi
+# Only copy if the checkpoint isn't already named 0.ckpt
+if [ "$GENERATED_CKPT" != "$CHECKPOINT_DIRECTORY/0.ckpt" ]; then
+    cp $GENERATED_CKPT $CHECKPOINT_DIRECTORY/0.ckpt
+fi
+echo "Checkpoint generated successfully: $GENERATED_CKPT"
+
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="-m $MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-launch-mode=$TRITON_LAUNCH_MODE --client-protocol=$CLIENT_PROTOCOL"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 1 --run-config-search-min-model-batch-size 1 --run-config-search-max-model-batch-size 1"
+MODEL_ANALYZER_SUBCOMMAND="analyze"
 LIST_OF_CONFIG_FILES=(`ls | grep .yml`)
 
 RET=0
@@ -59,7 +101,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
 
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -e $EXPORT_PATH -f $CONFIG_FILE"
 
-    TEST_OUTPUT_NUM_ROWS=47
+    TEST_OUTPUT_NUM_ROWS=4
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"

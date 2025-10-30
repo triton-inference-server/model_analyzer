@@ -103,6 +103,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config["model-name"] = TEST_MODEL_NAME
         self.config["measurement-interval"] = 1000
         self.config["measurement-request-count"] = 50
+        self.config["latency-report-file"] = TEST_MODEL_NAME + "-results.csv"
 
         self.run_config = RunConfig({})
         self.run_config.add_model_run_config(
@@ -151,7 +152,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
     def test_perf_analyzer_boolean_args(self):
         """Test that only positive boolean args get added"""
-        expected_cli_str = "-m test_model --measurement-interval=1000 --binary-search --measurement-request-count=50"
+        expected_cli_str = "-m test_model -f test_model-results.csv --measurement-interval=1000 --binary-search --measurement-request-count=50"
 
         self.config["async"] = "False"
         self.config["binary-search"] = "True"
@@ -160,7 +161,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
     def test_perf_analyzer_additive_args(self):
         shape = ["name1:1,2,3", "name2:4,5,6"]
-        expected_cli_str = "-m test_model --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50"
+        expected_cli_str = "-m test_model -f test_model-results.csv --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50"
 
         self.config["shape"] = shape[:]
 
@@ -168,7 +169,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
         shape = "name1:1,2,3"
-        expected_cli_str = "-m test_model --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50"
+        expected_cli_str = "-m test_model -f test_model-results.csv --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50"
         self.config["shape"] = shape
 
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
@@ -196,7 +197,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         ssl_https_private_key_file = "h"
 
         expected_cli_str = (
-            f"-m test_model --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl "
+            f"-m test_model -f test_model-results.csv --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl "
             f"--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c "
             f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e "
             f"--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h"
@@ -260,7 +261,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config["ssl-grpc-use-ssl"] = ssl_grpc_use_ssl
         self.assertEqual(self.config["ssl-grpc-use-ssl"], ssl_grpc_use_ssl)
         expected_cli_str = (
-            f"-m test_model --measurement-interval=1000 --measurement-request-count=50 "
+            f"-m test_model -f test_model-results.csv --measurement-interval=1000 --measurement-request-count=50 "
             f"--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c "
             f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e "
             f"--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h"
@@ -302,7 +303,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_perf_records()
@@ -350,7 +353,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
@@ -368,7 +373,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
@@ -384,7 +391,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
@@ -403,7 +412,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
@@ -428,7 +439,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(perf_metrics)
 
         perf_records = perf_analyzer.get_perf_records()
@@ -454,7 +467,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_empty),
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            self.assertFalse(perf_analyzer.run(perf_metrics))
+            self.assertEqual(perf_analyzer.run(perf_metrics), perf_analyzer.PA_FAIL)
 
         # Test case where PA returns blank values for some GPU metrics
         pa_csv_mock = """Concurrency,Inferences/Second,Client Send,Network+Server Send/Recv,Server Queue,Server Compute Input,Server Compute Infer,Server Compute Output,"""
@@ -469,7 +482,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
@@ -672,7 +687,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=read_data),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(metrics)
 
         if is_llm:
@@ -791,6 +808,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             "perf_analyzer",
             "-m",
             "test_model",
+            "-f",
+            "test_model-results.csv",
             "--measurement-interval",
             "1000",
             "--measurement-request-count",

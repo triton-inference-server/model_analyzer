@@ -35,6 +35,7 @@ MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --client-pro
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics --perf-analyzer-cpu-util=100000"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 2"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 
 python3 test_config_generator.py

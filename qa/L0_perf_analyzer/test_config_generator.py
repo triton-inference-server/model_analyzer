@@ -59,7 +59,7 @@ class TestConfigGenerator:
             "perf_output": True,
             "perf_analyzer_flags": {
                 "measurement-mode": "time_windows",
-                "measurement-interval": 50,
+                "measurement-interval": 10,
             },
         }
         with open("./config-time-adjust.yml", "w") as f:

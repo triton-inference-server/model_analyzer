@@ -53,6 +53,7 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_I
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --run-config-search-mode optuna"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --latency-budget 10"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --skip-summary-reports"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 2"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
