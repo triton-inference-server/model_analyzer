@@ -73,7 +73,6 @@ RUN chmod +x build_wheel.sh && \
     rm -f perf_analyzer
 
 # Install model analyzer and development dependencies
-# Note: nvidia-pyindex is not needed as tritonclient dependencies handle this
 RUN python3 -m pip install --no-cache-dir wheels/triton_model_analyzer-*-manylinux*.whl && \
     python3 -m pip install --no-cache-dir -r requirements-dev.txt
 

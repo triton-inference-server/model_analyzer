@@ -28,6 +28,3 @@ types-protobuf>=4.24.0
 types-PyYAML>=6.0.0
 types-requests>=2.31.0
 unittest-parallel>=1.6.0
-
-# Code formatting (legacy - pre-commit hooks use black/isort)
-yapf==0.32.0

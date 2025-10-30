@@ -89,54 +89,162 @@ class PerfAnalyzer:
     GPU_METRIC_UUID = 0
     GPU_METRIC_VALUE = 1
 
-    # yapf: disable
     PA_SUCCESS, PA_FAIL, PA_RETRY = 0, 1, 2
 
-    METRIC_TAG,                        CSV_STRING,             RECORD_CLASS,             REDUCTION_FACTOR = 0, 1, 2, 3
+    METRIC_TAG, CSV_STRING, RECORD_CLASS, REDUCTION_FACTOR = 0, 1, 2, 3
     perf_metric_table = [
-        ["perf_latency_avg",           "Avg latency",           PerfLatencyAvg,          "1000"],
-        ["perf_latency_p90",           "p90 latency",           PerfLatencyP90,          "1000"],
-        ["perf_latency_p95",           "p95 latency",           PerfLatencyP95,          "1000"],
-        ["perf_latency_p99",           "p99 latency",           PerfLatencyP99,          "1000"],
-        ["perf_throughput",            "Inferences/Second",     PerfThroughput,             "1"],
-        ["perf_client_send_recv",      "request/response",      PerfClientSendRecv,      "1000"],
-        ["perf_client_send_recv",      "send/recv",             PerfClientSendRecv,      "1000"],
-        ["perf_client_response_wait",  "response wait",         PerfClientResponseWait,  "1000"],
-        ["perf_server_queue",          "Server Queue",          PerfServerQueue,         "1000"],
-        ["perf_server_compute_infer",  "Server Compute Infer",  PerfServerComputeInfer,  "1000"],
-        ["perf_server_compute_input",  "Server Compute Input",  PerfServerComputeInput,  "1000"],
-        ["perf_server_compute_output", "Server Compute Output", PerfServerComputeOutput, "1000"]
+        ["perf_latency_avg", "Avg latency", PerfLatencyAvg, "1000"],
+        ["perf_latency_p90", "p90 latency", PerfLatencyP90, "1000"],
+        ["perf_latency_p95", "p95 latency", PerfLatencyP95, "1000"],
+        ["perf_latency_p99", "p99 latency", PerfLatencyP99, "1000"],
+        ["perf_throughput", "Inferences/Second", PerfThroughput, "1"],
+        ["perf_client_send_recv", "request/response", PerfClientSendRecv, "1000"],
+        ["perf_client_send_recv", "send/recv", PerfClientSendRecv, "1000"],
+        ["perf_client_response_wait", "response wait", PerfClientResponseWait, "1000"],
+        ["perf_server_queue", "Server Queue", PerfServerQueue, "1000"],
+        [
+            "perf_server_compute_infer",
+            "Server Compute Infer",
+            PerfServerComputeInfer,
+            "1000",
+        ],
+        [
+            "perf_server_compute_input",
+            "Server Compute Input",
+            PerfServerComputeInput,
+            "1000",
+        ],
+        [
+            "perf_server_compute_output",
+            "Server Compute Output",
+            PerfServerComputeOutput,
+            "1000",
+        ],
     ]
 
     gpu_metric_table = [
-        ["gpu_utilization",            "Avg GPU Utilization",   GPUUtilization,          "0.01"],
-        ["gpu_power_usage",            "Avg GPU Power Usage",   GPUPowerUsage,              "1"],
-        ["gpu_used_memory",            "Max GPU Memory Usage",  GPUUsedMemory,        "1000000"],
-        ["gpu_free_memory",            "Total GPU Memory",      GPUFreeMemory,        "1000000"]
+        ["gpu_utilization", "Avg GPU Utilization", GPUUtilization, "0.01"],
+        ["gpu_power_usage", "Avg GPU Power Usage", GPUPowerUsage, "1"],
+        ["gpu_used_memory", "Max GPU Memory Usage", GPUUsedMemory, "1000000"],
+        ["gpu_free_memory", "Total GPU Memory", GPUFreeMemory, "1000000"],
     ]
 
     llm_metric_table = [
-        ["time_to_first_token_avg", "Time To First Token (ns) avg",          TimeToFirstTokenAvg, "1000"],
-        ["time_to_first_token_min", "Time To First Token (ns) min",          TimeToFirstTokenMin, "1000"],
-        ["time_to_first_token_max", "Time To First Token (ns) max",          TimeToFirstTokenMax, "1000"],
-        ["time_to_first_token_p99", "Time To First Token (ns) p99",          TimeToFirstTokenP99, "1000"],
-        ["time_to_first_token_p95", "Time To First Token (ns) p95",          TimeToFirstTokenP95, "1000"],
-        ["time_to_first_token_p90", "Time To First Token (ns) p90",          TimeToFirstTokenP90, "1000"],
-        ["time_to_first_token_p75", "Time To First Token (ns) p75",          TimeToFirstTokenP75, "1000"],
-        ["time_to_first_token_p50", "Time To First Token (ns) p50",          TimeToFirstTokenP50, "1000"],
-        ["time_to_first_token_p25", "Time To First Token (ns) p25",          TimeToFirstTokenP25, "1000"],
-        ["inter_token_latency_avg", "Inter Token Latency (ns) avg",          InterTokenLatencyAvg, "1000"],
-        ["inter_token_latency_min", "Inter Token Latency (ns) min",          InterTokenLatencyMin, "1000"],
-        ["inter_token_latency_max", "Inter Token Latency (ns) max",          InterTokenLatencyMax, "1000"],
-        ["inter_token_latency_p99", "Inter Token Latency (ns) p99",          InterTokenLatencyP99, "1000"],
-        ["inter_token_latency_p95", "Inter Token Latency (ns) p95",          InterTokenLatencyP95, "1000"],
-        ["inter_token_latency_p90", "Inter Token Latency (ns) p90",          InterTokenLatencyP90, "1000"],
-        ["inter_token_latency_p75", "Inter Token Latency (ns) p75",          InterTokenLatencyP75, "1000"],
-        ["inter_token_latency_p50", "Inter Token Latency (ns) p50",          InterTokenLatencyP50, "1000"],
-        ["inter_token_latency_p25", "Inter Token Latency (ns) p25",          InterTokenLatencyP25, "1000"],
-        ["output_token_throughput", "Output Token Throughput (per sec) avg", OutputTokenThroughput, "1"]
+        [
+            "time_to_first_token_avg",
+            "Time To First Token (ns) avg",
+            TimeToFirstTokenAvg,
+            "1000",
+        ],
+        [
+            "time_to_first_token_min",
+            "Time To First Token (ns) min",
+            TimeToFirstTokenMin,
+            "1000",
+        ],
+        [
+            "time_to_first_token_max",
+            "Time To First Token (ns) max",
+            TimeToFirstTokenMax,
+            "1000",
+        ],
+        [
+            "time_to_first_token_p99",
+            "Time To First Token (ns) p99",
+            TimeToFirstTokenP99,
+            "1000",
+        ],
+        [
+            "time_to_first_token_p95",
+            "Time To First Token (ns) p95",
+            TimeToFirstTokenP95,
+            "1000",
+        ],
+        [
+            "time_to_first_token_p90",
+            "Time To First Token (ns) p90",
+            TimeToFirstTokenP90,
+            "1000",
+        ],
+        [
+            "time_to_first_token_p75",
+            "Time To First Token (ns) p75",
+            TimeToFirstTokenP75,
+            "1000",
+        ],
+        [
+            "time_to_first_token_p50",
+            "Time To First Token (ns) p50",
+            TimeToFirstTokenP50,
+            "1000",
+        ],
+        [
+            "time_to_first_token_p25",
+            "Time To First Token (ns) p25",
+            TimeToFirstTokenP25,
+            "1000",
+        ],
+        [
+            "inter_token_latency_avg",
+            "Inter Token Latency (ns) avg",
+            InterTokenLatencyAvg,
+            "1000",
+        ],
+        [
+            "inter_token_latency_min",
+            "Inter Token Latency (ns) min",
+            InterTokenLatencyMin,
+            "1000",
+        ],
+        [
+            "inter_token_latency_max",
+            "Inter Token Latency (ns) max",
+            InterTokenLatencyMax,
+            "1000",
+        ],
+        [
+            "inter_token_latency_p99",
+            "Inter Token Latency (ns) p99",
+            InterTokenLatencyP99,
+            "1000",
+        ],
+        [
+            "inter_token_latency_p95",
+            "Inter Token Latency (ns) p95",
+            InterTokenLatencyP95,
+            "1000",
+        ],
+        [
+            "inter_token_latency_p90",
+            "Inter Token Latency (ns) p90",
+            InterTokenLatencyP90,
+            "1000",
+        ],
+        [
+            "inter_token_latency_p75",
+            "Inter Token Latency (ns) p75",
+            InterTokenLatencyP75,
+            "1000",
+        ],
+        [
+            "inter_token_latency_p50",
+            "Inter Token Latency (ns) p50",
+            InterTokenLatencyP50,
+            "1000",
+        ],
+        [
+            "inter_token_latency_p25",
+            "Inter Token Latency (ns) p25",
+            InterTokenLatencyP25,
+            "1000",
+        ],
+        [
+            "output_token_throughput",
+            "Output Token Throughput (per sec) avg",
+            OutputTokenThroughput,
+            "1",
+        ],
     ]
-    # yapf: enable
 
     @staticmethod
     def get_perf_metrics():

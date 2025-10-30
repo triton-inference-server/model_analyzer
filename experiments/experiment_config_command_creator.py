@@ -37,23 +37,26 @@ class ExperimentConfigCommandCreator:
         else:
             checkpoint_dir = f"{data_path}/{model_name}"
 
-        # yapf: disable
         args = [
-            'model-analyzer', 'profile',
-            '--profile-models', model_name,
-            '--model-repository', data_path,
-            '--checkpoint-directory', checkpoint_dir
+            "model-analyzer",
+            "profile",
+            "--profile-models",
+            model_name,
+            "--model-repository",
+            data_path,
+            "--checkpoint-directory",
+            checkpoint_dir,
         ]
         args += other_args
 
-        if '-f' not in args and '--config-file' not in args:
-            args += ['-f', 'path-to-config-file']
+        if "-f" not in args and "--config-file" not in args:
+            args += ["-f", "path-to-config-file"]
             yaml_content = convert_to_bytes("")
         else:
-            index = args.index('-f') if '-f' in args else args.index('--config-file')
+            index = args.index("-f") if "-f" in args else args.index("--config-file")
             yaml_file = args[index + 1]
 
-            with open(yaml_file, 'r') as f:
+            with open(yaml_file, "r") as f:
                 yaml_content = f.read()
                 yaml_content = convert_to_bytes(yaml_content)
 
@@ -65,10 +68,11 @@ class ExperimentConfigCommandCreator:
         config = ConfigCommandExperiment()
         cli = CLI()
         cli.add_subcommand(
-            cmd='profile',
-            help='Run model inference profiling based on specified CLI or '
-            'config options.',
-            config=config)
+            cmd="profile",
+            help="Run model inference profiling based on specified CLI or "
+            "config options.",
+            config=config,
+        )
         cli.parse()
         mock_config.stop()
 
