@@ -400,61 +400,81 @@ class TestModelManager(trc.TestResultCollector):
         with patch.object(
             MetricsManagerSubclass, "_get_next_perf_throughput_value"
         ) as mock_method:
-            # yapf: disable
             side_effect = [
                 # Default config, bs=1, concurrency 1,2,4,8
                 # Will early exit for concurrency
                 # "Best" result for bs early exit is 5
-                5, 5, 5, 5,
-
+                5,
+                5,
+                5,
+                5,
                 # Default config, bs=2, concurrency 1,2,4,8
                 # Will early exit for concurrency
                 # "Best" result for bs early exit is 4
-                4, 4, 4, 4,
-
+                4,
+                4,
+                4,
+                4,
                 # Default config, bs=3, concurrency 1,2,4,8
                 # Will early exit for concurrency
                 # "Best" result for bs early exit is 6
-                6, 6, 6, 6,
-
+                6,
+                6,
+                6,
+                6,
                 # Default config, bs=4, concurrency 1,2,4,8
                 # Will early exit for concurrency
                 # "Best" result for bs early exit is 5
                 # We will not early exit batch size
-                5, 5, 5, 5,
-
+                5,
+                5,
+                5,
+                5,
                 # Default config, bs=7, concurrency 1,2,4,8
                 # Will not early exit for concurrency
                 # "Best" result for bs early exit is 1
                 # We are done sweeping batch size
-                1, 1, 1, 1,
-
-
+                1,
+                1,
+                1,
+                1,
                 # 1 instance, bs=1, concurrency 1,2,4,8,16
                 # Will not early exit for concurrency
                 # "Best" result for bs early exit is 10
-                1, 1, 10, 1, 1,
-
+                1,
+                1,
+                10,
+                1,
+                1,
                 # 1 instance, bs=2, concurrency 1,2,4,8,16
                 # Will not early exit for concurrency
                 # "Best" result for bs early exit is 9
-                1, 9, 1, 1, 2,
-
+                1,
+                9,
+                1,
+                1,
+                2,
                 # 1 instance, bs=3, concurrency 1,2,4,8,16
                 # Will not early exit for concurrency
                 # "Best" result for bs early exit is 8
-                1, 1, 1, 8, 3,
-
+                1,
+                1,
+                1,
+                8,
+                3,
                 # 1 instance, bs=4, concurrency 1,2,4,8,16
                 # Will not early exit for concurrency
                 # "Best" result for bs early exit is 7
                 # Will early exit batch size now
-                1, 1, 7, 1, 4
+                1,
+                1,
+                7,
+                1,
+                4,
             ]
             # Add a bunch of extra results for the no-early-exit case
-            side_effect.extend([1]*100)
+            side_effect.extend([1] * 100)
             mock_method.side_effect = side_effect
-            # yapf: enable
 
             self._test_model_manager(yaml_content, expected_ranges, args=args)
 
@@ -1014,18 +1034,32 @@ class TestModelManager(trc.TestResultCollector):
         with patch.object(
             MetricsManagerSubclass, "_get_next_perf_throughput_value"
         ) as mock_method:
-            # yapf: disable
             mock_method.side_effect = [
-                1, 2, 4,     # Default config, concurrency 1,2,4
-                1, 2, 4,     # 1 Instance, Batch size 8, concurrency 1,2,4
-                2, 4, 8,     # 1 Instance, Batch size 16, concurrency 1,2,4
-                2, 4, 8,     # 1 Instance, Batch size 32, concurrency 1,2,4
-                1, 2, 4,     # 1 Instance, Batch size 8, concurrency 1,2,4
-                8, 4, 2,     # 1 Instance, Batch size 16, concurrency 1,2,4
-                4, 8, 16,    # 1 Instance, Batch size 32, concurrency 1,2,4
-                4, 8, 16     # 1 Instance, Batch size 64, concurrency 1,2,4
+                1,
+                2,
+                4,  # Default config, concurrency 1,2,4
+                1,
+                2,
+                4,  # 1 Instance, Batch size 8, concurrency 1,2,4
+                2,
+                4,
+                8,  # 1 Instance, Batch size 16, concurrency 1,2,4
+                2,
+                4,
+                8,  # 1 Instance, Batch size 32, concurrency 1,2,4
+                1,
+                2,
+                4,  # 1 Instance, Batch size 8, concurrency 1,2,4
+                8,
+                4,
+                2,  # 1 Instance, Batch size 16, concurrency 1,2,4
+                4,
+                8,
+                16,  # 1 Instance, Batch size 32, concurrency 1,2,4
+                4,
+                8,
+                16,  # 1 Instance, Batch size 64, concurrency 1,2,4
             ]
-            # yapf: enable
 
             mock_method.return_value = None
             self._test_model_manager(yaml_str, expected_ranges)

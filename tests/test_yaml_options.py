@@ -66,8 +66,7 @@ class TestYamlOptions(trc.TestResultCollector):
         )
 
     def test_valid_yaml_file(self):
-        # yapf: disable
-        yaml_str = ("""
+        yaml_str = """
             run_config_search_max_instance_count: 16
             run_config_search_disable: True
             profile_models:
@@ -78,8 +77,7 @@ class TestYamlOptions(trc.TestResultCollector):
                         -
                             kind: KIND_GPU
                             count: [1,2]
-            """)
-        # yapf: enable
+            """
 
         yaml_config = self._load_config_file(yaml_str)
         YamlConfigValidator.validate(yaml_config)
@@ -89,8 +87,7 @@ class TestYamlOptions(trc.TestResultCollector):
         Raises an exception because run-config-search-max-instance-count: 16 uses
         hyphens instead of the required underscores
         """
-        # yapf: disable
-        yaml_str = ("""
+        yaml_str = """
             run-config-search-max-instance-count: 16
             run_config_search_disable: True
             profile_models:
@@ -101,8 +98,7 @@ class TestYamlOptions(trc.TestResultCollector):
                         -
                             kind: KIND_GPU
                             count: [1,2]
-            """)
-        # yapf: enable
+            """
 
         yaml_config = self._load_config_file(yaml_str)
         with self.assertRaises(TritonModelAnalyzerException):

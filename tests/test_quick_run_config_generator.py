@@ -191,15 +191,16 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
     def test_get_starting_coordinate(self):
         """Test that get_starting_coordinate() works for non-zero values"""
-        # yapf: disable
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
+        dims.add_dimensions(
+            0,
+            [
                 SearchDimension("x", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=2),
                 SearchDimension("y", SearchDimension.DIMENSION_TYPE_LINEAR, min=1),
-                SearchDimension("z", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=3)
-        ])
-        sc = SearchConfig(dimensions=dims,radius=2, min_initialized=2)
-        # yapf: enable
+                SearchDimension("z", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=3),
+            ],
+        )
+        sc = SearchConfig(dimensions=dims, radius=2, min_initialized=2)
         qrcg = QuickRunConfigGenerator(
             sc,
             MagicMock(),
@@ -298,7 +299,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             },
         }
-        # yapf: enable
 
         rc = qrcg._get_next_run_config()
 
@@ -329,57 +329,43 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         - existing values for perf-analyzer config should persist if they aren't overwritten
         """
 
-        # yapf: disable
         fake_base_config1 = {
             "name": "fake_model_name1",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": [16]}],
             "max_batch_size": 4,
-            "sequence_batching": {}
+            "sequence_batching": {},
         }
         fake_base_config2 = {
             "name": "fake_model_name2",
-            "input": [{
-                "name": "INPUT__2",
-                "dataType": "TYPE_FP16",
-                "dims": [32]
-            }],
-            "max_batch_size": 8
+            "input": [{"name": "INPUT__2", "dataType": "TYPE_FP16", "dims": [32]}],
+            "max_batch_size": 8,
         }
 
         expected_model_config1 = {
-            'instanceGroup': [{
-                'count': 3,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 2,
-            'sequenceBatching': {},
-            'name': 'fake_model_name1',
-            'input': [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": ['16']
-            }]
+            "instanceGroup": [
+                {
+                    "count": 3,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 2,
+            "sequenceBatching": {},
+            "name": "fake_model_name1",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
 
         expected_model_config2 = {
-            'dynamicBatching': {},
-            'instanceGroup': [{
-                'count': 6,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 16,
-            'name': 'fake_model_name2',
-            'input': [{
-                "name": "INPUT__2",
-                "dataType": "TYPE_FP16",
-                "dims": ['32']
-            }]
+            "dynamicBatching": {},
+            "instanceGroup": [
+                {
+                    "count": 6,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 16,
+            "name": "fake_model_name2",
+            "input": [{"name": "INPUT__2", "dataType": "TYPE_FP16", "dims": ["32"]}],
         }
-        # yapf: enable
 
         mock_models = []
         with patch(
@@ -487,14 +473,12 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             "/tmp/my_config.yml",
         ]
 
-        # yapf: disable
-        yaml_str = ("""
+        yaml_str = """
             profile_models:
                 - my-model:
                     perf_analyzer_flags:
                         percentile: 96
-            """)
-        # yapf: enable
+            """
 
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
@@ -553,14 +537,12 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             "/tmp/my_config.yml",
         ]
 
-        # yapf: disable
-        yaml_str = ("""
+        yaml_str = """
             profile_models:
                 - my-model:
                     perf_analyzer_flags:
                         percentile: 96
-            """)
-        # yapf: enable
+            """
 
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
@@ -636,14 +618,12 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             "bls_composing_modelA,bls_composing_modelB",
         ]
 
-        # yapf: disable
-        yaml_str = ("""
+        yaml_str = """
             profile_models:
                 - my-model:
                     perf_analyzer_flags:
                         percentile: 96
-            """)
-        # yapf: enable
+            """
 
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
@@ -770,7 +750,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             "name": "fake_model_name",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
-        # yapf: enable
 
         rc = qrcg._get_next_run_config()
 
@@ -822,7 +801,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             "name": "fake_model_name",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
-        # yapf: enable
 
         rc = qrcg._get_next_run_config()
 
@@ -874,7 +852,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             "name": "fake_model_name",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
-        # yapf: enable
 
         rc = qrcg._get_next_run_config()
 
@@ -926,7 +903,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             "name": "fake_model_name",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
-        # yapf: enable
 
         rc = qrcg._get_next_run_config()
 
@@ -994,37 +970,31 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             additional_args.append("--run-config-search-min-concurrency")
             additional_args.append(f"{min_concurrency}")
 
-        # yapf: disable
         expected_model_A_config_0 = {
-            'instanceGroup': [{
-                'count': 3,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 2,
-            'sequenceBatching': {},
-            'name': 'fake_model_A',
-            'input': [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": ['16']
-            }]
+            "instanceGroup": [
+                {
+                    "count": 3,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 2,
+            "sequenceBatching": {},
+            "name": "fake_model_A",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
 
         expected_model_B_config_0 = {
-            'dynamicBatching': {},
-            'instanceGroup': [{
-                'count': 6,
-                'kind': 'KIND_CPU',
-            }],
-            'maxBatchSize': 16,
-            'name': 'fake_model_B',
-            'input': [{
-                "name": "INPUT__2",
-                "dataType": "TYPE_FP16",
-                "dims": ['32']
-            }]
+            "dynamicBatching": {},
+            "instanceGroup": [
+                {
+                    "count": 6,
+                    "kind": "KIND_CPU",
+                }
+            ],
+            "maxBatchSize": 16,
+            "name": "fake_model_B",
+            "input": [{"name": "INPUT__2", "dataType": "TYPE_FP16", "dims": ["32"]}],
         }
-        # yapf: enable
 
         config = self._create_config(additional_args)
 
@@ -1158,53 +1128,45 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             additional_args.append("--run-config-search-min-concurrency")
             additional_args.append(f"{min_concurrency}")
 
-        # yapf: disable
         expected_model_config = {
-            'instanceGroup': [{
-                'count': 3,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 2,
-            'dynamicBatching': {},
-            'name': 'my-model',
-            'platform': 'bls',
-            'input': [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": ['16']
-            }]
+            "instanceGroup": [
+                {
+                    "count": 3,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 2,
+            "dynamicBatching": {},
+            "name": "my-model",
+            "platform": "bls",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
 
         expected_composing_model_config0 = {
-            'instanceGroup': [{
-                'count': 5,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 8,
-            'sequenceBatching': {},
-            'name': 'fake_model_A',
-            'input': [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": ['16']
-            }]
+            "instanceGroup": [
+                {
+                    "count": 5,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 8,
+            "sequenceBatching": {},
+            "name": "fake_model_A",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
 
         expected_composing_model_config1 = {
-            'dynamicBatching': {},
-            'instanceGroup': [{
-                'count': 7,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 32,
-            'name': 'fake_model_B',
-            'input': [{
-                "name": "INPUT__2",
-                "dataType": "TYPE_FP16",
-                "dims": ['32']
-            }]
+            "dynamicBatching": {},
+            "instanceGroup": [
+                {
+                    "count": 7,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 32,
+            "name": "fake_model_B",
+            "input": [{"name": "INPUT__2", "dataType": "TYPE_FP16", "dims": ["32"]}],
         }
-        # yapf: enable
 
         config = self._create_config(additional_args)
 
@@ -1328,12 +1290,10 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         for arg in additional_args:
             args.append(arg)
 
-        # yapf: disable
-        yaml_str = ("""
+        yaml_str = """
             profile_models:
                 - my-model
-            """)
-        # yapf: enable
+            """
 
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 

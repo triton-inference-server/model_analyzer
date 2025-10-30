@@ -53,12 +53,9 @@ class TestNeighborhood(trc.TestResultCollector):
     def _construct_rcm(self, throughput: float, latency: float):
         model_config_name = ["modelA_config_0"]
 
-        # yapf: disable
-        non_gpu_metric_values = [{
-            "perf_throughput": throughput,
-            "perf_latency_p99": latency
-        }]
-        # yapf: enable
+        non_gpu_metric_values = [
+            {"perf_throughput": throughput, "perf_latency_p99": latency}
+        ]
 
         metric_objectives = [{"perf_throughput": 1}]
         weights = [1]
