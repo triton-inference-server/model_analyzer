@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:25.10-py3
-ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:25.10-py3-sdk
+ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:25.09-py3
+ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:25.09-py3-sdk
 
 ARG MODEL_ANALYZER_VERSION=1.48.0dev
 ARG MODEL_ANALYZER_CONTAINER_VERSION=25.11dev
@@ -28,33 +28,6 @@ ARG TRITONSDK_BASE_IMAGE
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && \
-    apt-get install -y python3-dev
-
-RUN mkdir -p /opt/triton-model-analyzer
-
-# Install architecture-specific components
-
-# Install DCGM version 4.x. Steps from https://developer.nvidia.com/dcgm#Downloads
-# Remove any old DCGM installations
-RUN dpkg --list datacenter-gpu-manager &> /dev/null && \
-      apt purge --yes datacenter-gpu-manager || true && \
-    dpkg --list datacenter-gpu-manager-config &> /dev/null && \
-      apt purge --yes datacenter-gpu-manager-config || true
-
-RUN apt-get update && \
-    apt-get install --yes \
-      --install-recommends \
-      datacenter-gpu-manager-4-cuda13
-
-# Install Docker
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-      tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-   apt-get update && apt-get install -y docker-ce-cli
-
 # Install tritonclient
 COPY --from=sdk /workspace/install/python /tmp/tritonclient
 RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
@@ -62,17 +35,12 @@ RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
     xargs pip3 install --upgrade && rm -rf /tmp/tritonclient/
 
 WORKDIR /opt/triton-model-analyzer
-RUN rm -fr *
-COPY --from=sdk /usr/local/bin/perf_analyzer .
-RUN chmod +x ./perf_analyzer
 
 COPY . .
 RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
-RUN chmod +x build_wheel.sh && \
-    ./build_wheel.sh perf_analyzer true && \
-    rm -f perf_analyzer
+
 RUN python3 -m pip install nvidia-pyindex && \
-    python3 -m pip install wheels/triton_model_analyzer-*-manylinux*.whl
+    python3 -m pip install .
 # Install other pip packages
 RUN python3 -m pip install coverage
 RUN python3 -m pip install mypy
@@ -83,7 +51,7 @@ RUN python3 -m pip install mkdocs
 RUN python3 -m pip install mkdocs-htmlproofer-plugin==0.10.3
 RUN python3 -m pip install yapf==0.32.0
 
-RUN apt-get install -y wkhtmltopdf
+RUN apt-get update -qq && apt-get install -y wkhtmltopdf
 
 ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
 ENV MODEL_ANALYZER_VERSION=${MODEL_ANALYZER_VERSION}
