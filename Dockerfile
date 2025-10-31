@@ -53,7 +53,7 @@ RUN python3 -m pip install \
         types-requests \
         yapf==0.32.0
 
-RUN apt update -qq && apt install -y docker.io docker-buildx-plugin
+RUN apt update -qq && apt install -y docker.io
 
 ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
 ENV MODEL_ANALYZER_VERSION=${MODEL_ANALYZER_VERSION}
