@@ -19,8 +19,7 @@ create_logs_dir "L0_stability_metrics"
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_benchmark_models"}
-CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2022_02_23"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/opt/triton-model-analyzer/examples/quick-start"}
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
@@ -28,7 +27,7 @@ GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONFIG_FILE="config.yaml"
 NUM_ITERATIONS=${NUM_ITERATIONS:=5}
-BENCHMARK_MODELS="`ls ${MODEL_REPOSITORY}`"
+BENCHMARK_MODELS="add_sub"
 MODEL_NAMES="$(echo $BENCHMARK_MODELS | sed 's/ /,/g')"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"

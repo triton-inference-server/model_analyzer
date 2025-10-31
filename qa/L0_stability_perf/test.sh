@@ -20,14 +20,14 @@ create_logs_dir "L0_stability_perf"
 MODEL_ANALYZER="`which model-analyzer`"
 PERF_ANALYZER="`which perf_analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_benchmark_models"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/opt/triton-model-analyzer/examples/quick-start"}
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONCURRENCY="1"
-BENCHMARK_MODELS="bert_savedmodel resnet50_fp32_libtorch"
+BENCHMARK_MODELS="add_sub"
 MODEL_NAMES="$(echo $BENCHMARK_MODELS | sed 's/ /,/g')"
 
 METRIC_TOLERANCE_PERCENT=${METRIC_TOLERANCE_PERCENT:=5}
