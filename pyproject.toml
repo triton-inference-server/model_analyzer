@@ -79,13 +79,13 @@ model-analyzer = "model_analyzer.entrypoint:main"
 [project.optional-dependencies]
 perf-analyzer = ["perf-analyzer"]
 
-[tool.setuptools.packages.find]
-where = ["."]
-exclude = ["tests", "examples", "qa"]
-namespaces = false
-
 [tool.setuptools.dynamic]
 version = {file = "VERSION"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["model_analyzer*","tests*"]
+# exclude = ["qa"]
 
 [tool.codespell]
 # note: pre-commit passes explicit lists of files here, which this skip file list doesn't override -
