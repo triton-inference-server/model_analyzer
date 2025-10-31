@@ -85,7 +85,7 @@ version = {file = "VERSION"}
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["model_analyzer*"]
-exclude = ["model_analyzer/tests*"]
+exclude = ["tests*", "examples*", "qa*"]
 
 [tool.codespell]
 # note: pre-commit passes explicit lists of files here, which this skip file list doesn't override -
