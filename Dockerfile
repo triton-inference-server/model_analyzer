@@ -37,10 +37,8 @@ RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
 
 WORKDIR /opt/triton-model-analyzer
 
-COPY . .
-RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
-
 RUN python3 -m pip install \
+        build \
         coverage \
         mkdocs \
         mkdocs-htmlproofer-plugin==0.10.3 \
@@ -51,10 +49,16 @@ RUN python3 -m pip install \
         types-requests \
         yapf==0.32.0
 
-RUN python3 setup.py bdist_wheel \
+COPY . .
+
+RUN python3 -m build --wheel \
     && cd dist \
     && python3 -m pip install triton*model*analyzer*.whl
+
+RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
+
 ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
+
 ENV MODEL_ANALYZER_VERSION=${MODEL_ANALYZER_VERSION}
 ENV MODEL_ANALYZER_CONTAINER_VERSION=${MODEL_ANALYZER_CONTAINER_VERSION}
 ENV TRITON_SERVER_SDK_CONTAINER_IMAGE_NAME=${TRITONSDK_BASE_IMAGE}

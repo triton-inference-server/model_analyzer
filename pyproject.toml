@@ -12,6 +12,80 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "triton-model-analyzer"
+dynamic = ["version"]
+description = "Triton Model Analyzer is a tool to profile and analyze the runtime performance of one or more models on the Triton Inference Server"
+readme = {content-type = "text/markdown", text = """See the Model Analyzer's [installation documentation](https://github.com/triton-inference-server/model_analyzer/blob/main/docs/install.md#using-pip3) for package details. The [quick start](https://github.com/triton-inference-server/model_analyzer/blob/main/docs/quick_start.md) documentation describes how to get started with profiling and analysis using Triton Model Analyzer."""}
+license = {text = "BSD"}
+authors = [
+    {name = "NVIDIA Inc.", email = "sw-dl-triton@nvidia.com"}
+]
+keywords = ["triton", "tensorrt", "inference", "server", "service", "analyzer", "nvidia"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Information Technology",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Utilities",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Environment :: Console",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "cryptography>=3.3.2",
+    "distro>=1.5.0",
+    "docker>=4.3.1",
+    "gevent>=22.08.0",
+    "grpcio>=1.63.0,<1.68",
+    "httplib2>=0.19.0",
+    "importlib_metadata>=7.1.0",
+    "matplotlib>=3.3.4",
+    "numba>=0.51.2",
+    "optuna==3.6.1",
+    "pdfkit>=0.6.1",
+    "prometheus_client>=0.9.0",
+    "protobuf",
+    "psutil>=5.8.0",
+    "pyyaml>=5.3.1",
+    "requests>=2.24.0",
+    "tritonclient[all]>=2.4.0",
+    "urllib3>=2.0.7",
+]
+
+[project.urls]
+Homepage = "https://developer.nvidia.com/nvidia-triton-inference-server"
+Repository = "https://github.com/triton-inference-server/model_analyzer"
+
+[project.scripts]
+model-analyzer = "model_analyzer.entrypoint:main"
+
+
+[project.optional-dependencies]
+perf-analyzer = ["perf-analyzer"]
+
+[tool.setuptools]
+packages = {find = {exclude = ["tests"]}}
+zip-safe = false
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
+
 [tool.codespell]
 # note: pre-commit passes explicit lists of files here, which this skip file list doesn't override -
 # this is only to allow you to run codespell interactively
