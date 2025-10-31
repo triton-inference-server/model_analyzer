@@ -19,8 +19,7 @@ create_logs_dir "L0_stability_steps"
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_benchmark_models"}
-CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2022_02_23"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/opt/triton-model-analyzer/examples/quick-start"}
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
@@ -28,12 +27,12 @@ GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONFIG_FILE="config.yaml"
 NUM_ITERATIONS=${NUM_ITERATIONS:=4}
-BENCHMARK_MODELS="`ls ${MODEL_REPOSITORY}`"
+BENCHMARK_MODELS="add_sub"
 MODEL_NAMES="$(echo $BENCHMARK_MODELS | sed 's/ /,/g')"
 CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 
 # Set up checkpoints
-mkdir -p $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/stability_steps_p9x.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
+mkdir -p $CHECKPOINT_DIRECTORY
 
 # Generate test configs
 python3 test_config_generator.py --profile-models $MODEL_NAMES
@@ -43,14 +42,30 @@ RET=0
 
 set +e
 
-MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE"
+MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 
-# Run the analyzer and check the results
+# Generate initial checkpoint by running profile once
+echo "Generating initial checkpoint..."
+TEST_NAME=initial_checkpoint
+create_result_paths -test-name $TEST_NAME -checkpoints false
+INITIAL_EXPORT_PATH=$EXPORT_PATH
+
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -e $INITIAL_EXPORT_PATH"
+
+run_analyzer
+if [ $? -ne 0 ]; then
+    echo -e "\n***\n*** Test Failed. model-analyzer initial profile exited with non-zero exit code. \n***"
+    cat $ANALYZER_LOG
+    RET=1
+    exit $RET
+fi
+
+# Run the analyzer using the checkpoint and check the results
 for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
     TEST_NAME=iteration_${i}
     create_result_paths -test-name $TEST_NAME -checkpoints false
