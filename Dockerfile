@@ -27,6 +27,7 @@ ARG TRITONSDK_BASE_IMAGE
 
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
+RUN apt update -qq && apt install -y docker.io
 
 # Install tritonclient
 COPY --from=sdk /workspace/install/python /tmp/tritonclient
@@ -39,9 +40,6 @@ WORKDIR /opt/triton-model-analyzer
 COPY . .
 RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
 
-RUN python3 setup.py bdist_wheel \
-    && python3 -m pip install ./dist/triton_model_analyzer*.whl
-
 RUN python3 -m pip install \
         coverage \
         mkdocs \
@@ -53,8 +51,9 @@ RUN python3 -m pip install \
         types-requests \
         yapf==0.32.0
 
-RUN apt update -qq && apt install -y docker.io
-
+RUN python3 setup.py bdist_wheel \
+    && cd dist \
+    && python3 -m pip install triton*model*analyzer*.whl
 ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
 ENV MODEL_ANALYZER_VERSION=${MODEL_ANALYZER_VERSION}
 ENV MODEL_ANALYZER_CONTAINER_VERSION=${MODEL_ANALYZER_CONTAINER_VERSION}
