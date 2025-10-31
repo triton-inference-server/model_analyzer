@@ -13,15 +13,16 @@
 # limitations under the License.
 
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools >= 61.0","wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "triton-model-analyzer"
 dynamic = ["version"]
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 description = "Triton Model Analyzer is a tool to profile and analyze the runtime performance of one or more models on the Triton Inference Server"
 readme = {content-type = "text/markdown", text = """See the Model Analyzer's [installation documentation](https://github.com/triton-inference-server/model_analyzer/blob/main/docs/install.md#using-pip3) for package details. The [quick start](https://github.com/triton-inference-server/model_analyzer/blob/main/docs/quick_start.md) documentation describes how to get started with profiling and analysis using Triton Model Analyzer."""}
-license = {text = "BSD"}
 authors = [
     {name = "NVIDIA Inc.", email = "sw-dl-triton@nvidia.com"}
 ]
@@ -35,7 +36,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries",
     "Topic :: Utilities",
-    "License :: OSI Approved :: BSD License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -79,9 +79,10 @@ model-analyzer = "model_analyzer.entrypoint:main"
 [project.optional-dependencies]
 perf-analyzer = ["perf-analyzer"]
 
-[tool.setuptools]
-packages = {find = {exclude = ["tests"]}}
-zip-safe = false
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests", "examples", "qa"]
+namespaces = false
 
 [tool.setuptools.dynamic]
 version = {file = "VERSION"}
