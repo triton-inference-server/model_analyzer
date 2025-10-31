@@ -44,7 +44,6 @@ RUN python3 setup.py bdist_wheel \
 
 RUN python3 -m pip install \
         coverage \
-        docker \
         mkdocs \
         mkdocs-htmlproofer-plugin==0.10.3 \
         mypy \
@@ -53,6 +52,8 @@ RUN python3 -m pip install \
         types-PyYAML \
         types-requests \
         yapf==0.32.0
+
+RUN apt update -qq && apt install -y docker.io docker-buildx-plugin
 
 ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
 ENV MODEL_ANALYZER_VERSION=${MODEL_ANALYZER_VERSION}
