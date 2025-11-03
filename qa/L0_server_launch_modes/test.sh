@@ -21,10 +21,29 @@ rm -rf $OUTPUT_MODEL_REPOSITORY
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
-REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 TRITON_DOCKER_IMAGE=${TRITONSERVER_BASE_IMAGE_NAME}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
-MODEL_NAMES="vgg19_libtorch"
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+MODEL_REPOSITORY="${REPO_ROOT}/examples/quick-start"
+MODEL_NAMES="add"
+
+# Copy model to a location accessible for docker-in-docker mounting
+MODEL_REPOSITORY_LOCAL="/tmp/output/model_repository_launch_modes_test"
+rm -rf $MODEL_REPOSITORY_LOCAL
+mkdir -p $MODEL_REPOSITORY_LOCAL
+cp -r $MODEL_REPOSITORY/add $MODEL_REPOSITORY_LOCAL/
+
+# Configure the 'add' model for GPU testing (it defaults to CPU)
+if [ -f "$MODEL_REPOSITORY_LOCAL/add/config.pbtxt" ]; then
+    # 1. Remove the instance_group line so Triton auto-configures based on available GPUs
+    #    This allows the model to work with both GPU and CPU (important for c_api mode with --gpus [])
+    sed -i '/instance_group/d' "$MODEL_REPOSITORY_LOCAL/add/config.pbtxt"
+    # 2. Add max_batch_size to support the test's batch size of 4
+    sed -i '/^backend: "python"$/a max_batch_size: 8' "$MODEL_REPOSITORY_LOCAL/add/config.pbtxt"
+    chmod -R 755 "$MODEL_REPOSITORY_LOCAL/add"
+fi
+
+export MODEL_REPOSITORY_LOCAL
+
 TRITON_LAUNCH_MODES="local docker remote c_api"
 CLIENT_PROTOCOLS="http grpc"
 PORTS=(`find_available_ports 3`)
@@ -32,7 +51,7 @@ http_port="${PORTS[0]}"
 grpc_port="${PORTS[1]}"
 metrics_port="${PORTS[2]}"
 GPUS=(`get_all_gpus_uuids`)
-MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --profile-models $MODEL_NAMES"
+MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY_LOCAL --profile-models $MODEL_NAMES"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:$metrics_port/metrics"
@@ -137,7 +156,7 @@ function _run_single_config() {
 
             # For remote launch, set server args and start server
             SERVER=`which tritonserver`
-            SERVER_ARGS="--model-repository=$MODEL_REPOSITORY $MODEL_CONTROL_MODE --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
+            SERVER_ARGS="--model-repository=$MODEL_REPOSITORY_LOCAL $MODEL_CONTROL_MODE --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
             SERVER_HTTP_PORT=${http_port}
 
             run_server
@@ -165,7 +184,7 @@ function _run_single_config() {
         create_result_paths -test-name $TEST_NAME
         SERVER_LOG=$TEST_LOG_DIR/server.log
         ANALYZER_LOG=$TEST_LOG_DIR/analyzer.log
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_SERVER_CONTAINER_IMAGE_NAME --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_DOCKER_IMAGE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     else
         create_result_paths -test-name $TEST_NAME
         SERVER_LOG=$TEST_LOG_DIR/server.log
