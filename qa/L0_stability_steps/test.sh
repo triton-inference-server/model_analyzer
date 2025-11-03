@@ -61,6 +61,9 @@ for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
         cat $ANALYZER_LOG
         RET=1
     fi
+
+    # Clean output model repository between iterations to ensure each iteration does full profiling
+    rm -rf $OUTPUT_MODEL_REPOSITORY
 done
 
 # Check the Analyzer log for correct output
