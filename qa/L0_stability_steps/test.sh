@@ -42,30 +42,14 @@ RET=0
 
 set +e
 
-MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 
-# Generate initial checkpoint by running profile once
-echo "Generating initial checkpoint..."
-TEST_NAME=initial_checkpoint
-create_result_paths -test-name $TEST_NAME -checkpoints false
-INITIAL_EXPORT_PATH=$EXPORT_PATH
-
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -e $INITIAL_EXPORT_PATH"
-
-run_analyzer
-if [ $? -ne 0 ]; then
-    echo -e "\n***\n*** Test Failed. model-analyzer initial profile exited with non-zero exit code. \n***"
-    cat $ANALYZER_LOG
-    RET=1
-    exit $RET
-fi
-
-# Run the analyzer using the checkpoint and check the results
+# Run the analyzer and check the results
 for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
     TEST_NAME=iteration_${i}
     create_result_paths -test-name $TEST_NAME -checkpoints false
@@ -81,10 +65,17 @@ done
 
 # Check the Analyzer log for correct output
 TEST_NAME='steps_stability'
-python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -l $ANALYZER_LOG
+# Concatenate all iteration logs into one file for validation
+COMBINED_LOG="$LOGS_DIR/combined_analyzer.log"
+> $COMBINED_LOG  # Create empty file
+for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
+    cat $LOGS_DIR/iteration_${i}/logs/analyzer.iteration_${i}.log >> $COMBINED_LOG
+done
+
+python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -l $COMBINED_LOG
 if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
-    cat $ANALYZER_LOG
+    cat $COMBINED_LOG
     RET=1
 fi
 set -e
