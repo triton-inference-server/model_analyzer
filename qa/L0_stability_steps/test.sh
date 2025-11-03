@@ -62,8 +62,11 @@ for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
         RET=1
     fi
 
-    # Clean output model repository between iterations to ensure each iteration does full profiling
+    # Clean output model repository and checkpoints between iterations to ensure each iteration does full profiling
     rm -rf $OUTPUT_MODEL_REPOSITORY
+    rm -rf $CHECKPOINT_DIRECTORY
+    # Also clean the default checkpoints directory that model-analyzer creates in the current directory
+    rm -rf checkpoints
 done
 
 # Check the Analyzer log for correct output
