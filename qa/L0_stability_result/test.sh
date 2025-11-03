@@ -21,7 +21,7 @@ MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/opt/triton-model-analyzer/examples/quick-start"}
 CONFIG_FILE="config.yaml"
-NUM_ITERATIONS=${NUM_ITERATIONS:=4}
+NUM_ITERATIONS=${NUM_ITERATIONS:=3}
 BENCHMARK_MODELS="add_sub"
 MODEL_NAMES="$(echo $BENCHMARK_MODELS | sed 's/ /,/g')"
 FILENAME_SERVER_ONLY="server-metrics.csv"

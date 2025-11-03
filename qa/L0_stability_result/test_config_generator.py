@@ -53,6 +53,11 @@ class TestConfigGenerator:
 
         self.args = parser.parse_args()
         self.config = {}
+        self.config["duration_seconds"] = 2
+        self.config["run_config_search_min_concurrency"] = 4
+        self.config["run_config_search_max_concurrency"] = 4
+        self.config["run_config_search_max_instance_count"] = 1
+        self.config["run_config_search_max_model_batch_size"] = 2
         self.config["profile_models"] = {}
         for model in sorted(self.args.profile_models.split(",")):
             self.config["profile_models"][model] = {

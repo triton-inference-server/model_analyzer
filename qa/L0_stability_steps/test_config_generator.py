@@ -56,6 +56,11 @@ class TestConfigGenerator:
 
         self.config = {}
         self.config["run_config_search_disable"] = False
+        self.config["duration_seconds"] = 2
+        self.config["run_config_search_min_concurrency"] = 4
+        self.config["run_config_search_max_concurrency"] = 4
+        self.config["run_config_search_max_instance_count"] = 1
+        self.config["run_config_search_max_model_batch_size"] = 2
         self.config["profile_models"] = self.profile_models
 
     def generate_configs(self):
