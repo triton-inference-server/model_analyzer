@@ -56,21 +56,20 @@ class ExperimentFileWriter:
                 )
                 quick_best_measurement = profile_data.get_best_run_config_measurement()
 
-                # yapf: disable
-                writer.writerow({
-                    "overall_num_measurements":
-                        checkpoint_data.get_run_config_measurement_count(),
-                    "overall_best_throughput":
-                        overall_best_measurement.get_non_gpu_metric_value("perf_throughput"),
-                    "quick_num_measurements":
-                        profile_data.get_run_config_measurement_count(),
-                    "missing_num_measurements":
-                        checkpoint_data.get_missing_measurement_count(),
-                    "quick_throughput":
-                        quick_best_measurement.get_non_gpu_metric_value("perf_throughput"),
-                    "radius": radius,
-                    "min_initialized": min_initialized
-                })
-                # yapf: enable
+                writer.writerow(
+                    {
+                        "overall_num_measurements": checkpoint_data.get_run_config_measurement_count(),
+                        "overall_best_throughput": overall_best_measurement.get_non_gpu_metric_value(
+                            "perf_throughput"
+                        ),
+                        "quick_num_measurements": profile_data.get_run_config_measurement_count(),
+                        "missing_num_measurements": checkpoint_data.get_missing_measurement_count(),
+                        "quick_throughput": quick_best_measurement.get_non_gpu_metric_value(
+                            "perf_throughput"
+                        ),
+                        "radius": radius,
+                        "min_initialized": min_initialized,
+                    }
+                )
         except OSError as e:
             raise TritonModelAnalyzerException(e)

@@ -343,15 +343,21 @@ class PATester:
         self._results.append((config, results))
 
     def _get_cmd(self, config: RunConfigData):
-        # yapf: disable
         cmd = [
-            "/usr/local/bin/perf_analyzer", "-v",
-            "-i", config.protocol,
-            "--measurement-mode", config.measurement_mode,
-            "-m", config.model,
-            "-b", str(config.batch_size),
-            "--concurrency-range", str(config.concurrency),
-            "--max-threads", str(config.max_threads)
+            "/usr/local/bin/perf_analyzer",
+            "-v",
+            "-i",
+            config.protocol,
+            "--measurement-mode",
+            config.measurement_mode,
+            "-m",
+            config.model,
+            "-b",
+            str(config.batch_size),
+            "--concurrency-range",
+            str(config.concurrency),
+            "--max-threads",
+            str(config.max_threads),
         ]
         if config.protocol == "http":
             cmd += ["-u", "localhost:8000"]
@@ -362,7 +368,6 @@ class PATester:
             cmd += ["--async"]
         else:
             cmd += ["--sync"]
-        # yapf: enable
         return cmd
 
     def _get_dict_combos(self, config: dict):
