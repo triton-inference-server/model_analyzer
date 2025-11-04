@@ -26,7 +26,7 @@ PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONFIG_FILE="config.yaml"
-NUM_ITERATIONS=${NUM_ITERATIONS:=3}
+NUM_ITERATIONS=${NUM_ITERATIONS:=4}
 BENCHMARK_MODELS="add_sub"
 MODEL_NAMES="$(echo $BENCHMARK_MODELS | sed 's/ /,/g')"
 CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
