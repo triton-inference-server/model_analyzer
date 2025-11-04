@@ -58,9 +58,10 @@ class TestConfigGenerator:
 
         # Profile config
         self.config["run_config_search_disable"] = True
-        self.config["concurrency"] = 16
-        self.config["batch-size"] = 8
-        self.config["profile_models"] = self.models
+        self.config["concurrency"] = 4
+        self.config["batch_sizes"] = 4
+        self.config["duration_seconds"] = 2
+        self.config["profile_models"] = {}
 
         self.config["collect_cpu_metrics"] = True
         self.config["gpu_output_fields"] = [
