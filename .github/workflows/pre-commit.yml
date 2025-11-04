@@ -33,7 +33,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5.0.0
       with:
         fetch-depth: 1
 
@@ -42,10 +42,7 @@ jobs:
         git remote add base "${{ github.event.pull_request.base.repo.clone_url }}"
         git fetch --no-tags --depth=1 base ${{ github.event.pull_request.base.sha }}
 
-    - uses: actions/setup-python@v4
-      with:
-        python-version: "3.11"
-
+    - uses: actions/setup-python@v6.0.0
 
     - uses: pre-commit/action@v3.0.1
       with:

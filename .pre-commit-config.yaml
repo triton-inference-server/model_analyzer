@@ -26,7 +26,7 @@
 
 exclude: monitor/dcgm/
 repos:
-  - repo: https://github.com/timothycrosley/isort
+  - repo: https://github.com/PyCQA/isort
     rev: 5.12.0
     hooks:
       - id: isort
@@ -37,7 +37,7 @@ repos:
       - id: black
         types_or: [python, cython]
   - repo: https://github.com/PyCQA/flake8
-    rev: 5.0.4
+    rev: 7.3.0
     hooks:
       - id: flake8
         args:
