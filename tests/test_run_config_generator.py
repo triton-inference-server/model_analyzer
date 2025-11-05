@@ -96,7 +96,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
-
+            profile_models:
                 - my-model
                 - my-modelB
 
@@ -147,7 +147,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
-
+            profile_models:
                 my-model:
                     parameters:
                         concurrency: [1,2,3]
@@ -194,7 +194,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
-
+            profile_models:
                 - my-model
                 -
                   my-modelB:
@@ -266,7 +266,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 8
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
-
+            profile_models:
                 - my-model
                 - my-modelB
             """
@@ -312,7 +312,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 8
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
-
+            profile_models:
                 - my-model
                 - my-modelB
             """
@@ -357,7 +357,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 8
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
-
+            profile_models:
                 - my-model
                 - my-modelB
             """
@@ -391,7 +391,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
-
+            profile_models:
                 -
                   my-model:
                     triton_server_environment:
@@ -418,7 +418,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
-
+            profile_models:
                 -
                   my-model:
                     triton_server_environment:
@@ -452,7 +452,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 4
             run_config_search_max_instance_count: 3
             run_config_search_max_concurrency: 2
-
+            profile_models:
                 - my-model
             """
 
@@ -500,7 +500,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 1
             run_config_search_max_concurrency: 2048
-
+            profile_models:
                 - my-model
             """
 
@@ -558,7 +558,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 1
             run_config_search_max_concurrency: 2048
-
+            profile_models:
                 - my-model
             """
 
@@ -627,7 +627,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         yaml_str = """
             run_config_search_max_model_batch_size: 4
             run_config_search_max_instance_count: 2
-            run_config_search_max_concurrency
+            run_config_search_max_concurrency: 1
             profile_models:
                 -
                   modelA:

@@ -224,7 +224,10 @@ class TestConfig(trc.TestResultCollector):
     def setUp(self):
         # Mock path validation
         self.mock_os = MockOSMethods(
-            mock_paths=["model_analyzer.config.input.config_utils"]
+            mock_paths=[
+                "model_analyzer.config.input.config_utils",
+                "model_analyzer.config.input.config_command_profile",
+            ]
         )
         self.mock_os.start()
 
