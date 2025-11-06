@@ -29,12 +29,9 @@ class TestCoordinateData(trc.TestResultCollector):
     ):
         model_config_name = [config_name]
 
-        # yapf: disable
-        non_gpu_metric_values = [{
-            "perf_throughput": throughput,
-            "perf_latency_avg": latency
-        }]
-        # yapf: enable
+        non_gpu_metric_values = [
+            {"perf_throughput": throughput, "perf_latency_avg": latency}
+        ]
 
         metric_objectives = [{"perf_throughput": 1}]
         weights = [1]

@@ -511,16 +511,14 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         for arg in additional_args:
             args.append(arg)
 
-        # yapf: disable
-        yaml_str = ("""
+        yaml_str = """
             profile_models:
                 add_sub:
                     model_config_parameters:
                         dynamic_batching:
                             max_queue_delay_microseconds: [100, 200, 300]
 
-            """)
-        # yapf: enable
+            """
 
         config = TestConfig()._evaluate_config(args, yaml_str)
 
@@ -539,8 +537,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         for arg in additional_args:
             args.append(arg)
 
-        # yapf: disable
-        yaml_str = ("""
+        yaml_str = """
             profile_models: bls
             bls_composing_models:
               add:
@@ -552,8 +549,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
                   dynamic_batching:
                     max_queue_delay_microseconds: [400, 500, 600]
 
-            """)
-        # yapf: enable
+            """
 
         config = TestConfig()._evaluate_config(args, yaml_str)
 
@@ -572,8 +568,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
         for arg in additional_args:
             args.append(arg)
 
-        # yapf: disable
-        yaml_str = ("""
+        yaml_str = """
             profile_models:
                 add_sub:
                     model_config_parameters:
@@ -583,8 +578,7 @@ class TestOptunaRunConfigGenerator(trc.TestResultCollector):
                     model_config_parameters:
                         dynamic_batching:
                             max_queue_delay_microseconds: [400, 500, 600]
-            """)
-        # yapf: enable
+            """
 
         config = TestConfig()._evaluate_config(args, yaml_str)
 

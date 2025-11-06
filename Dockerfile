@@ -46,8 +46,7 @@ RUN python3 -m pip install \
         nvidia-pyindex \
         types-protobuf \
         types-PyYAML \
-        types-requests \
-        yapf==0.32.0
+        types-requests
 
 COPY . .
 
