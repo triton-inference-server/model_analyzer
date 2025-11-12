@@ -84,7 +84,7 @@ class TestConfigGenerator:
                 for protocol in self.protocols:
                     self.config["client_protocol"] = protocol
                     if launch_mode == "docker":
-                        # Set docker image and put in the CI runner's labels
+                        # Set Docker image and put in the CI runner's labels
                         if "TRITON_LAUNCH_DOCKER_IMAGE" in os.environ:
                             self.config["triton_docker_image"] = os.environ[
                                 "TRITON_LAUNCH_DOCKER_IMAGE"
@@ -93,6 +93,17 @@ class TestConfigGenerator:
                             self.config["triton_docker_labels"] = {
                                 "RUNNER_ID": os.environ["RUNNER_ID"]
                             }
+                        # Mount the model repository into the container
+                        model_repo = os.environ.get(
+                            "MODEL_REPOSITORY_LOCAL",
+                            os.environ.get("MODEL_REPOSITORY"),
+                        )
+                        self.config["triton_docker_mounts"] = [
+                            f"{model_repo}:{model_repo}:ro"
+                        ]
+                    else:
+                        # Remove Docker-specific config for non-Docker modes
+                        self.config.pop("triton_docker_mounts", None)
                     with open(f"config-{launch_mode}-{protocol}.yaml", "w") as f:
                         yaml.dump(self.config, f)
 
