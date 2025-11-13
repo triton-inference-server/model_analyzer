@@ -371,11 +371,11 @@ FodyWeavers.xsd
 .mypy_cache/
 
 # QA test artifacts - dynamically generated during test runs
-# Note: Uses qa/** scoping to avoid ignoring committed test fixtures in tests/ and experiments/
-qa/**/config.yaml
-qa/**/config-*.yaml
-qa/**/*.csv
-qa/**/*.ckpt
-qa/**/checkpoints/
-qa/**/output_model_repository/
+# Note: Patterns start with /qa/ to anchor to repo root and avoid matching tests/ or experiments/
+/qa/**/config.yaml
+/qa/**/config-*.yaml
+/qa/**/*.csv
+/qa/**/*.ckpt
+/qa/**/checkpoints/
+/qa/**/output_model_repository/
 /checkpoints/
