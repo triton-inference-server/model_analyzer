@@ -22,7 +22,7 @@ FLAGS = None
 SKIP_EXTS = ("pt", "log", "png", "pdf", "ckpt", "csv", "json")
 
 REPO_PATH_FROM_THIS_FILE = "../.."
-SKIP_PATHS = (".git", "VERSION", "LICENSE")
+SKIP_PATHS = (".git", "VERSION", "LICENSE", ".claude")
 
 COPYRIGHT_YEAR_RE = "Copyright( \\(c\\))? 20[1-9][0-9](-(20)?[1-9][0-9])?(,((20[2-9][0-9](-(20)?[2-9][0-9])?)|([2-9][0-9](-[2-9][0-9])?)))*,? NVIDIA CORPORATION( & AFFILIATES)?. All rights reserved."
 
@@ -65,6 +65,12 @@ def visit(path):
             if FLAGS.verbose:
                 print("skipping due to path prefix: " + path)
             return True
+
+    # Skip egg-info directories and their contents
+    if ".egg-info" in path:
+        if FLAGS.verbose:
+            print("skipping egg-info directory or file: " + path)
+        return True
 
     with open(path, "r") as f:
         first_line = True
