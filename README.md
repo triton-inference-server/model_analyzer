@@ -28,14 +28,14 @@ Triton Model Analyzer is a CLI tool which can help you find a more optimal confi
 
 - [Optuna Search](docs/config_search.md#optuna-search-mode) **_-ALPHA RELEASE-_** allows you to search for every parameter that can be specified in the model configuration, using a hyperparameter optimization framework. Please see the [Optuna](https://optuna.org/) website if you are interested in specific details on how the algorithm functions.
 
-- [Quick Search](docs/config_search.md#quick-search-mode) will **sparsely** search the [Max Batch Size](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#maximum-batch-size),
-  [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#dynamic-batcher), and
-  [Instance Group](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#instance-groups) spaces by utilizing a heuristic hill-climbing algorithm to help you quickly find a more optimal configuration
+- [Quick Search](docs/config_search.md#quick-search-mode) will **sparsely** search the [Max Batch Size](https://github.com/triton-inference-server/server/blob/r25.11/docs/user_guide/model_configuration.md#maximum-batch-size),
+  [Dynamic Batching](https://github.com/triton-inference-server/server/blob/r25.11/docs/user_guide/model_configuration.md#dynamic-batcher), and
+  [Instance Group](https://github.com/triton-inference-server/server/blob/r25.11/docs/user_guide/model_configuration.md#instance-groups) spaces by utilizing a heuristic hill-climbing algorithm to help you quickly find a more optimal configuration
 
 - [Automatic Brute Search](docs/config_search.md#automatic-brute-search) will **exhaustively** search the
-  [Max Batch Size](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#maximum-batch-size),
-  [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#dynamic-batcher), and
-  [Instance Group](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#instance-groups)
+  [Max Batch Size](https://github.com/triton-inference-server/server/blob/r25.11/docs/user_guide/model_configuration.md#maximum-batch-size),
+  [Dynamic Batching](https://github.com/triton-inference-server/server/blob/r25.11/docs/user_guide/model_configuration.md#dynamic-batcher), and
+  [Instance Group](https://github.com/triton-inference-server/server/blob/r25.11/docs/user_guide/model_configuration.md#instance-groups)
   parameters of your model configuration
 
 - [Manual Brute Search](docs/config_search.md#manual-brute-search) allows you to create manual sweeps for every parameter that can be specified in the model configuration
