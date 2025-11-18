@@ -49,7 +49,7 @@ git pull origin main
 **1. Pull the SDK container:**
 
 ```
-docker pull nvcr.io/nvidia/tritonserver:24.12-py3-sdk
+docker pull nvcr.io/nvidia/tritonserver:25.11-py3-sdk
 ```
 
 **2. Run the SDK container**
@@ -58,7 +58,7 @@ docker pull nvcr.io/nvidia/tritonserver:24.12-py3-sdk
 docker run -it --gpus all \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
-      --net=host nvcr.io/nvidia/tritonserver:24.12-py3-sdk
+      --net=host nvcr.io/nvidia/tritonserver:25.11-py3-sdk
 ```
 
 ## `Step 3:` Profile both models concurrently
