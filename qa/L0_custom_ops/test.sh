@@ -30,9 +30,22 @@ NUM_ITERATIONS=${NUM_ITERATIONS:=4}
 MODEL_NAMES="libtorch_modulo"
 WAIT_TIMEOUT=1200
 
+# Copy models to locations accessible for all modes
+# For Docker mode, use /tmp/output which is accessible to Docker daemon on host
+LOCAL_MODEL_REPOSITORY="/tmp/L0_custom_ops_models"
+DOCKER_MODEL_REPOSITORY="/tmp/output/L0_custom_ops_models"
+
+rm -rf ${LOCAL_MODEL_REPOSITORY} ${DOCKER_MODEL_REPOSITORY}
+cp -r ${MODEL_REPOSITORY} ${LOCAL_MODEL_REPOSITORY}
+cp -r ${MODEL_REPOSITORY} ${DOCKER_MODEL_REPOSITORY}
+
 # Generate test configs
-PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-python3 test_config_generator.py --profile-models $MODEL_NAMES --preload-path "/usr/lib/$(uname -m)-linux-gnu/libpython${PYTHON_VERSION}.so.1:$MODEL_REPOSITORY/libtorch_modulo/custom_modulo.so" --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH'
+PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+python3 test_config_generator.py --profile-models $MODEL_NAMES \
+    --preload-path "/usr/lib/$(uname -m)-linux-gnu/libpython${PYTHON_VERSION}.so.1" \
+    --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH' \
+    --docker-model-repository ${DOCKER_MODEL_REPOSITORY} \
+    --local-model-repository ${LOCAL_MODEL_REPOSITORY}
 
 LIST_OF_CONFIG_FILES=(`ls | grep .yaml`)
 
@@ -41,12 +54,12 @@ if [ ${#LIST_OF_CONFIG_FILES[@]} -le 0 ]; then
     exit 1
 fi
 
-MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
+# Base args without model repository - will be added per mode
+MODEL_ANALYZER_BASE_ARGS="--triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL"
-MODEL_ANALYZER_PROFILE_ARGS="$MODEL_ANALYZER_PROFILE_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 2"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --run-config-search-max-concurrency 2 --run-config-search-max-instance-count 2"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 
 RET=0
@@ -70,13 +83,15 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     touch $TRITON_LOG
     MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
-    # Run analyzer
+    # Run analyzer - use different model repository paths for different modes
     if [[ "$LOG_PREFIX" == "c_api" ]]; then
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --perf-output-path=$TRITON_LOG"
+        MODEL_ANALYZER_ARGS="-m $LOCAL_MODEL_REPOSITORY $MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --perf-output-path=$TRITON_LOG"
     elif [[ "$LOG_PREFIX" == "docker" ]]; then
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-docker-image $TRITON_SERVER_CONTAINER_IMAGE_NAME --triton-output-path=$TRITON_LOG"
+        # For Docker mode, use DOCKER_MODEL_REPOSITORY which is accessible to Docker daemon
+        MODEL_ANALYZER_ARGS="-m $DOCKER_MODEL_REPOSITORY $MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-docker-image $TRITON_SERVER_CONTAINER_IMAGE_NAME --triton-output-path=$TRITON_LOG"
     else
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-output-path=$TRITON_LOG"
+        # For local mode, use local copy
+        MODEL_ANALYZER_ARGS="-m $LOCAL_MODEL_REPOSITORY $MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-output-path=$TRITON_LOG"
     fi
 
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
@@ -125,6 +140,7 @@ done
 set -e
 
 rm -rf *.yaml
+rm -rf ${LOCAL_MODEL_REPOSITORY} ${DOCKER_MODEL_REPOSITORY}
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

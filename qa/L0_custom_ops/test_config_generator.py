@@ -65,6 +65,18 @@ class TestConfigGenerator:
             required=True,
             help="The path to the backend shared libraries used by the custom op",
         )
+        parser.add_argument(
+            "--docker-model-repository",
+            type=str,
+            required=True,
+            help="The model repository path accessible to Docker daemon (for Docker mode)",
+        )
+        parser.add_argument(
+            "--local-model-repository",
+            type=str,
+            required=True,
+            help="The local copy of model repository (for c_api and local modes)",
+        )
 
         self.args = parser.parse_args()
         self.profile_models = sorted(self.args.profile_models.split(","))
@@ -87,8 +99,11 @@ class TestConfigGenerator:
 
     def generate_local_mode_custom_op_config(self):
         self.config["triton_launch_mode"] = "local"
+        # For local mode, use the local copy's custom_modulo.so path
+        preload_parts = self.args.preload_path.split(":")
+        local_preload = f"{preload_parts[0]}:{self.args.local_model_repository}/libtorch_modulo/custom_modulo.so"
         self.config["triton_server_environment"] = {
-            "LD_PRELOAD": self.args.preload_path,
+            "LD_PRELOAD": local_preload,
             "LD_LIBRARY_PATH": self.args.library_path,
         }
         with open("config-local.yaml", "w+") as f:
@@ -100,14 +115,15 @@ class TestConfigGenerator:
             self.config["triton_docker_image"] = os.environ[
                 "TRITON_LAUNCH_DOCKER_IMAGE"
             ]
-        preload_paths = self.args.preload_path.split(":")
-        # Only mount the second preload location. The first
-        # location is available in the server container.
+        # Mount the Docker-accessible model repository path
+        # Use /tmp/output path which is accessible to Docker daemon on host
         self.config["triton_docker_mounts"] = [
-            f"{preload_paths[1]}:{preload_paths[1]}:ro"
+            f"{self.args.docker_model_repository}:{self.args.docker_model_repository}:ro"
         ]
+        # For Docker mode, use the docker repository path for LD_PRELOAD
+        docker_preload = f"{self.args.preload_path}:{self.args.docker_model_repository}/libtorch_modulo/custom_modulo.so"
         self.config["triton_server_environment"] = {
-            "LD_PRELOAD": self.args.preload_path,
+            "LD_PRELOAD": docker_preload,
             "LD_LIBRARY_PATH": self.args.library_path,
         }
         with open("config-docker.yaml", "w+") as f:
@@ -116,8 +132,11 @@ class TestConfigGenerator:
     def generate_c_api_custom_op_config(self):
         self.config["triton_launch_mode"] = "c_api"
         self.config["perf_output"] = True
+        # For c_api mode, use the local copy's custom_modulo.so path
+        preload_parts = self.args.preload_path.split(":")
+        local_preload = f"{preload_parts[0]}:{self.args.local_model_repository}/libtorch_modulo/custom_modulo.so"
         self.config["triton_server_environment"] = {
-            "LD_PRELOAD": self.args.preload_path,
+            "LD_PRELOAD": local_preload,
             "LD_LIBRARY_PATH": self.args.library_path,
         }
         with open("config-c_api.yaml", "w+") as f:
