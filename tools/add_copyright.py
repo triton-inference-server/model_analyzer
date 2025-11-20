@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import argparse
 import os
@@ -28,7 +17,7 @@ ROOT_DIR = os.path.dirname(__file__)
 LICENSE_PATH = os.path.join(ROOT_DIR, "COPYRIGHT")
 
 COPYRIGHT_YEAR_PAT = re.compile(
-    r"Copyright( \(c\))? (\d{4}),?-?(\d{4})?,? NVIDIA CORPORATION"
+    r"SPDX-FileCopyrightText: Copyright( \(c\))? (\d{4})?-?(\d{4}) NVIDIA CORPORATION"
 )
 
 
@@ -51,11 +40,11 @@ def update_copyright_year(
     assert match is not None, f"File {path} does not contain a valid copyright."
     min_year = match.groups()[1] or match.groups()[2]
 
-    new_copyright = f"Copyright{match.groups()[0] or ''} "
-    if min_year and min_year < current_year and not disallow_range:
-        new_copyright += f"{min_year}-{current_year},"
+    new_copyright = f"SPDX-FileCopyrightText: Copyright{match.groups()[0] or ''} "
+    if min_year < current_year and not disallow_range:
+        new_copyright += f"{min_year}-{current_year}"
     else:
-        new_copyright += f"{current_year},"
+        new_copyright += f"{current_year}"
     new_copyright += " NVIDIA CORPORATION"
 
     updated_content = COPYRIGHT_YEAR_PAT.sub(new_copyright, content)
@@ -143,7 +132,7 @@ def update_or_add_header(
 
     # As a sanity check, make sure we didn't accidentally add the copyright header
     # twice, or add a new header when one was already present.
-    if content.count("Copyright (c)") > 1 or content.count("Copyright ") > 1:
+    if content.count("SPDX-FileCopyrightText:") > 1:
         print(
             f"WARNING: Something went wrong while processing: {path}!\n"
             "Please check if the copyright header was included twice or wasn't added at all. "
