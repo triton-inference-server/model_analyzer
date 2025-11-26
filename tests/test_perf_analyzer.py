@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import unittest
 from unittest.mock import MagicMock, mock_open, patch
@@ -33,6 +21,16 @@ from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
 from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
 from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
+from model_analyzer.record.types.inter_token_latency_avg import InterTokenLatencyAvg
+from model_analyzer.record.types.inter_token_latency_max import InterTokenLatencyMax
+from model_analyzer.record.types.inter_token_latency_min import InterTokenLatencyMin
+from model_analyzer.record.types.inter_token_latency_p25 import InterTokenLatencyP25
+from model_analyzer.record.types.inter_token_latency_p50 import InterTokenLatencyP50
+from model_analyzer.record.types.inter_token_latency_p75 import InterTokenLatencyP75
+from model_analyzer.record.types.inter_token_latency_p90 import InterTokenLatencyP90
+from model_analyzer.record.types.inter_token_latency_p95 import InterTokenLatencyP95
+from model_analyzer.record.types.inter_token_latency_p99 import InterTokenLatencyP99
+from model_analyzer.record.types.output_token_throughput import OutputTokenThroughput
 from model_analyzer.record.types.perf_client_response_wait import PerfClientResponseWait
 from model_analyzer.record.types.perf_client_send_recv import PerfClientSendRecv
 from model_analyzer.record.types.perf_latency_avg import PerfLatencyAvg
@@ -46,6 +44,15 @@ from model_analyzer.record.types.perf_server_compute_output import (
 )
 from model_analyzer.record.types.perf_server_queue import PerfServerQueue
 from model_analyzer.record.types.perf_throughput import PerfThroughput
+from model_analyzer.record.types.time_to_first_token_avg import TimeToFirstTokenAvg
+from model_analyzer.record.types.time_to_first_token_max import TimeToFirstTokenMax
+from model_analyzer.record.types.time_to_first_token_min import TimeToFirstTokenMin
+from model_analyzer.record.types.time_to_first_token_p25 import TimeToFirstTokenP25
+from model_analyzer.record.types.time_to_first_token_p50 import TimeToFirstTokenP50
+from model_analyzer.record.types.time_to_first_token_p75 import TimeToFirstTokenP75
+from model_analyzer.record.types.time_to_first_token_p90 import TimeToFirstTokenP90
+from model_analyzer.record.types.time_to_first_token_p95 import TimeToFirstTokenP95
+from model_analyzer.record.types.time_to_first_token_p99 import TimeToFirstTokenP99
 from model_analyzer.triton.client.client_factory import TritonClientFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_factory import TritonServerFactory
@@ -84,6 +91,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config["model-name"] = TEST_MODEL_NAME
         self.config["measurement-interval"] = 1000
         self.config["measurement-request-count"] = 50
+        self.config["latency-report-file"] = TEST_MODEL_NAME + "-results.csv"
 
         self.run_config = RunConfig({})
         self.run_config.add_model_run_config(
@@ -132,7 +140,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
     def test_perf_analyzer_boolean_args(self):
         """Test that only positive boolean args get added"""
-        expected_cli_str = "-m test_model -b 1 --measurement-interval=1000 --binary-search --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --binary-search --measurement-request-count=50"
 
         self.config["async"] = "False"
         self.config["binary-search"] = "True"
@@ -141,7 +149,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
     def test_perf_analyzer_additive_args(self):
         shape = ["name1:1,2,3", "name2:4,5,6"]
-        expected_cli_str = "-m test_model -b 1 --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50"
 
         self.config["shape"] = shape[:]
 
@@ -149,7 +157,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
         shape = "name1:1,2,3"
-        expected_cli_str = "-m test_model -b 1 --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50"
         self.config["shape"] = shape
 
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
@@ -177,7 +185,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         ssl_https_private_key_file = "h"
 
         expected_cli_str = (
-            f"-m test_model -b 1 --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl "
+            f"-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl "
             f"--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c "
             f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e "
             f"--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h"
@@ -241,14 +249,17 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config["ssl-grpc-use-ssl"] = ssl_grpc_use_ssl
         self.assertEqual(self.config["ssl-grpc-use-ssl"], ssl_grpc_use_ssl)
         expected_cli_str = (
-            f"-m test_model -b 1 --measurement-interval=1000 --measurement-request-count=50 "
+            f"-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --measurement-request-count=50 "
             f"--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c "
             f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e "
             f"--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h"
         )
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
-    def test_run(self):
+    def test_pa_csv_output(self):
+        """
+        Tests the ability to read PA's CSV output
+        """
         server_config = TritonServerConfig()
         server_config["model-repository"] = MODEL_REPOSITORY_PATH
 
@@ -280,129 +291,49 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 5)
 
-        # Test p90 latency parsing
-        perf_metrics = [PerfLatencyP90]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.7)
-
-        # Test p95 latency parsing
-        perf_metrics = [PerfLatencyP95]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.8)
-
-        # Test p99 latency parsing
-        perf_metrics = [PerfLatencyP99]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.9)
+        # Test latency parsing
+        self._test_metrics_from_csv(perf_analyzer, pa_csv_mock, [PerfLatencyP90], [4.7])
+        self._test_metrics_from_csv(perf_analyzer, pa_csv_mock, [PerfLatencyP95], [4.8])
+        self._test_metrics_from_csv(perf_analyzer, pa_csv_mock, [PerfLatencyP99], [4.9])
 
         # Test throughput parsing
-        perf_metrics = [PerfThroughput]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 46.8)
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfThroughput], [46.8]
+        )
 
         # Test client response wait
-        perf_metrics = [PerfClientResponseWait]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.314)
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfClientResponseWait], [0.314]
+        )
 
         # Test server queue
-        perf_metrics = [PerfServerQueue]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.018)
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfServerQueue], [0.018]
+        )
 
         # Test server compute infer
-        perf_metrics = [PerfServerComputeInfer]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.065)
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfServerComputeInfer], [0.065]
+        )
 
         # Test server compute input
-        perf_metrics = [PerfServerComputeInput]
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfServerComputeInput], [0.034]
+        )
 
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.034)
-
-        # Test server compute infer
-        perf_metrics = [PerfServerComputeOutput]
-
-        with patch(
-            "model_analyzer.perf_analyzer.perf_analyzer.open",
-            mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            perf_analyzer.run(perf_metrics)
-
-        records = perf_analyzer.get_perf_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.016)
+        # Test server compute output
+        self._test_metrics_from_csv(
+            perf_analyzer, pa_csv_mock, [PerfServerComputeOutput], [0.016]
+        )
 
         # Test Avg GPU Utilizations. Perf metric is ignored for get_gpu_records()
         gpu_metrics = [GPUUtilization, PerfLatencyAvg]
@@ -410,7 +341,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
@@ -428,7 +361,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
@@ -444,7 +379,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
@@ -463,7 +400,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
@@ -488,7 +427,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(perf_metrics)
 
         perf_records = perf_analyzer.get_perf_records()
@@ -514,7 +455,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_empty),
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
-            self.assertFalse(perf_analyzer.run(perf_metrics))
+            self.assertEqual(perf_analyzer.run(perf_metrics), perf_analyzer.PA_FAIL)
 
         # Test case where PA returns blank values for some GPU metrics
         pa_csv_mock = """Concurrency,Inferences/Second,Client Send,Network+Server Send/Recv,Server Queue,Server Compute Input,Server Compute Infer,Server Compute Output,"""
@@ -529,7 +470,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with patch(
             "model_analyzer.perf_analyzer.perf_analyzer.open",
             mock_open(read_data=pa_csv_mock),
-        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
@@ -543,6 +486,208 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"):
             self.assertTrue(perf_analyzer.run(perf_metrics))
         self.server.stop()
+
+    def test_pa_llm_csv_output(self):
+        """
+        Tests the ability to read PA's LLM CSV output
+        """
+        server_config = TritonServerConfig()
+        server_config["model-repository"] = MODEL_REPOSITORY_PATH
+
+        # Create server, client, PerfAnalyzer, and wait for server ready
+        self.server = TritonServerFactory.create_server_local(
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=self.gpus
+        )
+
+        perf_analyzer = PerfAnalyzer(
+            path=PERF_BIN_PATH,
+            config=self.run_config,
+            max_retries=10,
+            timeout=100,
+            max_cpu_util=50,
+            model_type="LLM",
+        )
+        self.client = TritonClientFactory.create_grpc_client(server_url=TEST_GRPC_URL)
+        self.server.start()
+        self.client.wait_for_server_ready(num_retries=1)
+
+        pa_llm_csv_mock = """Metric,avg,min,max,p99,p95,p90,p75,p50,p25\n"""
+        pa_llm_csv_mock += """Time To First Token (ns),4238735,3367978,6702240,6371118,5344958,5006259,4841394,4146648,3484484\n"""
+        pa_llm_csv_mock += """Inter Token Latency (ns),27202264,3849435,138324924,28283424,27737593,27469154,27067290,26979956,26926962\n"""
+        pa_llm_csv_mock += """Request Latency (ns),3363927003,3367978,14238834483,14091273510,13740917508,13692672723,3752510140,4846258,3612270\n"""
+        pa_llm_csv_mock += """Num Output Token,126,0,584,562,509,505,135,0,0\n"""
+        pa_llm_csv_mock += """\n"""
+        pa_llm_csv_mock += """Metric,Value\n"""
+        pa_llm_csv_mock += """Output Token Throughput (per sec),36.37\n"""
+        pa_llm_csv_mock += """Request Throughput (per sec),0.29"""
+
+        # Test all Time to first token values
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenAvg],
+            [4238.735],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenMin],
+            [3367.978],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenMax],
+            [6702.240],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP99],
+            [6371.118],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP95],
+            [5344.958],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP90],
+            [5006.259],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP75],
+            [4841.394],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP50],
+            [4146.648],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP25],
+            [3484.484],
+            is_llm=True,
+        )
+
+        # Test all Inter token latency values
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyAvg],
+            [27202.264],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyMin],
+            [3849.435],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyMax],
+            [138324.924],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP99],
+            [28283.424],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP95],
+            [27737.593],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP90],
+            [27469.154],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP75],
+            [27067.290],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP50],
+            [26979.956],
+            is_llm=True,
+        )
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [InterTokenLatencyP25],
+            [26926.962],
+            is_llm=True,
+        )
+
+        # Test output token throughput
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [OutputTokenThroughput],
+            [36.37],
+            is_llm=True,
+        )
+
+        # Test combination
+        self._test_metrics_from_csv(
+            perf_analyzer,
+            pa_llm_csv_mock,
+            [TimeToFirstTokenP90, InterTokenLatencyP50, OutputTokenThroughput],
+            [5006.259, 26979.956, 36.37],
+            is_llm=True,
+        )
+
+    def _test_metrics_from_csv(
+        self, perf_analyzer, read_data, metrics, expected_values, is_llm=False
+    ):
+        with patch(
+            "model_analyzer.perf_analyzer.perf_analyzer.open",
+            mock_open(read_data=read_data),
+        ), patch("model_analyzer.perf_analyzer.perf_analyzer.os.remove"), patch.object(
+            PerfAnalyzer, "_verify_output_files_exist", return_value=True
+        ):
+            perf_analyzer.run(metrics)
+
+        if is_llm:
+            records = perf_analyzer.get_llm_records()
+        else:
+            records = perf_analyzer.get_perf_records()
+
+        self.assertEqual(len(records[TEST_MODEL_NAME]), len(expected_values))
+        for i, expected_value in enumerate(expected_values):
+            self.assertEqual(records[TEST_MODEL_NAME][i].value(), expected_value)
 
     def test_measurement_interval_increase(self):
         server_config = TritonServerConfig()
@@ -653,6 +798,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             "test_model",
             "-b",
             "1",
+            "-f",
+            "test_model-results.csv",
             "--measurement-interval",
             "1000",
             "--measurement-request-count",
@@ -857,6 +1004,49 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                 "measurement-request-count"
             ],
         )
+
+    def test_request_intervals_in_inference_load_args(self):
+        """
+        Test that request-intervals is included in inference_load_args
+        """
+        load_args = PerfAnalyzerConfig.get_inference_load_args()
+        self.assertIn("request-intervals", load_args)
+        self.assertIn("concurrency-range", load_args)
+        self.assertIn("request-rate-range", load_args)
+        self.assertEqual(len(load_args), 3)
+
+    def test_request_intervals_preserved_in_config(self):
+        """
+        Test that request-intervals is preserved when set in config
+        """
+        config = PerfAnalyzerConfig()
+        config["request-intervals"] = "./intervals.txt"
+        self.assertEqual(config["request-intervals"], "./intervals.txt")
+
+    def test_request_intervals_in_cli_string(self):
+        """
+        Test that request-intervals appears in CLI string
+        """
+        config = PerfAnalyzerConfig()
+        config["model-name"] = "test_model"
+        config["request-intervals"] = "./intervals.txt"
+        cli_string = config.to_cli_string()
+        self.assertIn("--request-intervals=./intervals.txt", cli_string)
+
+    def test_request_intervals_mutually_exclusive(self):
+        """
+        Test that only one load parameter appears in CLI when request-intervals is set
+        """
+        config = PerfAnalyzerConfig()
+        config["model-name"] = "test_model"
+        config["request-intervals"] = "./intervals.txt"
+        cli_string = config.to_cli_string()
+
+        # Should have request-intervals
+        self.assertIn("--request-intervals=./intervals.txt", cli_string)
+        # Should NOT have other load parameters
+        self.assertNotIn("--concurrency-range", cli_string)
+        self.assertNotIn("--request-rate-range", cli_string)
 
     def tearDown(self):
         # In case test raises exception
