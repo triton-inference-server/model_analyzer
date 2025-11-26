@@ -121,7 +121,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
     def test_perf_analyzer_boolean_args(self):
         """Test that only positive boolean args get added"""
-        expected_cli_str = "-m test_model -b 1 --measurement-interval=1000 --binary-search --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --binary-search --measurement-request-count=50"
 
         self.config["async"] = "False"
         self.config["binary-search"] = "True"
@@ -130,7 +130,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
     def test_perf_analyzer_additive_args(self):
         shape = ["name1:1,2,3", "name2:4,5,6"]
-        expected_cli_str = "-m test_model -b 1 --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50"
 
         self.config["shape"] = shape[:]
 
@@ -138,7 +138,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
         shape = "name1:1,2,3"
-        expected_cli_str = "-m test_model -b 1 --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50"
         self.config["shape"] = shape
 
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
@@ -166,7 +166,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         ssl_https_private_key_file = "h"
 
         expected_cli_str = (
-            f"-m test_model -b 1 --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl "
+            f"-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl "
             f"--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c "
             f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e "
             f"--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h"
@@ -230,7 +230,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config["ssl-grpc-use-ssl"] = ssl_grpc_use_ssl
         self.assertEqual(self.config["ssl-grpc-use-ssl"], ssl_grpc_use_ssl)
         expected_cli_str = (
-            f"-m test_model -b 1 --measurement-interval=1000 --measurement-request-count=50 "
+            f"-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --measurement-request-count=50 "
             f"--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c "
             f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e "
             f"--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h"
