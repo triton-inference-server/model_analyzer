@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from sys import maxsize
@@ -507,13 +495,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         perf_analyzer_config.update_config_from_profile_config(model_name, self._config)
 
-        concurrency = self._calculate_concurrency(dimension_values)
-
-        perf_config_params = {
-            "batch-size": DEFAULT_BATCH_SIZES,
-            "concurrency-range": concurrency,
-        }
-        perf_analyzer_config.update_config(perf_config_params)
+        if not model.is_load_specified():
+            concurrency = self._calculate_concurrency(dimension_values)
+            perf_config_params = {
+                "batch-size": DEFAULT_BATCH_SIZES,
+                "concurrency-range": concurrency,
+            }
+            perf_analyzer_config.update_config(perf_config_params)
 
         perf_analyzer_config.update_config(model.perf_analyzer_flags())
         return perf_analyzer_config
@@ -703,13 +691,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_config.get_field("name"), self._config
         )
 
-        default_concurrency = self._calculate_default_concurrency(model_config)
-
-        perf_config_params = {
-            "batch-size": DEFAULT_BATCH_SIZES,
-            "concurrency-range": default_concurrency,
-        }
-        default_perf_analyzer_config.update_config(perf_config_params)
+        if not model.is_load_specified():
+            default_concurrency = self._calculate_default_concurrency(model_config)
+            perf_config_params = {
+                "batch-size": DEFAULT_BATCH_SIZES,
+                "concurrency-range": default_concurrency,
+            }
+            default_perf_analyzer_config.update_config(perf_config_params)
 
         default_perf_analyzer_config.update_config(model.perf_analyzer_flags())
 

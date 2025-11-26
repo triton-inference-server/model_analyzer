@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import logging
 import os
@@ -22,6 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib import patches as mpatches
 
 from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.record.metrics_manager import MetricsManager
 
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
@@ -89,7 +78,6 @@ class DetailedPlot:
         self._fig.set_figheight(8)
         self._fig.set_figwidth(12)
 
-        self._ax_latency.set_xlabel("Concurrent Client Requests")
         self._ax_latency.set_ylabel(latency_axis_label)
         self._ax_throughput.set_ylabel(throughput_axis_label)
 
@@ -120,29 +108,15 @@ class DetailedPlot:
         """
 
         # TODO-TMA-568: This needs to be updated because there will be multiple model configs
-        if (
-            "concurrency-range" in run_config_measurement.model_specific_pa_params()[0]
-            and run_config_measurement.model_specific_pa_params()[0][
-                "concurrency-range"
-            ]
-        ):
-            self._data["concurrency"].append(
-                run_config_measurement.model_specific_pa_params()[0][
-                    "concurrency-range"
-                ]
-            )
-
-        if (
-            "request-rate-range" in run_config_measurement.model_specific_pa_params()[0]
-            and run_config_measurement.model_specific_pa_params()[0][
-                "request-rate-range"
-            ]
-        ):
-            self._data["request_rate"].append(
-                run_config_measurement.model_specific_pa_params()[0][
-                    "request-rate-range"
-                ]
-            )
+        for load_arg in PerfAnalyzerConfig.get_inference_load_args():
+            if (
+                load_arg in run_config_measurement.model_specific_pa_params()[0]
+                and run_config_measurement.model_specific_pa_params()[0][load_arg]
+            ):
+                data_key = self._get_data_key_from_load_arg(load_arg)
+                self._data[data_key].append(
+                    run_config_measurement.model_specific_pa_params()[0][load_arg]
+                )
 
         self._data["perf_throughput"].append(
             run_config_measurement.get_non_gpu_metric_value(tag="perf_throughput")
@@ -164,24 +138,27 @@ class DetailedPlot:
         on this plot's Axes object
         """
 
-        # Need to change the default x-axis plot title for request rates
-        if "request_rate" in self._data and self._data["request_rate"][0]:
+        # Update the x-axis plot title
+        if "request_intervals" in self._data and self._data["request_intervals"][0]:
+            self._ax_latency.set_xlabel("Request Intervals File")
+            sort_indices_key = "request_intervals"
+        elif "request_rate" in self._data and self._data["request_rate"][0]:
             self._ax_latency.set_xlabel("Client Request Rate")
-
-        # Sort the data by request rate or concurrency
-        if "request_rate" in self._data and self._data["request_rate"][0]:
-            sort_indices = list(
-                zip(*sorted(enumerate(self._data["request_rate"]), key=lambda x: x[1]))
-            )[0]
+            sort_indices_key = "request_rate"
         else:
-            sort_indices = list(
-                zip(*sorted(enumerate(self._data["concurrency"]), key=lambda x: x[1]))
-            )[0]
+            self._ax_latency.set_xlabel("Concurrent Client Requests")
+            sort_indices_key = "concurrency"
+
+        sort_indices = list(
+            zip(*sorted(enumerate(self._data[sort_indices_key]), key=lambda x: x[1]))
+        )[0]
 
         sorted_data = {
             key: [data_list[i] for i in sort_indices]
             for key, data_list in self._data.items()
         }
+
+        sorted_data["indices"] = list(map(str, sorted_data[sort_indices_key]))
 
         # Plot latency breakdown bars
         labels = dict(
@@ -196,11 +173,6 @@ class DetailedPlot:
             )
         )
         bottoms = None
-
-        if "request_rate" in self._data:
-            sorted_data["indices"] = list(map(str, sorted_data["request_rate"]))
-        else:
-            sorted_data["indices"] = list(map(str, sorted_data["concurrency"]))
 
         # Plot latency breakdown with concurrency casted as string to make uniform x
         for metric, label in labels.items():
@@ -264,3 +236,18 @@ class DetailedPlot:
         """
 
         self._fig.savefig(os.path.join(filepath, self._name))
+
+    def _get_data_key_from_load_arg(self, load_arg):
+        """
+        Gets the key into _data corresponding with the input load arg
+
+        For example, the load arg "request-rate-range" has the key "request_rate"
+        """
+        # Check if '-range' exists at the end of the input string and remove it
+        if load_arg.endswith("-range"):
+            load_arg = load_arg[:-6]
+
+        # Replace any '-' with '_' in the remaining string
+        data_key = load_arg.replace("-", "_")
+
+        return data_key

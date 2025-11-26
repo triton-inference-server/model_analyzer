@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from typing import Generator, List, Optional
@@ -169,10 +157,12 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._parameter_results.extend(measurement)
 
     def _create_parameter_list(self) -> List[int]:
-        # The two possible parameters are request rate or concurrency
-        # Concurrency is the default and will be used unless the user specifies
-        # request rate, either as a model parameter or a config option
-        if self._cli_config.is_request_rate_specified(self._model_parameters):
+        # Determines the inference load (concurrency or request-rate or request-intervals)
+        # and creates the list of values to use. If nothing is specified by the user, then
+        # concurrency will be used.
+        if "request-intervals" in self._perf_analyzer_flags:
+            return [self._perf_analyzer_flags["request-intervals"]]
+        elif self._cli_config.is_request_rate_specified(self._model_parameters):
             return self._create_request_rate_list()
         else:
             return self._create_concurrency_list()
@@ -207,7 +197,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         for params in utils.generate_parameter_combinations(
             perf_config_non_parameter_values
         ):
-            configs_with_concurrency = []
+            configs_with_inference_load = []
             for parameter in self._parameters:
                 new_perf_config = PerfAnalyzerConfig()
 
@@ -217,7 +207,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
                 new_perf_config.update_config(params)
 
-                if self._cli_config.is_request_rate_specified(self._model_parameters):
+                if "request-intervals" in self._perf_analyzer_flags:
+                    pass
+                elif self._cli_config.is_request_rate_specified(self._model_parameters):
                     new_perf_config.update_config({"request-rate-range": parameter})
                 else:
                     new_perf_config.update_config({"concurrency-range": parameter})
@@ -225,8 +217,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
 
-                configs_with_concurrency.append(new_perf_config)
-            self._configs.append(configs_with_concurrency)
+                configs_with_inference_load.append(new_perf_config)
+            self._configs.append(configs_with_inference_load)
 
     def _create_non_parameter_perf_config_values(self) -> dict:
         perf_config_values = {

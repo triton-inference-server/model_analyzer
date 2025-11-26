@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 from typing import List
 
@@ -98,6 +86,13 @@ class PerfAnalyzerConfig:
         "collect-metrics",
     ]
 
+    # Only one of these args can be sent to PA, as each one controls the inference load in a different way
+    inference_load_args = [
+        "concurrency-range",
+        "request-rate-range",
+        "request-intervals",
+    ]
+
     def __init__(self):
         """
         Construct a PerfAnalyzerConfig
@@ -108,7 +103,9 @@ class PerfAnalyzerConfig:
         self._options = {
             "-m": None,
             "-x": None,
-            "-b": None,
+            # Default to batch size of 1. This would be handled by PA if unspecified,
+            # but we want to be explicit so we can properly print/track values
+            "-b": 1,
             "-u": None,
             "-i": None,
             "-f": None,
@@ -159,6 +156,16 @@ class PerfAnalyzerConfig:
         """
 
         return cls.additive_args[:]
+
+    @classmethod
+    def get_inference_load_args(cls):
+        """
+        Returns
+        -------
+        list of str
+            The Perf Analyzer args that control the inference load
+        """
+        return cls.inference_load_args
 
     def update_config(self, params=None):
         """
@@ -275,6 +282,7 @@ class PerfAnalyzerConfig:
             "batch-size": self._options["-b"],
             "concurrency-range": self._args["concurrency-range"],
             "request-rate-range": self._args["request-rate-range"],
+            "request-intervals": self._args["request-intervals"],
         }
 
     @classmethod
