@@ -1005,9 +1005,11 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             ],
         )
 
-    def test_request_intervals_in_inference_load_args(self):
+    def test_valid_load_args_list(self):
         """
-        Test that request-intervals is included in inference_load_args
+        Test that all of the value load args are included in the class-level list of valid inference load args.
+        Note: These three load parameters are mutually exclusive at runtime (only one can be used
+        in a given config), but this list defines all valid options that Model Analyzer recognizes.
         """
         load_args = PerfAnalyzerConfig.get_inference_load_args()
         self.assertIn("request-intervals", load_args)
