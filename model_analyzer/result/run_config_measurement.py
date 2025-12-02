@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from copy import deepcopy
@@ -48,6 +36,9 @@ class RunConfigMeasurement:
         self._model_variants_name = model_variants_name
 
         self._gpu_data = gpu_data
+        # Note: "_avg_gpu_data" is a historical name. This actually contains
+        # aggregated GPU metrics: memory metrics are SUMMED, while utilization
+        # and power metrics are AVERAGED across GPUs.
         self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
         self._avg_gpu_data_from_tag = self._get_avg_gpu_data_from_tag()
 
@@ -213,7 +204,9 @@ class RunConfigMeasurement:
 
     def get_gpu_metric(self, tag: str) -> Optional[Record]:
         """
-        Returns the average of Records associated with this GPU metric
+        Returns the aggregated Record associated with this GPU metric
+        across all GPUs. GPU memory metrics are summed; other metrics
+        like utilization are averaged.
 
         Parameters
         ----------
@@ -224,7 +217,7 @@ class RunConfigMeasurement:
         Returns
         -------
         Record:
-            of average GPU metric Records corresponding to this tag,
+            of aggregated GPU metric Records corresponding to this tag,
             or None if tag not found
         """
         if tag in self._avg_gpu_data_from_tag:
@@ -320,8 +313,10 @@ class RunConfigMeasurement:
         Returns
         -------
         float :
-            Average of the values of the GPU metric Records
+            Aggregated value of the GPU metric Records across all GPUs
             corresponding to the tag, default_value if tag not found.
+            GPU memory metrics are summed; other metrics like utilization
+            are averaged.
         """
         metric = self.get_gpu_metric(tag)
         if metric is None:
@@ -615,7 +610,9 @@ class RunConfigMeasurement:
 
     def _average_list(self, row_list):
         """
-        Average a 2d list
+        Aggregate a 2d list of GPU records across GPUs.
+        Uses each record type's value_function() to determine
+        whether to sum or average the metric.
         """
 
         if not row_list:
@@ -623,13 +620,21 @@ class RunConfigMeasurement:
         else:
             N = len(row_list)
             d = len(row_list[0])
-            avg = [0 for _ in range(d)]
+            agg = [0 for _ in range(d)]
             for i in range(d):
-                avg[i] = (
-                    sum([row_list[j][i] for j in range(1, N)], start=row_list[0][i])
-                    * 1.0
-                ) / N
-            return avg
+                # Sum the records across all GPUs
+                summed_record = sum(
+                    [row_list[j][i] for j in range(1, N)], start=row_list[0][i]
+                )
+                # Get the aggregation function for this record type
+                value_func = row_list[0][i].value_function()
+                # If the value function is sum, use the sum directly
+                # If the value function is mean/average, divide by N
+                if value_func == sum:
+                    agg[i] = summed_record
+                else:
+                    agg[i] = summed_record / N
+            return agg
 
     def _deserialize_gpu_data(
         self, serialized_gpu_data: Dict

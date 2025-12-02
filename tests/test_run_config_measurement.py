@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import json
 import unittest
@@ -445,7 +433,9 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
             "0": {"gpu_used_memory": 6000, "gpu_utilization": 60},
             "1": {"gpu_used_memory": 10000, "gpu_utilization": 20},
         }
-        self.avg_gpu_metric_values = {"gpu_used_memory": 8000, "gpu_utilization": 40}
+        # GPU memory is now summed across GPUs (not averaged)
+        # GPU utilization is still averaged
+        self.avg_gpu_metric_values = {"gpu_used_memory": 16000, "gpu_utilization": 40}
 
         self.rcm0_non_gpu_metric_values = [
             {
