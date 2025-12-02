@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from math import log2
@@ -37,6 +25,8 @@ class ParameterSearch:
       - Will sweep from by powers of two from min to max parameter
       - If the user specifies a constraint, the algorithm will perform a binary search
         around the boundary if the constraint is violated
+      - Will not sweep at all if custom stimulus is provided by the user (via the
+        "request-intervals" perf analyzer flag)
 
     Invariant: It is necessary for the user to add new measurements as they are taken
     """
@@ -45,6 +35,7 @@ class ParameterSearch:
         self,
         config: ConfigCommandProfile,
         model_parameters: dict = {},
+        perf_analyzer_flags: dict = {},
         skip_parameter_sweep: bool = False,
     ) -> None:
         """
@@ -59,6 +50,7 @@ class ParameterSearch:
         self._parameter_is_request_rate = config.is_request_rate_specified(
             model_parameters
         )
+        self._inference_load_is_custom = "request-intervals" in perf_analyzer_flags
 
         if self._parameter_is_request_rate:
             self._min_parameter_index = int(
@@ -98,10 +90,11 @@ class ParameterSearch:
         a binary parameter search around the point where the constraint
         violated
         """
-        yield from self._perform_parameter_sweep()
+        if not self._inference_load_is_custom:
+            yield from self._perform_parameter_sweep()
 
-        if self._was_constraint_violated():
-            yield from self._perform_binary_parameter_search()
+            if self._was_constraint_violated():
+                yield from self._perform_binary_parameter_search()
 
     def _perform_parameter_sweep(self) -> Generator[int, None, None]:
         for parameter in (

@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import logging
 from copy import deepcopy
@@ -132,9 +120,11 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface)
             for result in top_results:
                 run_config = deepcopy(result.run_config())
                 model_parameters = self._get_model_parameters(model_name)
+                perf_analyzer_flags = self._get_model_perf_analyzer_flags(model_name)
                 parameter_search = ParameterSearch(
                     config=self._config,
                     model_parameters=model_parameters,
+                    perf_analyzer_flags=perf_analyzer_flags,
                     skip_parameter_sweep=True,
                 )
                 for parameter in parameter_search.search_parameters():
@@ -149,6 +139,12 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface)
             if model_name == model.model_name():
                 return model.parameters()
 
+        return {}
+
+    def _get_model_perf_analyzer_flags(self, model_name: str) -> Dict:
+        for model in self._models:
+            if model_name == model.model_name():
+                return model.perf_analyzer_flags()
         return {}
 
     def _set_parameter(

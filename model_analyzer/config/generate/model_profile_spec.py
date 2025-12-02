@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 from copy import deepcopy
 from typing import List
@@ -22,6 +10,7 @@ from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
 )
 from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
 
@@ -72,3 +61,14 @@ class ModelProfileSpec(ConfigModelProfileSpec):
     def is_ensemble(self) -> bool:
         """Returns true if the model is an ensemble"""
         return "ensemble_scheduling" in self._default_model_config
+
+    def is_load_specified(self) -> bool:
+        """
+        Returns true if the model's PA config has specified any of the
+        inference load args (such as concurrency). Else returns false
+        """
+        load_args = PerfAnalyzerConfig.get_inference_load_args()
+        pa_flags = self.perf_analyzer_flags()
+        if pa_flags is None:
+            return False
+        return any(e in pa_flags for e in load_args)

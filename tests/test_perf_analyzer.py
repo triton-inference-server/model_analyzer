@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import unittest
 from unittest.mock import MagicMock, mock_open, patch
@@ -152,7 +140,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
     def test_perf_analyzer_boolean_args(self):
         """Test that only positive boolean args get added"""
-        expected_cli_str = "-m test_model -f test_model-results.csv --measurement-interval=1000 --binary-search --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --binary-search --measurement-request-count=50"
 
         self.config["async"] = "False"
         self.config["binary-search"] = "True"
@@ -161,7 +149,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
     def test_perf_analyzer_additive_args(self):
         shape = ["name1:1,2,3", "name2:4,5,6"]
-        expected_cli_str = "-m test_model -f test_model-results.csv --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50"
 
         self.config["shape"] = shape[:]
 
@@ -169,7 +157,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
         shape = "name1:1,2,3"
-        expected_cli_str = "-m test_model -f test_model-results.csv --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50"
+        expected_cli_str = "-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50"
         self.config["shape"] = shape
 
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
@@ -197,7 +185,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         ssl_https_private_key_file = "h"
 
         expected_cli_str = (
-            f"-m test_model -f test_model-results.csv --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl "
+            f"-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl "
             f"--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c "
             f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e "
             f"--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h"
@@ -261,7 +249,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config["ssl-grpc-use-ssl"] = ssl_grpc_use_ssl
         self.assertEqual(self.config["ssl-grpc-use-ssl"], ssl_grpc_use_ssl)
         expected_cli_str = (
-            f"-m test_model -f test_model-results.csv --measurement-interval=1000 --measurement-request-count=50 "
+            f"-m test_model -b 1 -f test_model-results.csv --measurement-interval=1000 --measurement-request-count=50 "
             f"--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c "
             f"--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e "
             f"--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h"
@@ -808,6 +796,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             "perf_analyzer",
             "-m",
             "test_model",
+            "-b",
+            "1",
             "-f",
             "test_model-results.csv",
             "--measurement-interval",
@@ -843,32 +833,19 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             max_cpu_util=50,
         )
 
+        # yapf: disable
         expected_cmd = [
-            "mpiexec",
-            "--allow-run-as-root",
-            "--tag-output",
-            "-n",
-            "1",
-            "perf_analyzer",
-            "--enable-mpi",
-            "-m",
-            "MultiModel1",
-            "--measurement-interval",
-            "1000",
-            "--measurement-request-count",
-            "50",
-            ":",
-            "-n",
-            "1",
-            "perf_analyzer",
-            "--enable-mpi",
-            "-m",
-            "MultiModel2",
-            "-b",
-            "16",
-            "--concurrency-range",
-            "1024",
+            'mpiexec', '--allow-run-as-root', '--tag-output',
+            '-n', '1', 'perf_analyzer', '--enable-mpi',
+                '-m', 'MultiModel1', '-b', '1',
+                '--measurement-interval', '1000',
+                '--measurement-request-count', '50',
+            ':', '-n', '1', 'perf_analyzer', '--enable-mpi',
+                '-m', 'MultiModel2',
+                '-b', '16',
+                '--concurrency-range', '1024'
         ]
+        # yapf: enable
 
         self.assertEqual(pa._get_cmd(), expected_cmd)
 
@@ -1027,6 +1004,51 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                 "measurement-request-count"
             ],
         )
+
+    def test_valid_load_args_list(self):
+        """
+        Test that all of the value load args are included in the class-level list of valid inference load args.
+        Note: These three load parameters are mutually exclusive at runtime (only one can be used
+        in a given config), but this list defines all valid options that Model Analyzer recognizes.
+        """
+        load_args = PerfAnalyzerConfig.get_inference_load_args()
+        self.assertIn("request-intervals", load_args)
+        self.assertIn("concurrency-range", load_args)
+        self.assertIn("request-rate-range", load_args)
+        self.assertEqual(len(load_args), 3)
+
+    def test_request_intervals_preserved_in_config(self):
+        """
+        Test that request-intervals is preserved when set in config
+        """
+        config = PerfAnalyzerConfig()
+        config["request-intervals"] = "./intervals.txt"
+        self.assertEqual(config["request-intervals"], "./intervals.txt")
+
+    def test_request_intervals_in_cli_string(self):
+        """
+        Test that request-intervals appears in CLI string
+        """
+        config = PerfAnalyzerConfig()
+        config["model-name"] = "test_model"
+        config["request-intervals"] = "./intervals.txt"
+        cli_string = config.to_cli_string()
+        self.assertIn("--request-intervals=./intervals.txt", cli_string)
+
+    def test_request_intervals_mutually_exclusive(self):
+        """
+        Test that only one load parameter appears in CLI when request-intervals is set
+        """
+        config = PerfAnalyzerConfig()
+        config["model-name"] = "test_model"
+        config["request-intervals"] = "./intervals.txt"
+        cli_string = config.to_cli_string()
+
+        # Should have request-intervals
+        self.assertIn("--request-intervals=./intervals.txt", cli_string)
+        # Should NOT have other load parameters
+        self.assertNotIn("--concurrency-range", cli_string)
+        self.assertNotIn("--request-rate-range", cli_string)
 
     def tearDown(self):
         # In case test raises exception
