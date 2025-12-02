@@ -24,7 +24,11 @@ SKIP_EXTS = ("pt", "log", "png", "pdf", "ckpt", "csv", "json")
 REPO_PATH_FROM_THIS_FILE = "../.."
 SKIP_PATHS = (".git", "VERSION", "LICENSE", ".claude")
 
+# Old Apache format: Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 COPYRIGHT_YEAR_RE = "Copyright( \\(c\\))? 20[1-9][0-9](-(20)?[1-9][0-9])?(,((20[2-9][0-9](-(20)?[2-9][0-9])?)|([2-9][0-9](-[2-9][0-9])?)))*,? NVIDIA CORPORATION( & AFFILIATES)?. All rights reserved."
+
+# SPDX format: SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX_COPYRIGHT_YEAR_RE = "SPDX-FileCopyrightText: Copyright( \\(c\\))? 20[1-9][0-9](-(20)?[1-9][0-9])? NVIDIA CORPORATION( & AFFILIATES)?. All rights reserved."
 
 COPYRIGHT = """
 
@@ -41,11 +45,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+SPDX_LICENSE = "SPDX-License-Identifier: Apache-2.0"
+
 repo_abs_path = (
     pathlib.Path(__file__).parent.joinpath(REPO_PATH_FROM_THIS_FILE).resolve()
 )
 
 copyright_year_re = re.compile(COPYRIGHT_YEAR_RE)
+spdx_copyright_year_re = re.compile(SPDX_COPYRIGHT_YEAR_RE)
 
 
 def visit(path):
@@ -108,15 +115,15 @@ def visit(path):
 
         line = line.strip()
 
-        # The next line must be the copyright line with a single year
-        # or a year range. It is optionally allowed to have '# ' or
-        # '// ' prefix.
+        # Determine the comment prefix ('# ' or '// ')
         prefix = ""
         if line.startswith("# "):
             prefix = "# "
         elif line.startswith("// "):
             prefix = "// "
-        elif not line.startswith(COPYRIGHT_YEAR_RE[0]):
+        elif not line.startswith(COPYRIGHT_YEAR_RE[0]) and not line.startswith(
+            SPDX_COPYRIGHT_YEAR_RE[0]
+        ):
             print(
                 "incorrect prefix for copyright line, allowed prefixes '# ' or '// ', for "
                 + path
@@ -125,12 +132,41 @@ def visit(path):
             )
             return False
 
-        # Check if the copyright year line matches the regex
-        # and see if the year(s) are reasonable
+        # Check if this is SPDX format or old Apache format
+        copyright_row = line[len(prefix) :]
+        is_spdx = copyright_row.startswith("SPDX-FileCopyrightText:")
+
         years = []
 
-        copyright_row = line[len(prefix) :]
-        if copyright_year_re.match(copyright_row):
+        if is_spdx:
+            # Handle SPDX format
+            if not spdx_copyright_year_re.match(copyright_row):
+                print("copyright year is not recognized for " + path + ": " + line)
+                return False
+
+            # Extract years from SPDX format
+            # Format: SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION...
+            # Use regex to extract the year part
+            year_match = re.search(
+                r"Copyright\s*\(c\)\s*(\d{4})(?:-(\d{4}))?", copyright_row
+            )
+            if not year_match:
+                print("Could not extract years from SPDX copyright: " + line)
+                return False
+
+            start_year = year_match.group(1)
+            end_year = year_match.group(2)
+
+            years.append(int(start_year))
+            if end_year:
+                years.append(int(end_year))
+        else:
+            # Handle old Apache format
+            if not copyright_year_re.match(copyright_row):
+                print("copyright year is not recognized for " + path + ": " + line)
+                return False
+
+            # Extract years from old format
             for year in (
                 copyright_row.split(
                     "(c) " if "(c) " in copyright_row else "Copyright "
@@ -151,10 +187,8 @@ def visit(path):
                 elif len(year) == 5:  # 21-23
                     years.append(int(year[0:2]) + 2000)
                     years.append(int(year[3:5]) + 2000)
-        else:
-            print("copyright year is not recognized for " + path + ": " + line)
-            return False
 
+        # Validate years
         if years[0] > FLAGS.year:
             print(
                 "copyright start year greater than current year for "
@@ -173,38 +207,49 @@ def visit(path):
                 print("copyright years are not increasing for " + path + ": " + line)
                 return False
 
-        # Subsequent lines must match the copyright body.
-        copyright_body = [
-            l.rstrip() for i, l in enumerate(COPYRIGHT.splitlines()) if i > 0
-        ]
-        copyright_idx = 0
-        for line in f:
-            if copyright_idx >= len(copyright_body):
-                break
-
-            if len(prefix) == 0:
-                line = line.rstrip()
-            else:
-                line = line.strip()
-
-            if len(copyright_body[copyright_idx]) == 0:
-                expected = prefix.strip()
-            else:
-                expected = prefix + copyright_body[copyright_idx]
-            if line != expected:
-                print("incorrect copyright body for " + path)
-                print("  expected: '" + expected + "'")
-                print("       got: '" + line + "'")
+        # Check the license body (different for SPDX vs old format)
+        if is_spdx:
+            # SPDX format: next line should be "SPDX-License-Identifier: Apache-2.0"
+            license_line = f.readline().strip()
+            expected_license = prefix + SPDX_LICENSE
+            if license_line != expected_license:
+                print("incorrect SPDX license identifier for " + path)
+                print("  expected: '" + expected_license + "'")
+                print("       got: '" + license_line + "'")
                 return False
-            copyright_idx += 1
+        else:
+            # Old Apache format: check full license text
+            copyright_body = [
+                l.rstrip() for i, l in enumerate(COPYRIGHT.splitlines()) if i > 0
+            ]
+            copyright_idx = 0
+            for line in f:
+                if copyright_idx >= len(copyright_body):
+                    break
 
-        if copyright_idx != len(copyright_body):
-            print(
-                "missing "
-                + str(len(copyright_body) - copyright_idx)
-                + " lines of the copyright body"
-            )
-            return False
+                if len(prefix) == 0:
+                    line = line.rstrip()
+                else:
+                    line = line.strip()
+
+                if len(copyright_body[copyright_idx]) == 0:
+                    expected = prefix.strip()
+                else:
+                    expected = prefix + copyright_body[copyright_idx]
+                if line != expected:
+                    print("incorrect copyright body for " + path)
+                    print("  expected: '" + expected + "'")
+                    print("       got: '" + line + "'")
+                    return False
+                copyright_idx += 1
+
+            if copyright_idx != len(copyright_body):
+                print(
+                    "missing "
+                    + str(len(copyright_body) - copyright_idx)
+                    + " lines of the copyright body"
+                )
+                return False
 
     if FLAGS.verbose:
         print("copyright correct for " + path)
