@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import argparse
 
@@ -57,6 +45,48 @@ class TestConfigGenerator:
 
     def generate_config(self):
         with open("config.yml", "w+") as f:
+            yaml.dump(self.config, f)
+
+    def generate_config_with_ensemble_composing_ranges(self):
+        """
+        Generate a config that specifies instance_group count ranges
+        for ensemble composing models using the ensemble_composing_models option.
+
+        This tests the Quick search mode's ability to optimize
+        composing model configurations with user-specified parameter ranges.
+
+        Also tests explicit instance_group kind support:
+        - 'add' model uses KIND_CPU (tests explicit CPU kind detection)
+        - 'sub' model uses KIND_GPU (tests explicit GPU kind)
+        This verifies that explicit kind in instance_group is respected
+        without needing the separate cpu_only_composing_models config.
+        """
+        # Only profile the ensemble - composing models will be auto-discovered
+        # but we specify their configs via ensemble_composing_models
+        self.config["profile_models"] = ["ensemble_add_sub"]
+
+        # Specify configs for the auto-discovered composing models
+        # Use dictionary format (model names as keys) like profile_models
+        # Note: Using KIND_CPU for 'add' to test explicit kind detection
+        self.config["ensemble_composing_models"] = {
+            "add": {
+                "model_config_parameters": {
+                    "instance_group": [{"kind": "KIND_CPU", "count": [1, 2, 4]}],
+                    "dynamic_batching": {"max_queue_delay_microseconds": [0]},
+                }
+            },
+            "sub": {
+                "model_config_parameters": {
+                    "instance_group": [{"kind": "KIND_GPU", "count": [1, 2]}],
+                    "dynamic_batching": {"max_queue_delay_microseconds": [0]},
+                }
+            },
+        }
+
+        # Force quick search mode
+        self.config["run_config_search_mode"] = "quick"
+
+        with open("config_composing_ranges.yml", "w+") as f:
             yaml.dump(self.config, f)
 
 

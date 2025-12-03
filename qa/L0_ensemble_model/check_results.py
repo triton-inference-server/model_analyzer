@@ -1,17 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2021-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import argparse
 import sys
@@ -85,6 +74,123 @@ class TestOutputValidator:
                     f"Found {found_count}. \n***"
                 )
                 return False
+        return True
+
+    def check_composing_model_ranges(self):
+        """
+        Check that the ensemble composing model parameter ranges test ran successfully.
+
+        With constrained instance_group counts:
+        - add: [1, 2, 4] (3 values) with KIND_CPU
+        - sub: [1, 2] (2 values) with KIND_GPU
+
+        The search space is smaller than the default, so we expect fewer
+        measurements. Quick search should explore the constrained space
+        and find configurations within the specified ranges.
+
+        We verify:
+        1. The profiling completed (configs were generated)
+        2. The number of measurements is within expected range for constrained search
+        3. The 'add' model uses KIND_CPU (explicit kind in instance_group)
+        4. The 'sub' model uses KIND_GPU (explicit kind in instance_group)
+        """
+        with open(self._analyzer_log, "r") as f:
+            log_contents = f.read()
+
+        # With constrained composing model ranges, the search space is smaller
+        # Expected measurements: 10-40 (fewer than unconstrained)
+        expected_min_num_measurements = 10
+        expected_max_num_measurements = 40
+
+        # Check for ensemble model profiling
+        token = "Profiling ensemble_add_sub_config"
+        token_idx = 0
+        found_count = 0
+        while True:
+            token_idx = log_contents.find(token, token_idx + 1)
+            if token_idx == -1:
+                break
+            found_count += 1
+
+        if found_count < expected_min_num_measurements:
+            print(
+                f"\n***\n***  Expected at least {expected_min_num_measurements} measurements "
+                f"for ensemble_add_sub with composing model ranges. Found {found_count}. \n***"
+            )
+            return False
+
+        if found_count > expected_max_num_measurements:
+            print(
+                f"\n***\n***  Expected at most {expected_max_num_measurements} measurements "
+                f"for ensemble_add_sub with composing model ranges. Found {found_count}. \n***"
+            )
+            return False
+
+        print(
+            f"Composing model ranges test: Found {found_count} measurements "
+            f"(expected {expected_min_num_measurements}-{expected_max_num_measurements})"
+        )
+
+        # Verify explicit instance_group kind is respected
+        # The 'add' model should use KIND_CPU (specified in config)
+        # The 'sub' model should use KIND_GPU (specified in config)
+        if not self._check_model_instance_kind(log_contents, "add", "KIND_CPU"):
+            return False
+        if not self._check_model_instance_kind(log_contents, "sub", "KIND_GPU"):
+            return False
+
+        return True
+
+    def _check_model_instance_kind(self, log_contents, model_name, expected_kind):
+        """
+        Check that a model's instance_group uses the expected kind.
+
+        The log format is multi-line:
+        [Model Analyzer] Creating model config: add_config_0
+        [Model Analyzer]   Setting instance_group to [{'count': 1, 'kind': 'KIND_CPU'}]
+
+        We need to find "Creating model config: {model_name}_config" lines
+        and then look at the following instance_group setting.
+        """
+        import re
+
+        # Find all model config creations and their instance_group settings
+        # Pattern matches: "Creating model config: {model_name}_config" followed by
+        # "Setting instance_group to [...'kind': 'KIND_XXX'...]" within a few lines
+        #
+        # Use negative lookahead to stop at the next "Creating model config" or
+        # "Creating ensemble model config" line, so we don't match across different models.
+        # The lookahead uses .* to account for log prefixes like "[Model Analyzer]"
+        pattern = (
+            rf"Creating model config: {model_name}_config[^\n]*\n"
+            rf"(?:(?!.*Creating (?:ensemble )?model config:)[^\n]*\n)*?"  # Stop at next model config
+            rf"[^\n]*Setting instance_group to \[.*?'kind': '([A-Z_]+)'"
+        )
+        matches = re.findall(pattern, log_contents, re.MULTILINE)
+
+        if not matches:
+            print(
+                f"\n***\n***  Could not find instance_group settings for model '{model_name}' in log.\n***"
+            )
+            return False
+
+        # Check that all occurrences use the expected kind
+        wrong_kind_count = 0
+        for kind in matches:
+            if kind != expected_kind:
+                wrong_kind_count += 1
+
+        if wrong_kind_count > 0:
+            print(
+                f"\n***\n***  Model '{model_name}' expected {expected_kind} but found "
+                f"{wrong_kind_count} occurrences with wrong kind. Kinds found: {set(matches)}\n***"
+            )
+            return False
+
+        print(
+            f"Model '{model_name}' correctly uses {expected_kind} "
+            f"({len(matches)} occurrences verified)"
+        )
         return True
 
 

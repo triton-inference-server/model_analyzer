@@ -1,26 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# This test exercises all of the cli options.
-# It does a basic test of the cli and help message.
-# Then the rest of the testing uses an OptionStruct, which holds all
-# of the data necessary to test a command, and feeds that to the
-# CLI parser. The result of the CLI parsing is compared against the
-# expected value for the CLI. Default values are also verified as well as
-# values that are expected to cause failures.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import copy
 import os
@@ -397,6 +377,7 @@ def get_test_options():
         OptionStruct("noop", "profile", "--model-repository"),
         OptionStruct("noop", "profile", "--profile-models"),
         OptionStruct("noop", "profile", "--bls-composing-models"),
+        OptionStruct("noop", "profile", "--ensemble-composing-models"),
         OptionStruct("noop", "profile", "--cpu-only-composing-models"),
         OptionStruct("noop", "report", "--report-model-configs"),
         OptionStruct(
