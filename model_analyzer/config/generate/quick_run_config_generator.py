@@ -25,6 +25,7 @@ from model_analyzer.config.input.config_defaults import DEFAULT_BATCH_SIZES
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -425,33 +426,53 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         )
 
         model_config_params = deepcopy(model.model_config_parameters())
+
+        # Extract user-specified instance_group kind before removing it
+        instance_kind = self._extract_instance_group_kind(model_config_params)
+        if not instance_kind:
+            # Fallback to cpu_only flag
+            instance_kind = "KIND_CPU" if model.cpu_only() else "KIND_GPU"
+
         if model_config_params:
+            # Remove parameters that are controlled by search dimensions
             model_config_params.pop("max_batch_size", None)
+            model_config_params.pop("instance_group", None)
 
-            # This is guaranteed to only generate one combination (check is in config_command)
+            # Generate combinations from remaining parameters
+            # For composing models, this may include dynamic_batching settings, etc.
             param_combos = GeneratorUtils.generate_combinations(model_config_params)
-            assert len(param_combos) == 1
 
-            param_combo = param_combos[0]
+            # Top-level models must have exactly 1 combination (validated earlier)
+            # Composing models can have 1 combination (non-searchable params are fixed)
+            if len(param_combos) > 1:
+                raise TritonModelAnalyzerException(
+                    f"Model {model.model_name()} has multiple parameter combinations "
+                    f"after removing searchable parameters. This should have been caught "
+                    f"during config validation."
+                )
+
+            param_combo = param_combos[0] if param_combos else {}
         else:
             param_combo = {}
 
-        kind = "KIND_CPU" if model.cpu_only() else "KIND_GPU"
+        # Add instance_group with count from dimension and kind from config
         instance_count = self._calculate_instance_count(dimension_values)
-
         param_combo["instance_group"] = [
             {
                 "count": instance_count,
-                "kind": kind,
+                "kind": instance_kind,
             }
         ]
 
+        # Add max_batch_size from dimension if applicable
         if "max_batch_size" in dimension_values:
             param_combo["max_batch_size"] = self._calculate_model_batch_size(
                 dimension_values
             )
 
-        if model.supports_dynamic_batching():
+        # Add default dynamic_batching if model supports it and not already specified
+        # Preserves user-specified dynamic_batching settings (single combinations only)
+        if model.supports_dynamic_batching() and "dynamic_batching" not in param_combo:
             param_combo["dynamic_batching"] = {}
 
         model_config_variant = BaseModelConfigGenerator.make_model_config_variant(
@@ -462,6 +483,48 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         )
 
         return model_config_variant
+
+    def _extract_instance_group_kind(self, model_config_params: dict) -> str:
+        """
+        Extract the 'kind' field from instance_group in model_config_parameters.
+
+        The config parser may wrap values in lists for sweep support, so we need
+        to handle structures like:
+        - [[{'count': [1, 2, 4], 'kind': ['KIND_CPU']}]]  (double-wrapped, kind is list)
+        - [{'count': [1, 2, 4], 'kind': 'KIND_CPU'}]      (single-wrapped, kind is string)
+
+        Returns empty string if not found or if instance_group is not specified.
+        """
+        if not model_config_params or "instance_group" not in model_config_params:
+            return ""
+
+        instance_group = model_config_params["instance_group"]
+
+        # Handle various nested list structures from config parsing
+        if isinstance(instance_group, list) and len(instance_group) > 0:
+            # Handle nested structure: [[ {...} ]]
+            while (
+                isinstance(instance_group, list)
+                and len(instance_group) > 0
+                and isinstance(instance_group[0], list)
+            ):
+                instance_group = instance_group[0]
+
+            # Now should have [{...}] structure
+            if (
+                isinstance(instance_group, list)
+                and len(instance_group) > 0
+                and isinstance(instance_group[0], dict)
+            ):
+                kind = instance_group[0].get("kind", "")
+                # Handle case where kind is wrapped in a list by config parser
+                # e.g., ['KIND_CPU'] instead of 'KIND_CPU'
+                if isinstance(kind, list) and len(kind) > 0:
+                    kind = kind[0]
+                if isinstance(kind, str) and kind in ("KIND_CPU", "KIND_GPU"):
+                    return kind
+
+        return ""
 
     def _create_next_model_run_config(
         self,

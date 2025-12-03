@@ -1,19 +1,9 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
-# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+import logging
+import math
 from typing import Dict, List
 
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
@@ -25,7 +15,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
 )
-from model_analyzer.constants import MIN_INITIALIZED, RADIUS
+from model_analyzer.constants import LOGGER_NAME, MIN_INITIALIZED, RADIUS
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.result.result_manager import ResultManager
@@ -46,6 +36,8 @@ from .quick_plus_concurrency_sweep_run_config_generator import (
 from .search_config import SearchConfig
 from .search_dimension import SearchDimension
 from .search_dimensions import SearchDimensions
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class RunConfigGeneratorFactory:
@@ -221,9 +213,7 @@ class RunConfigGeneratorFactory:
             if model.is_ensemble():
                 continue
 
-            dims = RunConfigGeneratorFactory._get_dimensions_for_model(
-                model.supports_batching()
-            )
+            dims = RunConfigGeneratorFactory._get_dimensions_for_model(model)
             dimensions.add_dimensions(index, dims)
             index += 1
 
@@ -234,14 +224,161 @@ class RunConfigGeneratorFactory:
         return search_config
 
     @staticmethod
-    def _get_dimensions_for_model(is_batching_supported: bool) -> List[SearchDimension]:
-        if is_batching_supported:
-            return RunConfigGeneratorFactory._get_batching_supported_dimensions()
+    def _get_dimensions_for_model(model: ModelProfileSpec) -> List[SearchDimension]:
+        """
+        Create search dimensions for a model, respecting user-specified
+        instance_group count lists if provided.
+        """
+        dims = []
+
+        # Check if user specified instance_group with a count list
+        instance_count_list = RunConfigGeneratorFactory._get_instance_count_list(model)
+
+        if instance_count_list:
+            # User specified a list - create constrained dimension
+            dim = RunConfigGeneratorFactory._create_instance_dimension_from_list(
+                instance_count_list
+            )
+            dims.append(dim)
         else:
-            return RunConfigGeneratorFactory._get_batching_not_supported_dimensions()
+            # Use default unbounded dimension
+            dims.append(
+                SearchDimension("instance_count", SearchDimension.DIMENSION_TYPE_LINEAR)
+            )
+
+        # Add max_batch_size dimension if model supports batching
+        if model.supports_batching():
+            # For now, max_batch_size always uses default exponential dimension
+            # Could be extended to support user-specified lists in the future
+            dims.insert(
+                0,
+                SearchDimension(
+                    "max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL
+                ),
+            )
+
+        return dims
+
+    @staticmethod
+    def _get_instance_count_list(model: ModelProfileSpec) -> List[int]:
+        """
+        Extract instance_group count list from model config parameters if specified.
+
+        Returns empty list if not specified or not a list.
+        """
+        model_config_params = model.model_config_parameters()
+        if not model_config_params:
+            return []
+
+        if "instance_group" not in model_config_params:
+            return []
+
+        # instance_group structure: [[ {'kind': 'KIND_GPU', 'count': [1, 2, 4]} ]]
+        # The outer lists are from config parsing wrapping
+        instance_group = model_config_params["instance_group"]
+
+        if not instance_group or not isinstance(instance_group, list):
+            return []
+
+        # Unwrap the nested structure
+        if len(instance_group) > 0 and isinstance(instance_group[0], list):
+            instance_group = instance_group[0]
+
+        if len(instance_group) == 0 or not isinstance(instance_group[0], dict):
+            return []
+
+        count = instance_group[0].get("count")
+        if isinstance(count, list) and len(count) > 0:
+            return count
+
+        return []
+
+    @staticmethod
+    def _create_instance_dimension_from_list(
+        count_list: List[int],
+    ) -> SearchDimension:
+        """
+        Create a SearchDimension for instance_count from a user-specified list.
+
+        For lists that are powers of 2 (e.g., [1, 2, 4, 8, 16, 32]),
+        uses EXPONENTIAL dimension type with appropriate min/max indexes.
+
+        For other lists, uses LINEAR dimension type with appropriate min/max.
+
+        Raises TritonModelAnalyzerException if the list is not compatible with
+        either LINEAR or EXPONENTIAL growth patterns.
+        """
+        if not count_list or len(count_list) == 0:
+            raise TritonModelAnalyzerException("Instance count list cannot be empty")
+
+        # Sort the list to check for patterns
+        sorted_counts = sorted(count_list)
+
+        # Check if it's powers of 2
+        if RunConfigGeneratorFactory._is_powers_of_two(sorted_counts):
+            # Use EXPONENTIAL: 2^idx gives the value
+            # For [1, 2, 4, 8, 16, 32]: min_idx=0 (2^0=1), max_idx=5 (2^5=32)
+            min_idx = int(math.log2(sorted_counts[0]))
+            max_idx = int(math.log2(sorted_counts[-1]))
+
+            return SearchDimension(
+                "instance_count",
+                SearchDimension.DIMENSION_TYPE_EXPONENTIAL,
+                min=min_idx,
+                max=max_idx,
+            )
+
+        # Check if it's a contiguous linear sequence
+        elif RunConfigGeneratorFactory._is_linear_sequence(sorted_counts):
+            # Use LINEAR: idx+1 gives the value (LINEAR starts at 1, not 0)
+            # For [1, 2, 3, 4]: min_idx=0 (0+1=1), max_idx=3 (3+1=4)
+            min_idx = sorted_counts[0] - 1
+            max_idx = sorted_counts[-1] - 1
+
+            return SearchDimension(
+                "instance_count",
+                SearchDimension.DIMENSION_TYPE_LINEAR,
+                min=min_idx,
+                max=max_idx,
+            )
+
+        else:
+            # List is not compatible with LINEAR or EXPONENTIAL
+            raise TritonModelAnalyzerException(
+                f"Instance count list {count_list} is not compatible with Quick search mode. "
+                f"Lists must be either powers of 2 (e.g., [1, 2, 4, 8, 16, 32]) "
+                f"or a contiguous sequence (e.g., [1, 2, 3, 4, 5])."
+            )
+
+    @staticmethod
+    def _is_powers_of_two(sorted_list: List[int]) -> bool:
+        """Check if all values in the list are powers of 2 and form a valid sequence."""
+        for val in sorted_list:
+            if val <= 0:
+                return False
+            # Check if val is a power of 2: log2(val) should be an integer
+            log_val = math.log2(val)
+            if not log_val.is_integer():
+                return False
+
+        return True
+
+    @staticmethod
+    def _is_linear_sequence(sorted_list: List[int]) -> bool:
+        """Check if the list is a contiguous linear sequence."""
+        if len(sorted_list) < 2:
+            return True
+
+        # Check if values are consecutive: diff should always be 1
+        for i in range(1, len(sorted_list)):
+            if sorted_list[i] - sorted_list[i - 1] != 1:
+                return False
+
+        return True
 
     @staticmethod
     def _get_batching_supported_dimensions() -> List[SearchDimension]:
+        """Legacy method - kept for backward compatibility."""
         return [
             SearchDimension(
                 f"max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL
@@ -251,6 +388,7 @@ class RunConfigGeneratorFactory:
 
     @staticmethod
     def _get_batching_not_supported_dimensions() -> List[SearchDimension]:
+        """Legacy method - kept for backward compatibility."""
         return [
             SearchDimension(f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR)
         ]
@@ -306,24 +444,50 @@ class RunConfigGeneratorFactory:
         gpus: List[GPUDevice],
     ) -> List[ModelProfileSpec]:
         """
-        Creates a list of Ensemble composing model configs based on the model
+        Creates a list of Ensemble composing model configs based on the model.
+
+        If user specified ensemble_composing_models configs, use those for matching models.
+        Otherwise, use auto-discovered configs from ensemble_scheduling.
         """
         model_config = ModelConfig.create_from_profile_spec(model, config, client, gpus)
 
         if not model_config.is_ensemble():
             return []
 
+        # Auto-discover composing model names from ensemble_scheduling
         ensemble_composing_model_names = model_config.get_ensemble_composing_models()
+        if ensemble_composing_model_names is None:
+            return []
 
-        ensemble_composing_model_specs = (
-            ConfigModelProfileSpec.model_list_to_config_model_profile_spec(
+        # Check if user provided configs for any of these models
+        user_provided_configs = {}
+        if config.ensemble_composing_models is not None:
+            for user_spec in config.ensemble_composing_models:
+                user_provided_configs[user_spec.model_name()] = user_spec
+
+        # Create ModelProfileSpecs, using user configs when available
+        ensemble_composing_model_configs = []
+        for model_name in ensemble_composing_model_names:
+            if model_name in user_provided_configs:
+                # Use user-provided config with model_config_parameters
+                model_spec = user_provided_configs[model_name]
+            else:
+                # Use auto-discovered config (just model name, no parameters)
+                model_spec = ConfigModelProfileSpec(model_name)
+
+            mps = ModelProfileSpec(model_spec, config, client, gpus)
+            ensemble_composing_model_configs.append(mps)
+
+        # Warn if user specified models that aren't in the ensemble
+        if user_provided_configs:
+            unused_models = set(user_provided_configs.keys()) - set(
                 ensemble_composing_model_names
             )
-        )
-
-        ensemble_composing_model_configs = [
-            ModelProfileSpec(ensemble_composing_model_spec, config, client, gpus)
-            for ensemble_composing_model_spec in ensemble_composing_model_specs
-        ]
+            if unused_models:
+                logger.warning(
+                    f"The following models in ensemble_composing_models were not found "
+                    f"in the ensemble '{model.model_name()}' and will be ignored: "
+                    f"{', '.join(sorted(unused_models))}"
+                )
 
         return ensemble_composing_model_configs

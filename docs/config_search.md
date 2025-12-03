@@ -1,17 +1,6 @@
 <!--
-Copyright (c) 2020-2024, NVIDIA CORPORATION. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
 -->
 
 # Table of Contents
@@ -240,7 +229,8 @@ manual sweep:
 
 _This mode has the following limitations:_
 
-- If model config parameters are specified, they can contain only one possible combination of parameters
+- Top-level models can contain only one possible combination of model config parameters
+- Composing models (ensemble/BLS sub-models) can specify parameter ranges if they follow specific patterns (see [Ensemble Composing Model Parameter Ranges](#ensemble-composing-model-parameter-ranges))
 
 This mode uses a hill climbing algorithm to search the configuration space, looking for
 the maximal objective value within the specified constraints. In the majority of cases
@@ -259,6 +249,85 @@ run_config_search_mode: quick
 profile_models:
   - model_A
 ```
+
+---
+
+### **Ensemble Composing Model Parameter Ranges**
+
+When profiling ensemble or BLS models in Quick search mode, composing models (sub-models) can specify parameter ranges for `instance_group` count. This enables optimization of composing models with different resource requirements, such as:
+
+- CPU-bound models (tokenizers, preprocessors) that may benefit from higher instance counts
+- GPU-bound models (inference models, embeddings) with limited GPU memory
+
+**Supported Instance Count Patterns:**
+
+Model Analyzer supports two types of instance count sequences that map to Quick search's coordinate system:
+
+1. **Powers of 2**: `[1, 2, 4, 8, 16, 32]` or subsets like `[2, 4, 8]`
+   - Maps to exponential search dimensions
+   - Recommended for most use cases
+
+2. **Contiguous sequences**: `[1, 2, 3, 4, 5]` or ranges like `[5, 6, 7, 8]`
+   - Maps to linear search dimensions
+   - Useful for fine-grained control
+
+**Important Notes:**
+
+- Only composing models can specify instance count ranges in Quick mode
+- Top-level models (non-composing) must still have a single parameter combination
+- Only powers of 2 or contiguous sequences are supported; arbitrary value lists (e.g., `[1, 3, 7, 15]`) are not supported
+- Composing models are identified using `ensemble_composing_models`, `bls_composing_models`, or `cpu_only_composing_models` configuration
+
+---
+
+_An example with ensemble containing CPU tokenizer and GPU inference model:_
+
+```yaml
+model_repository: /path/to/model/repository/
+
+run_config_search_mode: quick
+export_path: /tmp/results
+override_output_model_repository: true
+
+profile_models:
+  - ensemble_model
+
+ensemble_composing_models:
+  tokenizer:
+    model_config_parameters:
+      instance_group:
+        - kind: KIND_CPU
+          count: [1, 2, 4, 8, 16, 32]  # Powers of 2 sequence
+      dynamic_batching:
+        max_queue_delay_microseconds: [0]
+  inference_model:
+    model_config_parameters:
+      instance_group:
+        - kind: KIND_GPU
+          count: [1, 2, 4, 8]  # Subset of powers of 2
+      dynamic_batching:
+        max_queue_delay_microseconds: [0]
+```
+
+In this example:
+- Only the ensemble is listed in `profile_models` - composing models are auto-discovered from `ensemble_scheduling`
+- The `ensemble_composing_models` section provides configurations for auto-discovered models
+- The tokenizer (CPU model) searches instance counts from 1 to 32
+- The inference model (GPU model) searches instance counts from 1 to 8
+- Quick search explores both dimensions in parallel to find the optimal combination
+- The ensemble model itself uses default parameters
+- Any models specified in `ensemble_composing_models` that don't exist in the ensemble will be ignored with a warning
+
+**Instance Group Kind:**
+
+The `kind` field (`KIND_CPU` or `KIND_GPU`) in `instance_group` is respected when explicitly specified. This allows you to control whether a model runs on CPU or GPU directly in the config without needing the separate `cpu_only_composing_models` option.
+
+Priority order for determining instance kind:
+1. **Explicit `kind` in `instance_group`** (highest priority) - if you specify `kind: KIND_CPU` or `kind: KIND_GPU`, that value is used
+2. **`cpu_only_composing_models` config** - models listed here will use KIND_CPU
+3. **Default to KIND_GPU** (lowest priority) - if neither is specified, models default to GPU instances
+
+This means you can override `cpu_only_composing_models` by explicitly specifying `kind: KIND_GPU` in the instance_group
 
 ---
 
@@ -398,6 +467,10 @@ _This mode has the following limitations:_
 
 Ensemble models can be optimized using the Quick Search mode's hill climbing algorithm to search the composing models' configuration spaces in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under one hour (compared to the days it would take a brute force run to complete) for ensembles that contain up to four composing models.
 
+**Composing Model Parameter Ranges:**
+
+Composing models within ensembles can specify instance count ranges to optimize models with different resource requirements (e.g., CPU tokenizers vs GPU inference models). See [Ensemble Composing Model Parameter Ranges](#ensemble-composing-model-parameter-ranges) for details on supported patterns and configuration examples.
+
 After Model Analyzer has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
 
 ---
@@ -411,6 +484,10 @@ _This mode has the following limitations:_
 - Composing models cannot be ensemble or BLS models
 
 BLS models can be optimized using the Quick Search mode's hill climbing algorithm to search the BLS composing models' configuration spaces, as well as the BLS model's instance count, in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under one hour (compared to the days it would take a brute force run to complete) for BLS models that contain up to four composing models.
+
+**Composing Model Parameter Ranges:**
+
+BLS composing models can specify instance count ranges to optimize models with different resource requirements. Models are identified using the `bls_composing_models` configuration parameter. See [Ensemble Composing Model Parameter Ranges](#ensemble-composing-model-parameter-ranges) for details on supported patterns and configuration examples.
 
 After Model Analyzer has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
 
