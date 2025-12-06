@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+ensemble_composing_models:
+  add:
+    model_config_parameters:
+      dynamic_batching:
+        max_queue_delay_microseconds:
+        - 0
+      instance_group:
+      - count:
+        - 1
+        - 2
+        - 4
+        kind: KIND_CPU
+  sub:
+    model_config_parameters:
+      dynamic_batching:
+        max_queue_delay_microseconds:
+        - 0
+      instance_group:
+      - count:
+        - 1
+        - 2
+        kind: KIND_GPU
+profile_models:
+- ensemble_add_sub
+run_config_search_mode: quick

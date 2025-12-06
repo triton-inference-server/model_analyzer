@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 from argparse import Namespace
 from copy import deepcopy
@@ -251,8 +239,18 @@ class ConfigCommand:
         ):
             return
 
+        # Get composing model names for validation
+        bls_composing = (
+            self._get_config_value("bls_composing_models", args, yaml_config) or []
+        )
+        cpu_only_composing = (
+            self._get_config_value("cpu_only_composing_models", args, yaml_config) or []
+        )
+
         self._check_per_model_parameters(profile_models)
-        self._check_per_model_model_config_parameters(profile_models)
+        self._check_per_model_model_config_parameters(
+            profile_models, bls_composing, cpu_only_composing
+        )
 
     def _check_per_model_parameters(self, profile_models: Dict) -> None:
         for model in profile_models.values():
@@ -268,22 +266,80 @@ class ConfigCommand:
                     "\nPlease use brute search mode or remove concurrency/batch sizes list."
                 )
 
-    def _check_per_model_model_config_parameters(self, profile_models: Dict) -> None:
-        for model in profile_models.values():
+    def _check_per_model_model_config_parameters(
+        self, profile_models: Dict, bls_composing: List, cpu_only_composing: List
+    ) -> None:
+        for model_name, model in profile_models.items():
             if not "model_config_parameters" in model:
+                continue
+
+            # Check if this is a composing model
+            is_composing = False
+            if bls_composing:
+                # bls_composing might be a list of dicts or list of strings
+                if isinstance(bls_composing, list):
+                    is_composing = any(
+                        (isinstance(m, dict) and m.get("model_name") == model_name)
+                        or (isinstance(m, str) and m == model_name)
+                        for m in bls_composing
+                    )
+            if (
+                not is_composing
+                and cpu_only_composing
+                and model_name in cpu_only_composing
+            ):
+                is_composing = True
+
+            # Composing models are allowed to have these parameters with ranges
+            if is_composing:
                 continue
 
             if "max_batch_size" in model["model_config_parameters"]:
                 raise TritonModelAnalyzerException(
-                    f"\nProfiling of models in quick search mode is not supported with lists of max batch sizes."
+                    f"\nProfiling of top-level models in quick search mode is not supported with lists of max batch sizes."
                     "\nPlease use brute search mode or remove max batch size list."
+                    "\nNote: Composing models in ensembles/BLS can have max_batch_size ranges in Quick mode."
                 )
 
             if "instance_group" in model["model_config_parameters"]:
                 raise TritonModelAnalyzerException(
-                    f"\nProfiling of models in quick search mode is not supported with instance group as a model config parameter"
+                    f"\nProfiling of top-level models in quick search mode is not supported with instance group as a model config parameter."
                     "\nPlease use brute search mode or remove instance_group from 'model_config_parameters'."
+                    "\nNote: Composing models in ensembles/BLS can have instance_group with count ranges in Quick mode."
                 )
+
+    def _is_composing_model(self, model_name: str, config: Dict) -> bool:
+        """
+        Determine if a model is a composing model by checking:
+        1. If it's in bls_composing_models list
+        2. If it's in ensemble_composing_models list
+        3. If it's in cpu_only_composing_models list
+
+        Note: We cannot check ensemble_scheduling at this stage because
+        we haven't loaded the model configs from the repository yet.
+        Users must explicitly list ensemble composing models in ensemble_composing_models
+        to enable parameter ranges for them.
+        """
+        if "bls_composing_models" in config:
+            bls_composing = config["bls_composing_models"].value()
+            if bls_composing and any(
+                m.model_name() == model_name for m in bls_composing
+            ):
+                return True
+
+        if "ensemble_composing_models" in config:
+            ensemble_composing = config["ensemble_composing_models"].value()
+            if ensemble_composing and any(
+                m.model_name() == model_name for m in ensemble_composing
+            ):
+                return True
+
+        if "cpu_only_composing_models" in config:
+            cpu_only_composing = config["cpu_only_composing_models"].value()
+            if cpu_only_composing and model_name in cpu_only_composing:
+                return True
+
+        return False
 
     def _check_quick_search_model_config_parameters_combinations(self) -> None:
         config = self.get_config()
@@ -295,13 +351,18 @@ class ConfigCommand:
 
         profile_models = config["profile_models"].value()
         for model in profile_models:
+            # Composing models are allowed to have parameter ranges in Quick mode
+            if self._is_composing_model(model.model_name(), config):
+                continue
+
             model_config_params = deepcopy(model.model_config_parameters())
             if model_config_params:
                 if len(GeneratorUtils.generate_combinations(model_config_params)) > 1:
                     raise TritonModelAnalyzerException(
-                        f"\nProfiling of models in quick search mode is not supported for the specified model config parameters, "
+                        f"\nProfiling of top-level models in quick search mode is not supported for the specified model config parameters, "
                         f"as more than one combination of parameters can be generated."
                         f"\nPlease use brute search mode to profile or remove the model config parameters specified."
+                        f"\nNote: Composing models in ensembles/BLS can have parameter ranges in Quick mode."
                     )
 
     def _check_bls_no_brute_search(
