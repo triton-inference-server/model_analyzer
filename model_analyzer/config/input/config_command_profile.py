@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-
-# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 import argparse
 import logging
@@ -801,6 +789,39 @@ class ConfigCommandProfile(ConfigCommand):
                 ),
                 default_value=[],
                 description="List of the models to be profiled",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "ensemble_composing_models",
+                flags=["--ensemble-composing-models"],
+                field_type=ConfigUnion(
+                    [
+                        profile_model_scheme,
+                        ConfigListGeneric(
+                            ConfigUnion(
+                                [
+                                    profile_model_scheme,
+                                    ConfigPrimitive(
+                                        str,
+                                        output_mapper=ConfigModelProfileSpec.model_str_to_config_model_profile_spec,
+                                    ),
+                                ]
+                            ),
+                            required=True,
+                            output_mapper=ConfigModelProfileSpec.model_mixed_to_config_model_profile_spec,
+                        ),
+                        ConfigListString(
+                            output_mapper=ConfigModelProfileSpec.model_list_to_config_model_profile_spec
+                        ),
+                    ],
+                    required=True,
+                ),
+                default_value=[],
+                description="List of ensemble composing models with optional model config parameters. "
+                "Composing models are auto-discovered from ensemble_scheduling. Use this option to specify "
+                "configurations (e.g., instance_group count ranges) for any auto-discovered models. "
+                "Only models found in ensemble_scheduling will be profiled; others will be ignored with a warning.",
             )
         )
         self._add_config(
@@ -1701,8 +1722,14 @@ class ConfigCommandProfile(ConfigCommand):
             new_profile_models[model.model_name()] = new_model
 
         # deepcopy is necessary, else it gets overwritten when updating profile_models
+        # Both bls_composing_models and ensemble_composing_models share the same
+        # profile_model_scheme ConfigObject, so updating profile_models would
+        # overwrite their values.
         self._fields["bls_composing_models"] = deepcopy(
             self._fields["bls_composing_models"]
+        )
+        self._fields["ensemble_composing_models"] = deepcopy(
+            self._fields["ensemble_composing_models"]
         )
         self._fields["profile_models"].set_value(new_profile_models)
 
