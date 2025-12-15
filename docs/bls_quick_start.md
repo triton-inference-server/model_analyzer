@@ -49,7 +49,7 @@ git pull origin main
 **1. Pull the SDK container:**
 
 ```
-docker pull nvcr.io/nvidia/tritonserver:25.11-py3-sdk
+docker pull nvcr.io/nvidia/tritonserver:25.12-py3-sdk
 ```
 
 **2. Run the SDK container**
@@ -59,7 +59,7 @@ docker run -it --gpus 1 \
       --shm-size 2G \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
-      --net=host nvcr.io/nvidia/tritonserver:25.11-py3-sdk
+      --net=host nvcr.io/nvidia/tritonserver:25.12-py3-sdk
 ```
 
 **Important:** The example above uses a single GPU. If you are running on multiple GPUs, you may need to increase the shared memory size accordingly<br><br>
@@ -68,7 +68,7 @@ docker run -it --gpus 1 \
 
 ---
 
-The [examples/quick-start](../examples/quick-start) directory is an example [Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains the BLS model `bls` which calculates the sum of two inputs using `add` model.
+The [examples/quick-start](../examples/quick-start) directory is an example [Triton Model Repository](https://github.com/triton-inference-server/server/blob/r25.12/docs/user_guide/model_repository.md) that contains the BLS model `bls` which calculates the sum of two inputs using `add` model.
 
 An example model analyzer YAML config that performs a BLS model search
 
