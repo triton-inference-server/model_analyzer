@@ -1,17 +1,6 @@
 <!--
-Copyright (c) 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
 -->
 
 # Single-Model Quick Start
@@ -49,7 +38,7 @@ git pull origin main
 **1. Pull the SDK container:**
 
 ```
-docker pull nvcr.io/nvidia/tritonserver:25.11-py3-sdk
+docker pull nvcr.io/nvidia/tritonserver:25.12-py3-sdk
 ```
 
 **2. Run the SDK container**
@@ -58,7 +47,7 @@ docker pull nvcr.io/nvidia/tritonserver:25.11-py3-sdk
 docker run -it --gpus all \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
-      --net=host nvcr.io/nvidia/tritonserver:25.11-py3-sdk
+      --net=host nvcr.io/nvidia/tritonserver:25.12-py3-sdk
 ```
 
 ## `Step 3:` Profile the `add_sub` model
@@ -66,7 +55,7 @@ docker run -it --gpus all \
 ---
 
 The [examples/quick-start](../examples/quick-start) directory is an example
-[Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains a simple libtorch model which calculates
+[Triton Model Repository](https://github.com/triton-inference-server/server/blob/r25.12/docs/user_guide/model_repository.md) that contains a simple libtorch model which calculates
 the sum and difference of two inputs.
 
 Run the Model Analyzer `profile` subcommand inside the container with:
