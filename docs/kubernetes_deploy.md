@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -68,7 +68,7 @@ images:
 
   triton:
     image: nvcr.io/nvidia/tritonserver
-    tag: 25.12-py3
+    tag: 26.01-py3
 ```
 
 The model analyzer executable uses the config file defined in `helm-chart/templates/config-map.yaml`. This config can be modified to supply arguments to model analyzer. Only the content under the `config.yaml` section of the file should be modified.
