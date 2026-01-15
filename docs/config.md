@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -142,7 +142,7 @@ cpu_only_composing_models: <comma-delimited-string-list>
 [ reload_model_disable: <bool> | default: false]
 
 # Triton Docker image tag used when launching using Docker mode
-[ triton_docker_image: <string> | default: nvcr.io/nvidia/tritonserver:25.12-py3 ]
+[ triton_docker_image: <string> | default: nvcr.io/nvidia/tritonserver:26.01-py3 ]
 
 # Triton Server HTTP endpoint url used by Model Analyzer client"
 [ triton_http_endpoint: <string> | default: localhost:8000 ]

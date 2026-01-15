@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -38,7 +38,7 @@ git pull origin main
 **1. Pull the SDK container:**
 
 ```
-docker pull nvcr.io/nvidia/tritonserver:25.12-py3-sdk
+docker pull nvcr.io/nvidia/tritonserver:26.01-py3-sdk
 ```
 
 **2. Run the SDK container**
@@ -48,7 +48,7 @@ docker run -it --gpus 1 \
       --shm-size 1G \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
-      --net=host nvcr.io/nvidia/tritonserver:25.12-py3-sdk
+      --net=host nvcr.io/nvidia/tritonserver:26.01-py3-sdk
 ```
 
 **Important:** The example above uses a single GPU. If you are running on multiple GPUs, you may need to increase the shared memory size accordingly<br><br>
@@ -57,7 +57,7 @@ docker run -it --gpus 1 \
 
 ---
 
-The [examples/quick-start](../examples/quick-start) directory is an example [Triton Model Repository](https://github.com/triton-inference-server/server/blob/r25.12/docs/user_guide/model_repository.md) that contains the ensemble model `ensemble_add_sub`, which calculates the sum and difference of two inputs using `add` and `sub` models.
+The [examples/quick-start](../examples/quick-start) directory is an example [Triton Model Repository](https://github.com/triton-inference-server/server/blob/r26.01/docs/user_guide/model_repository.md) that contains the ensemble model `ensemble_add_sub`, which calculates the sum and difference of two inputs using `add` and `sub` models.
 
 Run the Model Analyzer `profile` subcommand inside the container with:
 
