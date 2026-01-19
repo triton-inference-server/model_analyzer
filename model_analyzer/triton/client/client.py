@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -105,7 +107,9 @@ class TritonClient:
         variant_name = variant_name if variant_name else model_name
 
         try:
-            self._client.load_model(model_name, config=config_str)
+            self._client.load_model(
+                model_name, config=config_str, headers=self._headers
+            )
             logger.debug(f"Model {variant_name} loaded")
             return None
         except Exception as e:
@@ -139,7 +143,7 @@ class TritonClient:
         """
 
         try:
-            self._client.unload_model(model_name)
+            self._client.unload_model(model_name, headers=self._headers)
             logger.debug(f"Model {model_name} unloaded")
             return None
         except Exception as e:
@@ -214,7 +218,7 @@ class TritonClient:
         """
         Returns true if the server is ready. Else False
         """
-        return self._client.is_server_ready()
+        return self._client.is_server_ready(headers=self._headers)
 
     def _check_for_triton_log_errors(self, log_file):
         if not log_file or log_file == DEVNULL:

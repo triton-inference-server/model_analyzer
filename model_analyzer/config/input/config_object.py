@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -77,6 +79,10 @@ class ConfigObject(ConfigValue):
         int
             1 on success, and 0 on failure
         """
+
+        # Apply preprocessing if defined (e.g., to parse JSON strings)
+        if self._preprocess:
+            value = self._preprocess(value)
 
         new_value = {}
         schema = self._schema
