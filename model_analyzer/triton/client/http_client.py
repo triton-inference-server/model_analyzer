@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -28,7 +30,7 @@ class TritonHTTPClient(TritonClient):
     for HTTP
     """
 
-    def __init__(self, server_url, ssl_options={}):
+    def __init__(self, server_url, ssl_options={}, headers={}):
         """
         Parameters
         ----------
@@ -36,6 +38,8 @@ class TritonHTTPClient(TritonClient):
             The url for Triton server's HTTP endpoint
         ssl_options : dict
             Dictionary of SSL options for HTTP python client
+        headers : dict
+            Dictionary of HTTP headers to send to Triton Server
         """
 
         ssl = False
@@ -86,6 +90,8 @@ class TritonHTTPClient(TritonClient):
             ssl_context_factory = None
             insecure = False
 
+        self._headers = headers
+
         self._client = httpclient.InferenceServerClient(
             url=server_url,
             ssl=ssl,
@@ -98,10 +104,10 @@ class TritonHTTPClient(TritonClient):
         """
         Returns the JSON dict holding the model repository index.
         """
-        return self._client.get_model_repository_index()
+        return self._client.get_model_repository_index(headers=self._headers)
 
     def is_model_ready(self, model_name: str) -> bool:
         """
         Returns true if the model is loaded on the server
         """
-        return self._client.is_model_ready(model_name)
+        return self._client.is_model_ready(model_name, headers=self._headers)
