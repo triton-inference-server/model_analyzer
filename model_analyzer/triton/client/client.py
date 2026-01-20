@@ -59,7 +59,7 @@ class TritonClient:
         retries = num_retries
         while retries > 0:
             try:
-                if self._client.is_server_ready():
+                if self._client.is_server_ready(headers=self._headers):
                     time.sleep(sleep_time)
                     return
                 else:
@@ -179,7 +179,7 @@ class TritonClient:
         error = None
         while retries > 0:
             try:
-                if self._client.is_model_ready(model_name):
+                if self._client.is_model_ready(model_name, headers=self._headers):
                     return None
                 else:
                     time.sleep(sleep_time)
@@ -211,7 +211,9 @@ class TritonClient:
         """
 
         self.wait_for_model_ready(model_name, num_retries)
-        model_config_dict = self._client.get_model_config(model_name)
+        model_config_dict = self._client.get_model_config(
+            model_name, headers=self._headers
+        )
         return model_config_dict
 
     def is_server_ready(self):
