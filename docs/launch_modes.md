@@ -1,5 +1,9 @@
 <!--
-Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<!--
+Copyright (c) 2020-2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -78,7 +82,7 @@ have a TritonServer executable
 | ---------- | -------------------------------- |
 
 In this mode, Triton server is launched locally via the
-[C_API](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/inference_protocols.md#in-process-triton-server-api)
+[C_API](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/inprocess_c_api.md)
 by the perf_analyzer instances launched by Model Analyzer. Inference requests are
 sent directly via C-API function calls instead of going through the network via
 GRPC or HTTP.
