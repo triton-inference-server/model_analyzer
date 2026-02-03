@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -18,12 +18,12 @@ Triton Model Analyzer is a CLI tool which can help you find a more optimal confi
 - [Optuna Search](docs/config_search.md#optuna-search-mode) **_-ALPHA RELEASE-_** allows you to search for every parameter that can be specified in the model configuration, using a hyperparameter optimization framework. Please see the [Optuna](https://optuna.org/) website if you are interested in specific details on how the algorithm functions.
 
 - [Quick Search](docs/config_search.md#quick-search-mode) will **sparsely** search the [Max Batch Size](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#maximum-batch-size),
-  [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#dynamic-batcher), and
+  [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/batcher.md#dynamic-batcher), and
   [Instance Group](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#instance-groups) spaces by utilizing a heuristic hill-climbing algorithm to help you quickly find a more optimal configuration
 
 - [Automatic Brute Search](docs/config_search.md#automatic-brute-search) will **exhaustively** search the
   [Max Batch Size](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#maximum-batch-size),
-  [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#dynamic-batcher), and
+  [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/batcher.md#dynamic-batcher), and
   [Instance Group](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#instance-groups)
   parameters of your model configuration
 

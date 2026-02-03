@@ -1,5 +1,9 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<!--
+Copyright (c) 2020-2026, NVIDIA CORPORATION. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,4 +22,4 @@ limitations under the License.
 
 Triton Memory Analyzer follows similar contributing guidelines to Triton Inference Server. Please see [the Triton Inference Server contributing document].
 
-[the Triton Inference Server contributing document]: https://github.com/triton-inference-server/server/blob/master/CONTRIBUTING.md
+[the Triton Inference Server contributing document]: https://github.com/triton-inference-server/server/blob/main/CONTRIBUTING.md
