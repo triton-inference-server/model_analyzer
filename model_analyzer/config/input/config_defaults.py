@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
 import os
@@ -52,7 +52,7 @@ DEFAULT_REQUEST_RATE_SEARCH_ENABLE = False
 DEFAULT_CONCURRENCY_SWEEP_DISABLE = False
 DEFAULT_DCGM_DISABLE = False
 DEFAULT_TRITON_LAUNCH_MODE = "local"
-DEFAULT_TRITON_DOCKER_IMAGE = "nvcr.io/nvidia/tritonserver:25.12-py3"
+DEFAULT_TRITON_DOCKER_IMAGE = "nvcr.io/nvidia/tritonserver:26.01-py3"
 DEFAULT_TRITON_HTTP_ENDPOINT = "localhost:8000"
 DEFAULT_TRITON_GRPC_ENDPOINT = "localhost:8001"
 DEFAULT_TRITON_METRICS_URL = "http://localhost:8002/metrics"

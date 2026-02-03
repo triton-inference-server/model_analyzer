@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2020-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
 # Job timeout value specified in seconds
@@ -26,4 +26,4 @@ images:
 
   triton:
     image: nvcr.io/nvidia/tritonserver
-    tag: 25.12-py3
+    tag: 26.01-py3
