@@ -1,11 +1,11 @@
 # SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:26.02-py3
-ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:26.02-py3-sdk
+ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:26.03-py3
+ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:26.03-py3-sdk
 
-ARG MODEL_ANALYZER_VERSION=1.52.0dev
-ARG MODEL_ANALYZER_CONTAINER_VERSION=26.03dev
+ARG MODEL_ANALYZER_VERSION=1.53.0dev
+ARG MODEL_ANALYZER_CONTAINER_VERSION=26.04dev
 FROM ${TRITONSDK_BASE_IMAGE} AS sdk
 
 FROM ${BASE_IMAGE}
