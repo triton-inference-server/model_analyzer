@@ -57,7 +57,7 @@ docker run -it --gpus 1 \
 
 ---
 
-The [examples/quick-start](../examples/quick-start) directory is an example [Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains the BLS model `bls` which calculates the sum of two inputs using `add` model.
+The [examples/quick-start](../examples/quick-start) directory is an example [Triton Model Repository](https://github.com/triton-inference-server/server/blob/r26.03/docs/user_guide/model_repository.md) that contains the BLS model `bls` which calculates the sum of two inputs using `add` model.
 
 An example model analyzer YAML config that performs a BLS model search
 
