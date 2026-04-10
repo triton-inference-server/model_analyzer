@@ -26,4 +26,4 @@ images:
 
   triton:
     image: nvcr.io/nvidia/tritonserver
-    tag: 26.03-py3
+    tag: 26.04-py3
