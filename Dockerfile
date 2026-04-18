@@ -27,6 +27,7 @@ RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
 WORKDIR /opt/triton-model-analyzer
 
 RUN python3 -m pip install \
+        auditwheel \
         build \
         coverage \
         mkdocs \
