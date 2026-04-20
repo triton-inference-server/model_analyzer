@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -41,7 +43,7 @@ class TritonClientFactory:
         return TritonGRPCClient(server_url=server_url, ssl_options=ssl_options)
 
     @staticmethod
-    def create_http_client(server_url, ssl_options={}):
+    def create_http_client(server_url, ssl_options={}, headers={}):
         """
         Parameters
         ----------
@@ -49,9 +51,13 @@ class TritonClientFactory:
             The url for Triton server's HTTP endpoint
         ssl_options : dict
             Dictionary of SSL options for HTTP python client
+        headers : dict
+            Dictionary of HTTP headers to send to Triton Server
 
         Returns
         -------
         TritonHTTPClient
         """
-        return TritonHTTPClient(server_url=server_url, ssl_options=ssl_options)
+        return TritonHTTPClient(
+            server_url=server_url, ssl_options=ssl_options, headers=headers
+        )
