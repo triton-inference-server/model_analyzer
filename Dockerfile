@@ -20,9 +20,15 @@ RUN apt update -qq && apt install -y docker.io wkhtmltopdf
 
 # Install tritonclient
 COPY --from=sdk /workspace/install/python /tmp/tritonclient
-RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
-    "tritonclient-*-manylinux*.whl" | xargs printf -- '%s[all]' | \
-    xargs pip3 install --upgrade && rm -rf /tmp/tritonclient/
+
+RUN --mount=type=secret,id=triton_ci_pip_extra_values,env=TRITON_CI_PYPI_EXTRA_VALUES \
+    if [ -n "${TRITON_CI_PYPI_EXTRA_VALUES}" ]; then \
+        find /tmp/tritonclient -maxdepth 1 -type f -name \
+            "tritonclient-*-any*.whl" -exec pip3 install --upgrade ${TRITON_CI_PYPI_EXTRA_VALUES} {}[all] \; ; \
+    else \
+        find /tmp/tritonclient -maxdepth 1 -type f -name \
+            "tritonclient-*-any*.whl" -exec pip3 install --upgrade {}[all] \; ; \
+    fi
 
 WORKDIR /opt/triton-model-analyzer
 
