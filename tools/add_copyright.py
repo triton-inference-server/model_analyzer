@@ -54,19 +54,26 @@ def update_copyright_year(
             f.write(updated_content)
 
 
-def update_and_get_license() -> str:
+def get_license() -> str:
     """
-    Updates the copyright year in the LICENSE file if necessary and then
-    returns its contents.
+    Returns the license header template with its copyright year set to the
+    current year. The template file itself is never modified — headers are
+    always inserted with the current year, computed in memory.
     """
-    # License file should always have the current year.
-    update_copyright_year(LICENSE_PATH, disallow_range=True)
-
     with open(LICENSE_PATH) as license_file:
-        return license_file.read()
+        content = license_file.read()
+
+    match = COPYRIGHT_YEAR_PAT.search(content)
+    assert match is not None, f"File {LICENSE_PATH} does not contain a valid copyright."
+
+    new_copyright = (
+        f"SPDX-FileCopyrightText: Copyright{match.group(1) or ''} "
+        f"{current_year} NVIDIA CORPORATION"
+    )
+    return COPYRIGHT_YEAR_PAT.sub(new_copyright, content)
 
 
-LICENSE_TEXT = update_and_get_license()
+LICENSE_TEXT = get_license()
 
 #
 # Header manipulation helpers

@@ -50,6 +50,9 @@ repos:
         entry: python tools/add_copyright.py
         language: python
         require_serial: true
+        # GitHub issue/PR templates must start with YAML frontmatter; keep
+        # license headers out of them.
+        exclude: ^\.github/
   # More details about these pre-commit hooks here:
   # https://pre-commit.com/hooks.html
   - repo: https://github.com/pre-commit/pre-commit-hooks
