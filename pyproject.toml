@@ -13,13 +13,19 @@
 # limitations under the License.
 
 [build-system]
-requires = ["setuptools >= 61.0","wheel"]
-build-backend = "setuptools.build_meta"
+# Pinned: the PEP 639 SPDX `license` string above is rejected outright by
+# setuptools < 77 ("project.license must be valid exactly by one
+# definition"), so the previous unbounded `setuptools >= 61.0` made the
+# build depend on whatever the environment happened to provide.
+# See TRI-1775.
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
 
 [project]
 name = "triton-model-analyzer"
 dynamic = ["version"]
 license = "Apache-2.0"
+license-files = ["LICENSE"]
 description = "Triton Model Analyzer is a tool to profile and analyze the runtime performance of one or more models on the Triton Inference Server"
 readme = {content-type = "text/markdown", text = """See the Model Analyzer's [installation documentation](https://github.com/triton-inference-server/model_analyzer/blob/main/docs/install.md#using-pip3) for package details. The [quick start](https://github.com/triton-inference-server/model_analyzer/blob/main/docs/quick_start.md) documentation describes how to get started with profiling and analysis using Triton Model Analyzer."""}
 authors = [
@@ -78,13 +84,12 @@ model-analyzer = "model_analyzer.entrypoint:main"
 [project.optional-dependencies]
 perf-analyzer = ["perf-analyzer"]
 
-[tool.setuptools.dynamic]
-version = {file = "VERSION"}
+[tool.hatch.version]
+path = "VERSION"
+pattern = "(?P<version>.+)"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["model_analyzer*"]
-exclude = ["tests*", "examples*", "qa*"]
+[tool.hatch.build.targets.wheel]
+packages = ["model_analyzer"]
 
 [tool.codespell]
 # note: pre-commit passes explicit lists of files here, which this skip file list doesn't override -
