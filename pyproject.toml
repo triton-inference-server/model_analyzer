@@ -91,6 +91,12 @@ pattern = "(?P<version>.+)"
 [tool.hatch.build.targets.wheel]
 packages = ["model_analyzer"]
 
+[tool.hatch.build.targets.sdist]
+# Preserves the boundaries the previous setuptools `exclude` enforced;
+# without an explicit sdist target hatchling defaults to shipping all
+# tracked content, pulling tests, QA assets and examples into the sdist.
+only-include = ["model_analyzer", "VERSION", "LICENSE", "README.md", "pyproject.toml"]
+
 [tool.codespell]
 # note: pre-commit passes explicit lists of files here, which this skip file list doesn't override -
 # this is only to allow you to run codespell interactively
