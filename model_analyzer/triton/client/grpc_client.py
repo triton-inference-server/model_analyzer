@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -68,6 +70,8 @@ class TritonGRPCClient(TritonClient):
             certificate_chain=certificate_chain,
             channel_args=channel_args,
         )
+
+        self._headers = {}
 
     def get_model_config(self, model_name, num_retries):
         """
