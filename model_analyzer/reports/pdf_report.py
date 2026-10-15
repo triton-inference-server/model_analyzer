@@ -26,6 +26,22 @@ class PDFReport(HTMLReport):
     it to PDF
     """
 
+    # wkhtmltopdf embeds QtWebKit and runs JavaScript by default. Reports are
+    # static documents built from local data, so neither scripting nor
+    # filesystem access is ever needed to render one. QtWebKit is unmaintained
+    # upstream and carries known-exploited CVEs, so the renderer is given the
+    # narrowest capability set that still produces a report.
+    #
+    # wkhtmltopdf has no option that blocks remote resource loading, so a
+    # subresource URL reaching the document would still be fetched. Keeping
+    # untrusted text out of the markup is what closes that, not an option
+    # here -- see HTMLReport's escaping.
+    PDFKIT_OPTIONS = {
+        "quiet": "",
+        "disable-javascript": "",
+        "disable-local-file-access": "",
+    }
+
     def __init__(self, html_report=None):
         super().__init__(html_report)
 
@@ -40,7 +56,7 @@ class PDFReport(HTMLReport):
             The name of the report
         """
 
-        pdfkit.from_string(self.document(), f"{filename}", options={"quiet": ""})
+        pdfkit.from_string(self.document(), f"{filename}", options=self.PDFKIT_OPTIONS)
 
     def get_file_extension(self):
         """
