@@ -630,6 +630,46 @@ class TestReportManager(trc.TestResultCollector):
 
         self.assertEqual(actual_constraint_str, expected_constraint_str)
 
+    def test_constraint_string_escapes_model_name(self, *args):
+        """
+        The model name is attacker-controlled when the models under test came
+        from someone else, and this sentence is built with its own <strong>
+        markup -- so the substitution is escaped while the markup survives.
+        NVBug 6833957.
+        """
+
+        constraint_manager = construct_constraint_manager(
+            """
+            profile_models:
+              "<script>alert(1)</script>":
+                constraints:
+                  perf_latency_p99:
+                    max: 100
+              modelB:
+                constraints:
+                  perf_latency_p99:
+                    max: 200
+            """
+        )
+
+        report_manager = ReportManager(
+            mode=MagicMock(),
+            config=MagicMock(),
+            gpu_info=MagicMock(),
+            result_manager=MagicMock(),
+            constraint_manager=constraint_manager,
+        )
+
+        actual_constraint_str = report_manager._create_constraint_string(
+            report_key="<script>alert(1)</script>,modelB"
+        )
+
+        self.assertNotIn("<script>", actual_constraint_str)
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", actual_constraint_str)
+        # The sentence's own markup must survive the escaping.
+        self.assertIn("<strong>", actual_constraint_str)
+        self.assertIn("<br>", actual_constraint_str)
+
     def tearDown(self):
         self.matplotlib_mock.stop()
         self.io_mock.stop()
