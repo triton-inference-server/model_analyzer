@@ -142,6 +142,65 @@ class TestHTMLReportMethods(trc.TestResultCollector):
 
         self.assertEqual(self.report.document(), expected_report_body)
 
+    def test_add_title_escapes_markup(self):
+        """
+        A model name reaching the report must not be able to close the tag
+        it sits in. NVBug 6833957.
+        """
+
+        self.report.add_title("<script>alert(1)</script>")
+        document = self.report.document()
+        self.assertNotIn("<script>", document)
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", document)
+
+    def test_add_subheading_escapes_markup(self):
+        self.report.add_subheading("Model Config: <script>alert(1)</script>")
+        document = self.report.document()
+        self.assertNotIn("<script>", document)
+        self.assertIn("&lt;script&gt;", document)
+
+    def test_add_table_escapes_headers_and_cells(self):
+        """
+        Every value in a table is data, never markup, so both headers and
+        cells are escaped.
+        """
+
+        table = ResultTable(headers=["Model", "<script>alert(1)</script>"], title="t")
+        table.insert_row_by_index(["<img src=x onerror=alert(1)>", "7"])
+        self.report.add_table(table=table)
+
+        document = self.report.document()
+        self.assertNotIn("<script>", document)
+        self.assertNotIn("<img", document)
+        self.assertIn("&lt;script&gt;", document)
+        self.assertIn("&lt;img src=x onerror=alert(1)&gt;", document)
+
+    def test_add_images_escapes_caption(self):
+        with patch(
+            "model_analyzer.reports.html_report.open",
+            mock_open(read_data=bytes(">:(".encode("ascii"))),
+        ):
+            self.report.add_images(["f"], ["<script>alert(1)</script>"])
+
+        document = self.report.document()
+        self.assertNotIn("<script>", document)
+        self.assertIn("&lt;script&gt;", document)
+
+    def test_add_paragraph_preserves_intentional_markup(self):
+        """
+        report_manager.py builds its sentences with <strong> and <br> on
+        purpose, so paragraphs must NOT be escaped at the sink. Escaping
+        here would render every summary report's own markup as literal
+        text; those sentences escape their substitutions individually.
+        """
+
+        sentence = (
+            "is <strong>23%</strong> better than the default configuration"
+            " at meeting the objectives"
+        )
+        self.report.add_paragraph(sentence)
+        self.assertIn("<strong>23%</strong>", self.report.document())
+
     def test_write_report(self):
         self.report.add_title("Test HTML Report")
         self.report.add_subheading("Throughput vs. Latency")
