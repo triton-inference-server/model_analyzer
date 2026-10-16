@@ -249,14 +249,10 @@ class TestReportEscapingInvariant(trc.TestResultCollector):
         the first element would pass this.
         """
 
-        offending = (
-            'names = "<br>".join([escape(first_name), model_config_name])'
-        )
+        offending = 'names = "<br>".join([escape(first_name), model_config_name])'
         self.assertEqual(len(find_unescaped_interpolations(offending)), 1)
 
-        fixed = (
-            'names = "<br>".join([escape(first_name), escape(model_config_name)])'
-        )
+        fixed = 'names = "<br>".join([escape(first_name), escape(model_config_name)])'
         self.assertEqual(find_unescaped_interpolations(fixed), [])
 
     def test_invariant_detects_a_nested_f_string_in_a_concatenation(self):
