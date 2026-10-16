@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -15,8 +17,48 @@
 # limitations under the License.
 
 import base64
+import html
 
 from .report import Report
+
+
+class Markup(str):
+    """
+    A string that is already report markup and must not be escaped again.
+
+    Report tables carry two kinds of cell. Most are plain text that came from
+    a model repository and must be neutralized. A few are short fragments the
+    report composes itself -- config names separated by <br>, a metric
+    emphasized with <strong> -- which have already escaped their own
+    substitutions. Marking the second kind is what keeps escape() from
+    rendering their tags as visible text and escaping the names inside them a
+    second time.
+    """
+
+
+def escape(value):
+    """
+    Neutralize text that is about to become part of the report markup.
+
+    Model names, config variant names and measured values originate in a
+    model repository or a config file, so they are attacker-controlled when
+    the models being benchmarked came from someone else. Interpolating them
+    raw lets that text close a tag and run as script in the reader's browser
+    -- and under the PDF renderer, inside QtWebKit.
+
+    A Markup value is returned untouched, because it is markup the report
+    built and has already escaped. Everything else is escaped, so forgetting
+    to mark a fragment makes its tags visible rather than live.
+
+    Only callers that never pass intentional markup may rely on this; the
+    report sentences in report_manager.py build their own <strong>/<br>
+    markup and escape their substitutions individually instead.
+    """
+
+    if isinstance(value, Markup):
+        return value
+
+    return html.escape(str(value))
 
 
 class HTMLReport(Report):
@@ -65,7 +107,7 @@ class HTMLReport(Report):
             The title of the report
         """
 
-        self._body += f"<center><h1>{title}</h1></center>"
+        self._body += f"<center><h1>{escape(title)}</h1></center>"
 
     def add_subheading(self, subheading):
         """
@@ -75,7 +117,7 @@ class HTMLReport(Report):
             The subheading of the given section
         """
 
-        self._body += f"<h3>{subheading}</h3>"
+        self._body += f"<h3>{escape(subheading)}</h3>"
 
     def add_images(self, images, image_captions, image_width=100, float="center"):
         """
@@ -101,7 +143,7 @@ class HTMLReport(Report):
                 image_row += (
                     f'<img src="data:image/png;base64,{data_uri}" style="width:100%">'
                 )
-                image_row += f'<center><div style="font-weight:bold;font-size:12;padding-bottom:20px">{caption}</div></center>'
+                image_row += f'<center><div style="font-weight:bold;font-size:12;padding-bottom:20px">{escape(caption)}</div></center>'
                 image_row += "</div>"
 
         self._body += f"<center><div>{image_row}</div></center>"
@@ -156,7 +198,7 @@ class HTMLReport(Report):
         html_table = ""
         # Add headers
         headers = "".join(
-            [f'<th style="{table_style()}">{h}</th>' for h in table.headers()]
+            [f'<th style="{table_style()}">{escape(h)}</th>' for h in table.headers()]
         )
         html_table += f"<tr>{headers}</tr>"
 
@@ -164,7 +206,7 @@ class HTMLReport(Report):
         for i in range(table.size()):
             row_data = "".join(
                 [
-                    f'<td style="{table_style()}">{d}</td>'
+                    f'<td style="{table_style()}">{escape(d)}</td>'
                     for d in table.get_row_by_index(i)
                 ]
             )

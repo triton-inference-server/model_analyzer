@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -629,6 +631,94 @@ class TestReportManager(trc.TestResultCollector):
         )
 
         self.assertEqual(actual_constraint_str, expected_constraint_str)
+
+    def test_constraint_string_escapes_model_name(self, *args):
+        """
+        The model name is attacker-controlled when the models under test came
+        from someone else, and this sentence is built with its own <strong>
+        markup -- so the substitution is escaped while the markup survives.
+        NVBug 6833957.
+        """
+
+        constraint_manager = construct_constraint_manager(
+            """
+            profile_models:
+              "<script>alert(1)</script>":
+                constraints:
+                  perf_latency_p99:
+                    max: 100
+              modelB:
+                constraints:
+                  perf_latency_p99:
+                    max: 200
+            """
+        )
+
+        report_manager = ReportManager(
+            mode=MagicMock(),
+            config=MagicMock(),
+            gpu_info=MagicMock(),
+            result_manager=MagicMock(),
+            constraint_manager=constraint_manager,
+        )
+
+        actual_constraint_str = report_manager._create_constraint_string(
+            report_key="<script>alert(1)</script>,modelB"
+        )
+
+        self.assertNotIn("<script>", actual_constraint_str)
+        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", actual_constraint_str)
+        # The sentence's own markup must survive the escaping.
+        self.assertIn("<strong>", actual_constraint_str)
+        self.assertIn("<br>", actual_constraint_str)
+
+    @patch("model_analyzer.plots.plot_manager.PlotManager._create_update_simple_plot")
+    def test_summary_report_escapes_malicious_model_name(self, add_plot_fn):
+        """
+        End-to-end over the summary pipeline: a model whose name is markup is
+        profiled, create_summaries() builds the real report, and the rendered
+        document must carry no live tag while keeping the report's own markup.
+        NVBug 6833957.
+        """
+
+        malicious = "<script>alert(1)</script>"
+        self._init_managers(
+            models=malicious, num_configs_per_model=3, subcommand="profile"
+        )
+        result_comparator = RunConfigResultComparator(
+            metric_objectives_list=[{"perf_throughput": 10}], model_weights=[1]
+        )
+        avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
+        for i in range(4):
+            avg_non_gpu_metrics = {
+                "perf_throughput": 100 - 10 * i,
+                "perf_latency_p99": 20 + i,
+                "cpu_used_ram": 1000,
+            }
+            name = f"{malicious}_config_default" if not i else f"{malicious}_config_{i}"
+            self._add_result_measurement(
+                name,
+                malicious,
+                avg_gpu_metrics,
+                avg_non_gpu_metrics,
+                result_comparator,
+            )
+
+        self.report_manager.create_summaries()
+        document = self.report_manager._summaries[malicious].document()
+
+        self.assertNotIn("<script>", document)
+        self.assertNotIn("</script>", document)
+        self.assertIn("&lt;script&gt;", document)
+        # The report's own markup is untouched.
+        self.assertIn("<strong>", document)
+        self.assertIn("<h3>", document)
+        # Escaped exactly once. The summary table cell escapes the config
+        # names itself and is marked Markup so add_table leaves it alone;
+        # escaping it twice would print a&amp;lt;b&amp;gt;c to the reader,
+        # which is no more the model's name than the raw tag was.
+        self.assertNotIn("&amp;lt;", document)
+        self.assertNotIn("&amp;gt;", document)
 
     def tearDown(self):
         self.matplotlib_mock.stop()

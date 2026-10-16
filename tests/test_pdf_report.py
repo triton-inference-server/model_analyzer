@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -53,8 +55,26 @@ class TestPDFReportMethods(trc.TestResultCollector):
                 "</body></html>"
             )
             pdfkit_mock.from_string.assert_called_with(
-                expected_report_body, "test_report_filename", options={"quiet": ""}
+                expected_report_body,
+                "test_report_filename",
+                options=PDFReport.PDFKIT_OPTIONS,
             )
+
+    def test_write_report_disables_scripting_and_local_file_access(self):
+        """
+        wkhtmltopdf runs JavaScript and reads local files by default. A report
+        is a static document, so the renderer is handed neither capability.
+        """
+
+        with patch(
+            "model_analyzer.reports.pdf_report.pdfkit", MagicMock()
+        ) as pdfkit_mock:
+            self.report.add_title("Test PDF Report")
+            self.report.write_report("test_report_filename")
+
+            options = pdfkit_mock.from_string.call_args.kwargs["options"]
+            self.assertIn("disable-javascript", options)
+            self.assertIn("disable-local-file-access", options)
 
 
 if __name__ == "__main__":
