@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -18,7 +20,7 @@ import base64
 import unittest
 from unittest.mock import mock_open, patch
 
-from model_analyzer.reports.html_report import HTMLReport
+from model_analyzer.reports.html_report import HTMLReport, Markup
 from model_analyzer.result.result_table import ResultTable
 
 from .common import test_result_collector as trc
@@ -185,6 +187,56 @@ class TestHTMLReportMethods(trc.TestResultCollector):
         document = self.report.document()
         self.assertNotIn("<script>", document)
         self.assertIn("&lt;script&gt;", document)
+
+    def test_add_table_preserves_marked_markup_cells(self):
+        """
+        A few cells are markup the report composed itself -- config names
+        joined with <br>, a metric wrapped in <strong>. Those arrive as
+        Markup and must pass through add_table untouched, or the separators
+        and emphasis render as visible tag text.
+        """
+
+        table = ResultTable(headers=["Models", "Throughput"], title="t")
+        table.insert_row_by_index(
+            [Markup("alpha<br>beta"), Markup("<strong>7</strong> (7, 8)")]
+        )
+        self.report.add_table(table=table)
+
+        document = self.report.document()
+        self.assertIn("alpha<br>beta", document)
+        self.assertIn("<strong>7</strong>", document)
+        self.assertNotIn("&lt;br&gt;", document)
+
+    def test_add_table_escapes_marked_cell_contents_exactly_once(self):
+        """
+        Regression: a Markup cell has already escaped its own substitutions,
+        so add_table must not escape it again. Double escaping turned a model
+        named a<b>c into the visible text a&lt;b&gt;c -- the same class of
+        defect as the unescaped name it replaced, since the reader is shown
+        something that is not the model's name.
+        """
+
+        table = ResultTable(headers=["Models"], title="t")
+        table.insert_row_by_index([Markup("a&lt;b&gt;c<br>d&lt;e&gt;f")])
+        self.report.add_table(table=table)
+
+        document = self.report.document()
+        self.assertIn("a&lt;b&gt;c", document)
+        self.assertNotIn("&amp;lt;", document)
+        self.assertNotIn("<b>", document)
+
+    def test_escape_is_idempotent_only_through_markup(self):
+        """
+        Plain text is always escaped; only an explicit Markup marker opts out.
+        A fragment someone forgets to mark shows its tags as text, which is
+        visible in review, rather than running them.
+        """
+
+        from model_analyzer.reports.html_report import escape
+
+        self.assertEqual(escape("a<b>c"), "a&lt;b&gt;c")
+        self.assertEqual(escape(Markup("a<br>b")), "a<br>b")
+        self.assertEqual(escape(escape("a<b>c")), "a&amp;lt;b&amp;gt;c")
 
     def test_add_paragraph_preserves_intentional_markup(self):
         """

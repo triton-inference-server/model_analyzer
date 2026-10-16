@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -711,6 +713,12 @@ class TestReportManager(trc.TestResultCollector):
         # The report's own markup is untouched.
         self.assertIn("<strong>", document)
         self.assertIn("<h3>", document)
+        # Escaped exactly once. The summary table cell escapes the config
+        # names itself and is marked Markup so add_table leaves it alone;
+        # escaping it twice would print a&amp;lt;b&amp;gt;c to the reader,
+        # which is no more the model's name than the raw tag was.
+        self.assertNotIn("&amp;lt;", document)
+        self.assertNotIn("&amp;gt;", document)
 
     def tearDown(self):
         self.matplotlib_mock.stop()

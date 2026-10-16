@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -55,6 +57,23 @@ def _is_markup_literal(node):
     )
 
 
+def _inserted_expressions(argument):
+    """
+    The expressions a join argument actually contributes to the document.
+
+    ``"<br>".join([a, b])`` inserts both elements, and
+    ``"<br>".join([f(x) for x in xs])`` inserts the comprehension's element
+    expression. Checking only the first one lets a mixed list -- one escaped
+    element and one raw -- pass the guard.
+    """
+
+    if isinstance(argument, (ast.List, ast.Tuple, ast.Set)):
+        return list(argument.elts)
+    if isinstance(argument, (ast.ListComp, ast.GeneratorExp, ast.SetComp)):
+        return [argument.elt]
+    return [argument]
+
+
 def _flatten_add(node):
     """Flatten a chain of string concatenations into its operands."""
 
@@ -105,12 +124,13 @@ def find_unescaped_interpolations(source):
             and _is_markup_literal(node.func.value)
         ):
             # ``"<br>".join([...])`` -- the separator is markup, so every
-            # joined element lands in the document as markup too.
+            # joined element lands in the document as markup too. Every
+            # element is checked, not just the first: a list whose first
+            # element is escaped says nothing about the rest.
             for argument in node.args:
-                for element in ast.walk(argument):
-                    if isinstance(element, (ast.Name, ast.Attribute, ast.Call)):
+                for element in _inserted_expressions(argument):
+                    if not isinstance(element, ast.Constant):
                         check(element, element.lineno)
-                        break
 
         elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
             if id(node) in inner_adds:
@@ -124,7 +144,10 @@ def find_unescaped_interpolations(source):
                     # itself holds outside text; the key is not what lands in
                     # the report.
                     check(operand.value, operand.lineno)
-                elif isinstance(operand, (ast.Name, ast.Attribute)):
+                elif not isinstance(operand, ast.Constant):
+                    # Calls and f-strings are interpolations too:
+                    # ``"<b>" + f"{model_name}" + "</b>"`` puts the name in
+                    # the document just as surely as naming it directly.
                     check(operand, operand.lineno)
 
     return violations
@@ -218,6 +241,45 @@ class TestReportEscapingInvariant(trc.TestResultCollector):
 
         fixed = 'names = "<br>".join([escape(c.variant_name) for c in configs])'
         self.assertEqual(find_unescaped_interpolations(fixed), [])
+
+    def test_invariant_detects_a_partially_escaped_join(self):
+        """
+        A mixed list is the realistic regression: someone wraps the element
+        they were looking at and leaves the one beside it raw. Checking only
+        the first element would pass this.
+        """
+
+        offending = (
+            'names = "<br>".join([escape(first_name), model_config_name])'
+        )
+        self.assertEqual(len(find_unescaped_interpolations(offending)), 1)
+
+        fixed = (
+            'names = "<br>".join([escape(first_name), escape(model_config_name)])'
+        )
+        self.assertEqual(find_unescaped_interpolations(fixed), [])
+
+    def test_invariant_detects_a_nested_f_string_in_a_concatenation(self):
+        """
+        An f-string operand interpolates just as directly as a bare name, and
+        on its own carries no markup literal for the f-string branch to key
+        on, so the concatenation branch has to catch it.
+        """
+
+        offending = 'out = "<b>" + f"{model_name}" + "</b>"'
+        self.assertEqual(len(find_unescaped_interpolations(offending)), 1)
+
+        fixed = 'out = "<b>" + f"{escape(model_name)}" + "</b>"'
+        self.assertEqual(find_unescaped_interpolations(fixed), [])
+
+    def test_invariant_detects_a_tainted_call_in_a_concatenation(self):
+        """
+        A helper call that takes the tainted value is still an interpolation
+        of it unless escaping happens on the way in.
+        """
+
+        offending = 'out = "<b>" + str(model_name) + "</b>"'
+        self.assertEqual(len(find_unescaped_interpolations(offending)), 1)
 
 
 if __name__ == "__main__":

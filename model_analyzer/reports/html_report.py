@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -20,6 +22,20 @@ import html
 from .report import Report
 
 
+class Markup(str):
+    """
+    A string that is already report markup and must not be escaped again.
+
+    Report tables carry two kinds of cell. Most are plain text that came from
+    a model repository and must be neutralized. A few are short fragments the
+    report composes itself -- config names separated by <br>, a metric
+    emphasized with <strong> -- which have already escaped their own
+    substitutions. Marking the second kind is what keeps escape() from
+    rendering their tags as visible text and escaping the names inside them a
+    second time.
+    """
+
+
 def escape(value):
     """
     Neutralize text that is about to become part of the report markup.
@@ -30,10 +46,17 @@ def escape(value):
     raw lets that text close a tag and run as script in the reader's browser
     -- and under the PDF renderer, inside QtWebKit.
 
+    A Markup value is returned untouched, because it is markup the report
+    built and has already escaped. Everything else is escaped, so forgetting
+    to mark a fragment makes its tags visible rather than live.
+
     Only callers that never pass intentional markup may rely on this; the
     report sentences in report_manager.py build their own <strong>/<br>
     markup and escape their substitutions individually instead.
     """
+
+    if isinstance(value, Markup):
+        return value
 
     return html.escape(str(value))
 

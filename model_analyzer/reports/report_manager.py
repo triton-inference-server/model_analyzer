@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -36,7 +38,7 @@ from model_analyzer.constants import (
 )
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.record.metrics_manager import MetricsManager
-from model_analyzer.reports.html_report import HTMLReport, escape
+from model_analyzer.reports.html_report import HTMLReport, Markup, escape
 from model_analyzer.reports.pdf_report import PDFReport
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.result.result_manager import ResultManager
@@ -1011,11 +1013,15 @@ class ReportManager:
                 ]
             )
 
-        model_config_names = "<br>".join(
-            [
-                escape(model_run_config.model_config_variant().variant_name)
-                for model_run_config in run_config.model_run_configs()
-            ]
+        # A table cell, so it is marked as markup: the <br> separators have to
+        # survive add_table's escaping, and the names inside are escaped here.
+        model_config_names = Markup(
+            "<br>".join(
+                [
+                    escape(model_run_config.model_config_variant().variant_name)
+                    for model_run_config in run_config.model_run_configs()
+                ]
+            )
         )
 
         perf_latency_string = self._create_non_gpu_metric_string(
@@ -1081,9 +1087,9 @@ class ReportManager:
                 ]
             )
 
-            return (
+            return Markup(
                 f"<strong>{round(run_config_measurement.get_non_gpu_metric_value(non_gpu_metric), 1)}</strong> "
-                f"({non_gpu_metric_config_string})"
+                f"({escape(non_gpu_metric_config_string)})"
             )
         else:
             return f"{non_gpu_metrics[0].value()}"
