@@ -559,11 +559,17 @@ class ReportManager:
                     for i in range(len("Constraint targets: ")):
                         constraint_str += "&ensp;"
 
+                # The constraint text is built from code-defined metric
+                # headers and an int the config schema enforces, so it
+                # carries nothing to escape today. It is escaped anyway
+                # because nothing mechanical guards this line: the invariant
+                # check ignores it, the tainted name here being only the
+                # dict key.
                 constraint_str += (
                     "<strong>"
                     + escape(model_name)
                     + "</strong>: "
-                    + constraint_strs[model_name]
+                    + escape(constraint_strs[model_name])
                 )
 
         return constraint_str

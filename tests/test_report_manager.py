@@ -21,6 +21,7 @@ from unittest.mock import MagicMock, patch
 
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.reports.report_manager import ReportManager
 from model_analyzer.result.constraint_manager import ConstraintManager
@@ -671,6 +672,29 @@ class TestReportManager(trc.TestResultCollector):
         # The sentence's own markup must survive the escaping.
         self.assertIn("<strong>", actual_constraint_str)
         self.assertIn("<br>", actual_constraint_str)
+        # The constraint text itself is built from code-defined headers and
+        # an int, so escaping it is a no-op and must stay readable.
+        self.assertIn("Max p99 Latency: 100 ms", actual_constraint_str)
+        self.assertIn("Max p99 Latency: 200 ms", actual_constraint_str)
+
+    def test_constraint_value_must_be_an_int(self):
+        """
+        The constraint text is only safe to treat as plain prose because the
+        config schema refuses anything but an int. If that ever loosens, the
+        escaping beside it is what carries the weight -- so pin the schema
+        here rather than leave the reasoning implicit at the call site.
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            construct_constraint_manager(
+                """
+                profile_models:
+                  modelA:
+                    constraints:
+                      perf_latency_p99:
+                        max: "<script>alert(1)</script>"
+                """
+            )
 
     @patch("model_analyzer.plots.plot_manager.PlotManager._create_update_simple_plot")
     def test_summary_report_escapes_malicious_model_name(self, add_plot_fn):
