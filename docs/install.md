@@ -1,4 +1,8 @@
 <!--
+SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+-->
+<!--
 Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -181,12 +185,22 @@ pip3 install --upgrade pip
 
 You can then try installing model analyzer again.
 
-Optionally, if you want Model Analyzer to generate PDF reports instead of HTML,
-you should also run the following:
+Model Analyzer generates HTML reports by default.
+
+Optionally, if you want PDF reports instead, you should also run the
+following:
 
 ```
 sudo apt-get update && sudo apt-get install wkhtmltopdf
 ```
+
+> **Note**
+> `wkhtmltopdf` renders through QtWebKit, which is unmaintained upstream and
+> carries CVEs that are on the CISA Known Exploited Vulnerabilities list. For
+> that reason the Triton SDK container stopped shipping it in 26.10, and
+> Model Analyzer produces HTML reports there. Installing it is opt-in, and
+> the resulting PDF renderer is run with scripting and local file access
+> disabled.
 
 <br>
 

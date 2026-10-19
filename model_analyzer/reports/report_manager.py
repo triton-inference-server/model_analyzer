@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -36,7 +38,7 @@ from model_analyzer.constants import (
 )
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.record.metrics_manager import MetricsManager
-from model_analyzer.reports.html_report import HTMLReport
+from model_analyzer.reports.html_report import HTMLReport, Markup, escape
 from model_analyzer.reports.pdf_report import PDFReport
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.result.result_manager import ResultManager
@@ -383,8 +385,8 @@ class ReportManager:
         summary.add_title(title=f"{self._mode.title()} Result Summary")
         summary.add_subheading(f"Model: {' and '.join(report_key.split(','))}")
         if report_gpu_metrics:
-            summary.add_paragraph(f"GPU(s): {gpu_names}")
-            summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
+            summary.add_paragraph(f"GPU(s): {escape(gpu_names)}")
+            summary.add_paragraph(f"Total Available GPU Memory: {escape(max_memories)}")
         summary.add_paragraph(f"Constraint targets: {constraint_str}")
         summary.add_paragraph(summary_sentence)
         summary.add_paragraph(
@@ -461,8 +463,10 @@ class ReportManager:
             ].get_composing_config_names():
                 caption_results_table = (
                     caption_results_table
-                    + BaseModelConfigGenerator.extract_model_name_from_variant_name(
-                        composing_config_name
+                    + escape(
+                        BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                            composing_config_name
+                        )
                     )
                     + ", "
                 )
@@ -555,11 +559,17 @@ class ReportManager:
                     for i in range(len("Constraint targets: ")):
                         constraint_str += "&ensp;"
 
+                # The constraint text is built from code-defined metric
+                # headers and an int the config schema enforces, so it
+                # carries nothing to escape today. It is escaped anyway
+                # because nothing mechanical guards this line: the invariant
+                # check ignores it, the tainted name here being only the
+                # dict key.
                 constraint_str += (
                     "<strong>"
-                    + model_name
+                    + escape(model_name)
                     + "</strong>: "
-                    + constraint_strs[model_name]
+                    + escape(constraint_strs[model_name])
                 )
 
         return constraint_str
@@ -616,7 +626,7 @@ class ReportManager:
 
         summary_sentence = (
             summary_sentence
-            + f"<strong>{best_config_name}</strong> is comprised of the following composing models: <UL> "
+            + f"<strong>{escape(best_config_name)}</strong> is comprised of the following composing models: <UL> "
         )
         summary_sentence = (
             summary_sentence + self._create_composing_model_summary_sentence(run_config)
@@ -675,7 +685,7 @@ class ReportManager:
 
     def _create_summary_config_phrase(self, best_run_config, num_configurations):
         config_names = [
-            f"<strong>{model_run_config.model_config_variant().variant_name}</strong>"
+            f"<strong>{escape(model_run_config.model_config_variant().variant_name)}</strong>"
             for model_run_config in best_run_config.model_run_configs()
         ]
 
@@ -1009,11 +1019,15 @@ class ReportManager:
                 ]
             )
 
-        model_config_names = "<br>".join(
-            [
-                model_run_config.model_config_variant().variant_name
-                for model_run_config in run_config.model_run_configs()
-            ]
+        # A table cell, so it is marked as markup: the <br> separators have to
+        # survive add_table's escaping, and the names inside are escaped here.
+        model_config_names = Markup(
+            "<br>".join(
+                [
+                    escape(model_run_config.model_config_variant().variant_name)
+                    for model_run_config in run_config.model_run_configs()
+                ]
+            )
         )
 
         perf_latency_string = self._create_non_gpu_metric_string(
@@ -1079,9 +1093,9 @@ class ReportManager:
                 ]
             )
 
-            return (
+            return Markup(
                 f"<strong>{round(run_config_measurement.get_non_gpu_metric_value(non_gpu_metric), 1)}</strong> "
-                f"({non_gpu_metric_config_string})"
+                f"({escape(non_gpu_metric_config_string)})"
             )
         else:
             return f"{non_gpu_metrics[0].value()}"
@@ -1089,7 +1103,7 @@ class ReportManager:
     def _create_summary_config_info(self, model_config_variant):
         model_config = model_config_variant.model_config
 
-        config_info = f"<strong>{model_config_variant.variant_name}</strong>: "
+        config_info = f"<strong>{escape(model_config_variant.variant_name)}</strong>: "
         config_info = (
             config_info + f"{self._create_instance_group_phrase(model_config)} with a "
         )
@@ -1236,10 +1250,12 @@ class ReportManager:
 
         if report_gpu_metrics:
             gpu_names, max_memories = self._get_gpu_stats(measurements)
-            gpu_cpu_string = f"GPU(s) {gpu_names} with total memory {max_memories}"
+            gpu_cpu_string = (
+                f"GPU(s) {escape(gpu_names)} with total memory {escape(max_memories)}"
+            )
 
         if run_config.is_ensemble_model():
-            sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
+            sentence = f"<strong>{escape(model_config_name)}</strong> is comprised of the following composing models:"
 
             for composing_config_variant in run_config.composing_config_variants():
                 sentence = (
@@ -1254,7 +1270,7 @@ class ReportManager:
                 + f"<br>{len(measurements)} measurement(s) were obtained for the model config on {gpu_cpu_string}."
             )
         elif run_config.is_bls_model():
-            sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
+            sentence = f"<strong>{escape(model_config_name)}</strong> is comprised of the following composing models:"
 
             for composing_config_variant in run_config.composing_config_variants():
                 sentence = (
@@ -1270,11 +1286,11 @@ class ReportManager:
             )
         else:
             sentence = (
-                f"The model config <strong>{model_config_name}</strong> uses {instance_group_string} "
+                f"The model config <strong>{escape(model_config_name)}</strong> uses {instance_group_string} "
                 f"with {max_batch_size_string} and has {dynamic_batching_string}. "
                 f"{len(measurements)} measurement(s) were obtained for the model config on "
                 f"{gpu_cpu_string}. "
-                f"This model uses the platform {platform}."
+                f"This model uses the platform {escape(platform)}."
             )
 
         return sentence

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -16,9 +18,23 @@
 
 import argparse
 import os
+import shutil
 import sys
 
 import yaml
+
+
+def report_extension():
+    """
+    Returns the file extension Model Analyzer uses for reports.
+
+    ReportFactory emits PDF reports only when wkhtmltopdf is on PATH and
+    falls back to HTML otherwise, so the expected artifact depends on the
+    image the tests run in. The SDK image stopped shipping wkhtmltopdf
+    (and with it QtWebKit) in 26.10.
+    """
+
+    return "pdf" if shutil.which("wkhtmltopdf") is not None else "html"
 
 
 class TestOutputValidator:
@@ -39,7 +55,7 @@ class TestOutputValidator:
 
     def check_summaries(self):
         """
-        Checks if the result summary pdfs exists
+        Checks if the result summary reports exist
         in the required location
 
         Returns
@@ -47,21 +63,21 @@ class TestOutputValidator:
         True if all exist, False otherwise
         """
 
-        for model in config["profile_models"]:
+        for model in self._config["profile_models"]:
             if not os.path.exists(
                 os.path.join(
                     self._export_path,
                     "reports",
                     "summaries",
                     model,
-                    "result_summary.pdf",
+                    f"result_summary.{report_extension()}",
                 )
             ):
                 print(f"\n***\n*** Summary not found for {model}.\n***")
                 return False
 
         # First check for the best models report
-        profile_models = set(config["profile_models"])
+        profile_models = set(self._config["profile_models"])
         report_dirs = set(
             os.listdir(os.path.join(self._export_path, "reports", "summaries"))
         )
@@ -73,7 +89,11 @@ class TestOutputValidator:
         for dir in report_dirs - profile_models:
             if not os.path.exists(
                 os.path.join(
-                    self._export_path, "reports", "summaries", dir, "result_summary.pdf"
+                    self._export_path,
+                    "reports",
+                    "summaries",
+                    dir,
+                    f"result_summary.{report_extension()}",
                 )
             ):
                 print("\n***\n*** Top models summary not found.\n***")
@@ -83,18 +103,18 @@ class TestOutputValidator:
 
     def check_detailed_reports(self):
         """
-        Checks if the detailed report pdfs exists
+        Checks if the detailed reports exist
         in the required location
         """
 
-        for model_config in config["report_model_configs"]:
+        for model_config in self._config["report_model_configs"]:
             if not os.path.exists(
                 os.path.join(
                     self._export_path,
                     "reports",
                     "detailed",
                     model_config,
-                    "detailed_report.pdf",
+                    f"detailed_report.{report_extension()}",
                 )
             ):
                 print(f"\n***\n*** Detailed report not found for {model_config}.\n***")
