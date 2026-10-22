@@ -176,20 +176,60 @@ def _in_style_attribute(prefix):
     return quote not in prefix[opener.end() :]
 
 
-def _css_guarded_names(tree):
-    """Locals bound from a guard call, e.g. ``size = css_length(...)``."""
+def _enclosing_functions(tree):
+    """Map every node to the innermost function that contains it."""
+
+    scopes = {}
+
+    def walk(node, current):
+        for child in ast.iter_child_nodes(node):
+            inner = (
+                child
+                if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
+                else current
+            )
+            scopes[id(child)] = inner
+            walk(child, inner)
+
+    walk(tree, None)
+    return scopes
+
+
+def _css_guarded_names(scope):
+    """
+    Locals bound from a guard call, e.g. ``size = css_length(...)``.
+
+    Collected per function, not per module: ``size = css_length(...)`` in one
+    function says nothing about a ``size`` in another, and trusting the name
+    globally would hide exactly the mistake this is here to catch.
+    """
 
     names = set()
-    for node in ast.walk(tree):
+    for node in ast.walk(scope):
         if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
             continue
         function = node.value.func
-        called = function.id if isinstance(function, ast.Name) else ""
-        if called in _CSS_GUARD_CALLS:
+        if isinstance(function, ast.Name) and function.id in _CSS_GUARD_CALLS:
             names.update(
                 target.id for target in node.targets if isinstance(target, ast.Name)
             )
     return names
+
+
+def _calls_a_guard(expression):
+    """
+    Whether the expression actually calls a guard.
+
+    Matched on the AST rather than by substring: ``"int" in segment`` is true
+    of ``internal_width``, which calls nothing at all.
+    """
+
+    return any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id in _CSS_GUARD_CALLS
+        for node in ast.walk(expression)
+    )
 
 
 def _css_relevant_names(expression):
@@ -204,12 +244,11 @@ def _css_relevant_names(expression):
 
     skipped = set()
     for node in ast.walk(expression):
-        if isinstance(node, ast.Call):
-            if isinstance(node.func, ast.Name):
-                skipped.add(id(node.func))
-                if node.func.id == "len":
-                    for argument in node.args:
-                        skipped.update(id(inner) for inner in ast.walk(argument))
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            skipped.add(id(node.func))
+            if node.func.id == "len":
+                for argument in node.args:
+                    skipped.update(id(inner) for inner in ast.walk(argument))
     return {
         node.id
         for node in ast.walk(expression)
@@ -230,12 +269,20 @@ def find_unguarded_style_interpolations(source):
     """
 
     tree = ast.parse(source)
-    guarded = _css_guarded_names(tree)
+    scopes = _enclosing_functions(tree)
+    guarded_by_scope = {}
     violations = []
 
     for node in ast.walk(tree):
         if not isinstance(node, ast.JoinedStr):
             continue
+
+        scope = scopes.get(id(node))
+        if id(scope) not in guarded_by_scope:
+            guarded_by_scope[id(scope)] = (
+                _css_guarded_names(scope) if scope is not None else set()
+            )
+        guarded = guarded_by_scope[id(scope)]
 
         prefix = ""
         for value in node.values:
@@ -243,10 +290,10 @@ def find_unguarded_style_interpolations(source):
                 prefix += value.value
             elif isinstance(value, ast.FormattedValue):
                 if _in_style_attribute(prefix):
-                    segment = ast.get_source_segment(source, value.value) or ""
-                    if any(guard in segment for guard in _CSS_GUARD_CALLS):
-                        pass
-                    elif _css_relevant_names(value.value) - guarded:
+                    if not _calls_a_guard(value.value) and (
+                        _css_relevant_names(value.value) - guarded
+                    ):
+                        segment = ast.get_source_segment(source, value.value) or ""
                         violations.append((value.lineno, segment.strip()))
                 prefix += "\x00"
 
@@ -409,6 +456,30 @@ class TestReportEscapingInvariant(trc.TestResultCollector):
     def test_style_invariant_ignores_text_nodes(self):
         source = 'body += f"<p>{model_name}</p>"\n'
         self.assertEqual(find_unguarded_style_interpolations(source), [])
+
+    def test_style_invariant_is_not_fooled_by_a_name_containing_a_guard(self):
+        """``"int" in segment`` is also true of ``internal_width``."""
+
+        source = "body += f'<div style=\"width:{internal_width}\">x</div>'\n"
+        self.assertEqual(
+            [segment for _, segment in find_unguarded_style_interpolations(source)],
+            ["internal_width"],
+        )
+
+    def test_style_invariant_does_not_trust_a_guard_from_another_function(self):
+        """A guard in one function must not vouch for the name in another."""
+
+        source = (
+            "def safe():\n"
+            "    size = css_length(font_size, 'font_size')\n"
+            "    return f'<div style=\"font-size:{size}\">x</div>'\n"
+            "\n"
+            "def unsafe(size):\n"
+            "    return f'<div style=\"font-size:{size}\">x</div>'\n"
+        )
+        found = find_unguarded_style_interpolations(source)
+        self.assertEqual([segment for _, segment in found], ["size"])
+        self.assertEqual(found[0][0], 6)
 
 
 if __name__ == "__main__":

@@ -27,16 +27,22 @@ def report_extension():
     """
     Returns the file extension Model Analyzer uses for reports.
 
-    ReportFactory emits PDF reports only when WeasyPrint is importable and
-    falls back to HTML otherwise, so the expected artifact depends on the
-    image the tests run in. The import is attempted rather than looked up
-    with find_spec, because WeasyPrint installed without its native
-    libraries imports with OSError -- exactly the case ReportFactory treats
-    as "no renderer". The two must agree or the gate fails on correct output.
+    ReportFactory emits PDF reports only when WeasyPrint is usable, so the
+    expected artifact depends on the image the tests run in.
+
+    The exact names pdf_report imports are imported here, not just the
+    package: a WeasyPrint older than 70 has no URLFetcher, so PDFReport
+    fails to import and HTML is produced, and a bare ``import weasyprint``
+    would still say "pdf" and reject that correct output. The import is
+    attempted rather than looked up with find_spec for the same reason --
+    WeasyPrint installed without its native libraries imports with OSError,
+    which ReportFactory also treats as "no renderer". This check and that
+    one must agree.
     """
 
     try:
-        import weasyprint  # noqa: F401
+        from weasyprint import HTML  # noqa: F401
+        from weasyprint.urls import URLFetcher  # noqa: F401
     except (ImportError, OSError):
         return "html"
     return "pdf"

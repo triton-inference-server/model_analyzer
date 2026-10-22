@@ -23,18 +23,17 @@ from unittest.mock import MagicMock, patch
 
 from .common import test_result_collector as trc
 
-# WeasyPrint is the "pdf" extra, and it raises OSError rather than ImportError
-# when its native libraries are absent. Skip on either: there is no renderer
-# to test in both cases.
+# Probe by importing PDFReport itself rather than the weasyprint package.
+# The extra may be absent (ImportError), installed without its native
+# libraries (OSError), or older than the URLFetcher this module needs
+# (ImportError from pdf_report's own import). All three mean "no renderer",
+# and a bare ``import weasyprint`` would miss the third and fail collection.
 try:
-    import weasyprint  # noqa: F401
+    from model_analyzer.reports.pdf_report import PDFReport
 
     WEASYPRINT_AVAILABLE = True
 except (ImportError, OSError):
     WEASYPRINT_AVAILABLE = False
-
-if WEASYPRINT_AVAILABLE:
-    from model_analyzer.reports.pdf_report import PDFReport
 
 
 @unittest.skipUnless(
@@ -121,8 +120,16 @@ class TestPDFReportMethods(trc.TestResultCollector):
                 report.write_report(output)
 
             self.assertTrue(os.path.exists(output))
-            messages = " ".join(record.getMessage() for record in captured.records)
-            self.assertIn("disallowed protocol", messages)
+            messages = [record.getMessage() for record in captured.records]
+
+            # Assert a refusal per URL. One combined assertion would stay
+            # green if only one of the two restrictions still worked.
+            for url in (f"file://{canary_path}", "http://localhost:1/remote.png"):
+                self.assertTrue(
+                    any("disallowed protocol" in m and url in m for m in messages),
+                    f"no refusal logged for {url}; got {messages}",
+                )
+
             with open(output, "rb") as rendered:
                 self.assertNotIn(b"secret-canary-contents", rendered.read())
 

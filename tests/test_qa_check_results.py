@@ -20,10 +20,11 @@ import importlib.util
 import os
 import sys
 import tempfile
+import types
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from .common import test_result_collector as trc
 
@@ -36,24 +37,39 @@ _ABSENT = object()
 
 
 @contextmanager
-def weasyprint_available(available):
-    """Control whether ``import weasyprint`` succeeds inside the qa script.
+def weasyprint_available(state):
+    """Control what ``import weasyprint`` does inside the qa script.
 
-    report_extension() attempts the import rather than probing with
-    find_spec, because that is the only question that matches what
-    ReportFactory does. Driving it therefore means driving sys.modules:
-    ``None`` makes the import raise ImportError.
+    Three states, because there are three real ones. True: a usable install.
+    False: no "pdf" extra. "old": WeasyPrint present but older than the
+    URLFetcher pdf_report needs, so PDFReport does not import and HTML is
+    produced -- the gate has to say "html" for that case too, or it rejects
+    correct output.
     """
 
-    saved = sys.modules.get("weasyprint", _ABSENT)
-    sys.modules["weasyprint"] = MagicMock() if available else None
+    names = ("weasyprint", "weasyprint.urls")
+    saved = {name: sys.modules.get(name, _ABSENT) for name in names}
+
+    if state is False:
+        sys.modules["weasyprint"] = None
+        sys.modules.pop("weasyprint.urls", None)
+    else:
+        package = types.ModuleType("weasyprint")
+        package.HTML = object()
+        urls = types.ModuleType("weasyprint.urls")
+        if state is True:
+            urls.URLFetcher = object()
+        package.urls = urls
+        sys.modules["weasyprint"] = package
+        sys.modules["weasyprint.urls"] = urls
     try:
         yield
     finally:
-        if saved is _ABSENT:
-            sys.modules.pop("weasyprint", None)
-        else:
-            sys.modules["weasyprint"] = saved
+        for name, module in saved.items():
+            if module is _ABSENT:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = module
 
 
 def _load_check_results():
@@ -111,6 +127,16 @@ class TestQACheckResults(trc.TestResultCollector):
 
     def test_report_extension_html_when_weasyprint_absent(self):
         with weasyprint_available(False):
+            self.assertEqual(self.check_results.report_extension(), "html")
+
+    def test_report_extension_html_when_weasyprint_is_too_old(self):
+        """
+        A WeasyPrint without URLFetcher cannot render: PDFReport fails to
+        import and ReportFactory produces HTML. A bare ``import weasyprint``
+        would still report "pdf" here and fail the gate on correct output.
+        """
+
+        with weasyprint_available("old"):
             self.assertEqual(self.check_results.report_extension(), "html")
 
     def test_checks_pass_on_html_reports_without_weasyprint(self):

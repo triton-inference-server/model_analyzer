@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import importlib
 import subprocess
 import sys
 import unittest
@@ -26,45 +25,72 @@ from model_analyzer.reports.report_factory import ReportFactory
 
 from .common import test_result_collector as trc
 
-_BLOCKED_MODULES = ("weasyprint", "model_analyzer.reports.pdf_report")
+_ABSENT = object()
+
+# Every module the block has to evict so the import is really re-attempted,
+# and really restored afterwards. Leaving "weasyprint.urls" out of the saved
+# set lets a later test load a second copy of it.
+_BLOCKED_MODULES = (
+    "weasyprint",
+    "weasyprint.urls",
+    "model_analyzer.reports.pdf_report",
+)
 
 
 def _weasyprint_importable():
     try:
-        import weasyprint  # noqa: F401
+        from model_analyzer.reports.pdf_report import PDFReport  # noqa: F401
     except (ImportError, OSError):
         return False
     return True
+
+
+class _FailingFinder:
+    """Raise from the import system itself, the way a broken install does."""
+
+    def __init__(self, error):
+        self.error = error
+
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname == "weasyprint" or fullname.startswith("weasyprint."):
+            raise self.error
+        return None
 
 
 @contextmanager
 def weasyprint_broken(error):
     """Make importing weasyprint fail the way a real environment does.
 
-    ``None`` in sys.modules raises ImportError on import -- the "pdf" extra
-    is not installed. An object whose import raises OSError models the other
-    real case: WeasyPrint present, its native libraries missing.
+    Two real failures are modelled. ImportError: the "pdf" extra is not
+    installed. OSError: WeasyPrint is installed but its native libraries are
+    not, which surfaces as "cannot load library 'libgobject-2.0-0'" while
+    the module executes.
+
+    Both are raised from a meta-path finder rather than by planting a
+    stand-in object in sys.modules, so the failure happens at import time,
+    where the real one does.
     """
 
-    saved = {
-        name: sys.modules.pop(name) for name in _BLOCKED_MODULES if name in sys.modules
-    }
+    saved = {name: sys.modules.get(name, _ABSENT) for name in _BLOCKED_MODULES}
+    for name in _BLOCKED_MODULES:
+        sys.modules.pop(name, None)
+
     if error is ImportError:
-        sys.modules["weasyprint"] = None
+        raised = ImportError("No module named 'weasyprint'")
     else:
+        raised = OSError("cannot load library 'libgobject-2.0-0'")
 
-        class _Exploding:
-            def __getattr__(self, name):
-                raise OSError("cannot load library 'libgobject-2.0-0'")
-
-        sys.modules["weasyprint"] = _Exploding()
-        sys.modules["weasyprint.urls"] = _Exploding()
+    finder = _FailingFinder(raised)
+    sys.meta_path.insert(0, finder)
     try:
         yield
     finally:
-        sys.modules.pop("weasyprint", None)
-        sys.modules.pop("weasyprint.urls", None)
-        sys.modules.update(saved)
+        sys.meta_path.remove(finder)
+        for name, module in saved.items():
+            if module is _ABSENT:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = module
 
 
 class TestReportFactory(trc.TestResultCollector):
