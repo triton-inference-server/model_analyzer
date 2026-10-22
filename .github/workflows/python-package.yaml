@@ -52,7 +52,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .
+          python -m pip install -e ".[pdf]"
       - name: Test with unittest
         run: |
           pip install unittest-parallel

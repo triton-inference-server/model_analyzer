@@ -16,14 +16,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib.util
 import unittest
 from unittest.mock import MagicMock, patch
 
-from model_analyzer.reports.pdf_report import PDFReport
-
 from .common import test_result_collector as trc
 
+# pdfkit is an optional dependency (the "pdf" extra). Without it there is no
+# PDF renderer to test, so skip rather than fail collection.
+PDFKIT_AVAILABLE = importlib.util.find_spec("pdfkit") is not None
 
+if PDFKIT_AVAILABLE:
+    from model_analyzer.reports.pdf_report import PDFReport
+
+
+@unittest.skipUnless(PDFKIT_AVAILABLE, "requires the optional pdfkit dependency")
 class TestPDFReportMethods(trc.TestResultCollector):
     """
     Tests the methods of the PDFReport class

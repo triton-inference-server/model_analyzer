@@ -187,20 +187,24 @@ You can then try installing model analyzer again.
 
 Model Analyzer generates HTML reports by default.
 
-Optionally, if you want PDF reports instead, you should also run the
-following:
+Optionally, if you want PDF reports instead, install Model Analyzer with its
+`pdf` extra and install the renderer:
 
 ```
+pip3 install triton-model-analyzer[pdf]
 sudo apt-get update && sudo apt-get install wkhtmltopdf
 ```
+
+Both are required. With only one of the two present, Model Analyzer logs a
+warning and produces HTML.
 
 > **Note**
 > `wkhtmltopdf` renders through QtWebKit, which is unmaintained upstream and
 > carries CVEs that are on the CISA Known Exploited Vulnerabilities list. For
-> that reason the Triton SDK container stopped shipping it in 26.10, and
-> Model Analyzer produces HTML reports there. Installing it is opt-in, and
-> the resulting PDF renderer is run with scripting and local file access
-> disabled.
+> that reason neither the Triton SDK container nor the Model Analyzer
+> container ships it, and Model Analyzer produces HTML reports there.
+> Installing it is opt-in, and the resulting PDF renderer is run with
+> scripting and local file access disabled.
 
 <br>
 
