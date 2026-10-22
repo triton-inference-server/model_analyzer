@@ -30,8 +30,9 @@ def report_extension():
 
     ReportFactory emits PDF reports only when wkhtmltopdf is on PATH and
     falls back to HTML otherwise, so the expected artifact depends on the
-    image the tests run in. The SDK image stopped shipping wkhtmltopdf
-    (and with it QtWebKit) in 26.10.
+    image the tests run in. Probe rather than assume: wkhtmltopdf is being
+    removed from the SDK and Model Analyzer images, and it remains
+    installable by hand in either.
     """
 
     return "pdf" if shutil.which("wkhtmltopdf") is not None else "html"

@@ -42,9 +42,9 @@ def _load_check_results():
 class TestQACheckResults(trc.TestResultCollector):
     """
     The L0_results gate asserts the report artifacts Model Analyzer wrote.
-    ReportFactory only emits PDFs when wkhtmltopdf is on PATH, and the SDK
-    image dropped wkhtmltopdf (with QtWebKit) in 26.10, so the gate has to
-    follow the same condition instead of hardcoding .pdf.
+    ReportFactory only emits PDFs when wkhtmltopdf is on PATH, and whether it
+    is present depends on the image, so the gate has to follow the same
+    condition instead of hardcoding .pdf.
     """
 
     def setUp(self):
@@ -91,8 +91,8 @@ class TestQACheckResults(trc.TestResultCollector):
 
     def test_checks_pass_on_html_reports_without_wkhtmltopdf(self):
         """
-        The 26.10+ SDK image: no wkhtmltopdf, so HTML reports are produced.
-        This failed before the fix because the gate looked for .pdf.
+        An image without wkhtmltopdf, so HTML reports are produced. This
+        failed before the fix because the gate looked for .pdf.
         """
 
         with patch.object(self.check_results.shutil, "which", return_value=None):
