@@ -18,8 +18,47 @@
 
 import base64
 import html
+import re
 
 from .report import Report
+
+# Values that land inside a ``style=""`` attribute. A CSS attribute is not a
+# text node, and escape() is the wrong tool for it: html.escape() leaves ``:``
+# and ``;`` untouched, so an escaped value can still close one declaration and
+# open another. Only a value drawn from a known shape is safe here.
+_CSS_FLOAT_KEYWORDS = frozenset({"left", "right", "center", "none"})
+_CSS_LENGTH = re.compile(r"\A\d+(?:\.\d+)?(?:px|pt|em|rem|%)?\Z")
+
+
+def css_keyword(value, allowed, parameter):
+    """
+    Validate a keyword that is about to be interpolated into a style attribute.
+
+    Raises rather than sanitizing. Every caller in report_manager.py passes a
+    literal, so a value outside the allowed set is a programming error, and a
+    quietly substituted default would hide it.
+    """
+
+    text = str(value)
+    if text not in allowed:
+        raise ValueError(f"{parameter} must be one of {sorted(allowed)}, got {text!r}")
+    return text
+
+
+def css_length(value, parameter):
+    """
+    Validate a length that is about to be interpolated into a style attribute.
+
+    See css_keyword for why this is validation and not escaping.
+    """
+
+    text = str(value)
+    if not _CSS_LENGTH.match(text):
+        raise ValueError(
+            f"{parameter} must be a CSS length such as 12, 11pt or 80%, "
+            f"got {text!r}"
+        )
+    return text
 
 
 class Markup(str):
@@ -135,11 +174,17 @@ class HTMLReport(Report):
             Alignment of the div containing each image in the row
         """
 
+        alignment = css_keyword(float, _CSS_FLOAT_KEYWORDS, "float")
+        # int() up front, so a non-numeric width raises before it can reach
+        # the style attribute. The division stays inside the loop, where it
+        # was: an empty image list must remain a no-op, not a ZeroDivisionError.
+        total_width = int(image_width)
+
         image_row = ""
         for img, caption in zip(images, image_captions):
             with open(img, "rb") as image_file:
                 data_uri = base64.b64encode(image_file.read()).decode("ascii")
-                image_row += f'<div class="image" style="float:{float};width:{image_width//len(images)}%">'
+                image_row += f'<div class="image" style="float:{alignment};width:{total_width//len(images)}%">'
                 image_row += (
                     f'<img src="data:image/png;base64,{data_uri}" style="width:100%">'
                 )
@@ -157,7 +202,8 @@ class HTMLReport(Report):
             the report as a paragraph
         """
 
-        self._body += f'<div style="font-size:{font_size}"><p>{paragraph}</p></div>'
+        size = css_length(font_size, "font_size")
+        self._body += f'<div style="font-size:{size}"><p>{paragraph}</p></div>'
 
     def add_line_breaks(self, num_breaks=1):
         """

@@ -20,7 +20,12 @@ import base64
 import unittest
 from unittest.mock import mock_open, patch
 
-from model_analyzer.reports.html_report import HTMLReport, Markup
+from model_analyzer.reports.html_report import (
+    HTMLReport,
+    Markup,
+    css_keyword,
+    css_length,
+)
 from model_analyzer.result.result_table import ResultTable
 
 from .common import test_result_collector as trc
@@ -272,6 +277,60 @@ class TestHTMLReportMethods(trc.TestResultCollector):
             self.report.write_report("test_report_filename")
         mocked_file.assert_called_once_with(f"test_report_filename", "w")
         mocked_file().write.assert_called_once_with(f"{expected_report_body}")
+
+
+class TestStyleAttributeValidation(trc.TestResultCollector):
+    """
+    A style attribute is a CSS context, not a text node. escape() leaves ``:``
+    and ``;`` alone, so an escaped value can still close one declaration and
+    open another -- validation is the only thing that closes these sinks.
+    """
+
+    def setUp(self):
+        self.report = HTMLReport()
+
+    def test_css_keyword_accepts_the_alignments_the_report_uses(self):
+        for alignment in ("left", "right", "center", "none"):
+            self.assertEqual(
+                css_keyword(alignment, {"left", "right", "center", "none"}, "float"),
+                alignment,
+            )
+
+    def test_css_keyword_rejects_an_injected_declaration(self):
+        with self.assertRaises(ValueError):
+            css_keyword(
+                "left;background:url(http://example.com/x)",
+                {"left", "right", "center", "none"},
+                "float",
+            )
+
+    def test_css_length_accepts_the_shapes_the_report_uses(self):
+        for length in (14, 18, "11pt", "80%", "1.5em"):
+            self.assertEqual(css_length(length, "font_size"), str(length))
+
+    def test_css_length_rejects_an_injected_declaration(self):
+        for hostile in (
+            "12;background:url(http://example.com/x)",
+            "12px;}</style><script>alert(1)</script>",
+            "expression(alert(1))",
+        ):
+            with self.assertRaises(ValueError):
+                css_length(hostile, "font_size")
+
+    def test_add_paragraph_rejects_a_hostile_font_size(self):
+        with self.assertRaises(ValueError):
+            self.report.add_paragraph("body", font_size="12;background:url(x)")
+        self.assertNotIn("background", self.report.document())
+
+    def test_add_images_rejects_a_hostile_float(self):
+        with self.assertRaises(ValueError):
+            self.report.add_images([], [], float="left;background:url(x)")
+        self.assertNotIn("background", self.report.document())
+
+    def test_add_images_rejects_a_non_numeric_width(self):
+        with self.assertRaises((ValueError, TypeError)):
+            self.report.add_images([], [], image_width="66;background:url(x)")
+        self.assertNotIn("background", self.report.document())
 
 
 if __name__ == "__main__":

@@ -16,7 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pdfkit
+from weasyprint import HTML
+from weasyprint.urls import URLFetcher
 
 from .html_report import HTMLReport
 
@@ -28,21 +29,18 @@ class PDFReport(HTMLReport):
     it to PDF
     """
 
-    # wkhtmltopdf embeds QtWebKit and runs JavaScript by default. Reports are
-    # static documents built from local data, so neither scripting nor
-    # filesystem access is ever needed to render one. QtWebKit is unmaintained
-    # upstream and carries known-exploited CVEs, so the renderer is given the
-    # narrowest capability set that still produces a report.
+    # WeasyPrint is a layout engine, not a browser: it has no JavaScript
+    # interpreter at all, so the scripting exposure that wkhtmltopdf carried
+    # through QtWebKit is gone by construction rather than by an opt-out flag.
     #
-    # wkhtmltopdf has no option that blocks remote resource loading, so a
-    # subresource URL reaching the document would still be fetched. Keeping
-    # untrusted text out of the markup is what closes that, not an option
-    # here -- see HTMLReport's escaping.
-    PDFKIT_OPTIONS = {
-        "quiet": "",
-        "disable-javascript": "",
-        "disable-local-file-access": "",
-    }
+    # Resource loading is not gone by construction. WeasyPrint's default
+    # fetcher reads file:// URLs and issues real HTTP requests for anything
+    # the document references. Report images are inlined as data: URIs by
+    # html_report, so nothing legitimate needs the filesystem or the network,
+    # and a subresource that asks for either got into the markup by accident
+    # or by injection. Restricting the fetcher to data: refuses both before
+    # the read or the request happens -- a control wkhtmltopdf never offered.
+    URL_FETCHER = URLFetcher(allowed_protocols=["data"])
 
     def __init__(self, html_report=None):
         super().__init__(html_report)
@@ -58,7 +56,11 @@ class PDFReport(HTMLReport):
             The name of the report
         """
 
-        pdfkit.from_string(self.document(), f"{filename}", options=self.PDFKIT_OPTIONS)
+        # No base_url: a relative URL then has nothing to resolve against, so
+        # the document cannot reach the directory it is rendered from either.
+        HTML(string=self.document(), url_fetcher=self.URL_FETCHER).write_pdf(
+            f"{filename}"
+        )
 
     def get_file_extension(self):
         """

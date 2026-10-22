@@ -82,7 +82,7 @@ model-analyzer = "model_analyzer.entrypoint:main"
 
 [project.optional-dependencies]
 perf-analyzer = ["perf-analyzer"]
-pdf = ["pdfkit>=0.6.1"]
+pdf = ["weasyprint>=70"]
 
 [tool.hatch.version]
 path = "VERSION"

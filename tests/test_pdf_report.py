@@ -16,21 +16,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import importlib.util
+import os
+import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
 from .common import test_result_collector as trc
 
-# pdfkit is an optional dependency (the "pdf" extra). Without it there is no
-# PDF renderer to test, so skip rather than fail collection.
-PDFKIT_AVAILABLE = importlib.util.find_spec("pdfkit") is not None
+# WeasyPrint is the "pdf" extra, and it raises OSError rather than ImportError
+# when its native libraries are absent. Skip on either: there is no renderer
+# to test in both cases.
+try:
+    import weasyprint  # noqa: F401
 
-if PDFKIT_AVAILABLE:
+    WEASYPRINT_AVAILABLE = True
+except (ImportError, OSError):
+    WEASYPRINT_AVAILABLE = False
+
+if WEASYPRINT_AVAILABLE:
     from model_analyzer.reports.pdf_report import PDFReport
 
 
-@unittest.skipUnless(PDFKIT_AVAILABLE, "requires the optional pdfkit dependency")
+@unittest.skipUnless(
+    WEASYPRINT_AVAILABLE, "requires the optional weasyprint dependency"
+)
 class TestPDFReportMethods(trc.TestResultCollector):
     """
     Tests the methods of the PDFReport class
@@ -44,9 +53,7 @@ class TestPDFReportMethods(trc.TestResultCollector):
         patch.stopall()
 
     def test_write_report(self):
-        with patch(
-            "model_analyzer.reports.pdf_report.pdfkit", MagicMock()
-        ) as pdfkit_mock:
+        with patch("model_analyzer.reports.pdf_report.HTML", MagicMock()) as html_mock:
             self.report.add_title("Test PDF Report")
             self.report.add_subheading("Throughput vs. Latency")
             test_paragraph = (
@@ -61,27 +68,63 @@ class TestPDFReportMethods(trc.TestResultCollector):
                 f'<div style="font-size:14"><p>{test_paragraph}</p></div>'
                 "</body></html>"
             )
-            pdfkit_mock.from_string.assert_called_with(
-                expected_report_body,
-                "test_report_filename",
-                options=PDFReport.PDFKIT_OPTIONS,
-            )
+            self.assertEqual(html_mock.call_args.kwargs["string"], expected_report_body)
+            html_mock.return_value.write_pdf.assert_called_with("test_report_filename")
 
-    def test_write_report_disables_scripting_and_local_file_access(self):
+    def test_the_renderer_is_restricted_to_data_uris(self):
         """
-        wkhtmltopdf runs JavaScript and reads local files by default. A report
-        is a static document, so the renderer is handed neither capability.
+        WeasyPrint's default fetcher reads file:// URLs and issues real HTTP
+        requests. Report images are inlined as data: URIs, so nothing else
+        should ever be fetched.
         """
 
-        with patch(
-            "model_analyzer.reports.pdf_report.pdfkit", MagicMock()
-        ) as pdfkit_mock:
+        with patch("model_analyzer.reports.pdf_report.HTML", MagicMock()) as html_mock:
             self.report.add_title("Test PDF Report")
             self.report.write_report("test_report_filename")
 
-            options = pdfkit_mock.from_string.call_args.kwargs["options"]
-            self.assertIn("disable-javascript", options)
-            self.assertIn("disable-local-file-access", options)
+            fetcher = html_mock.call_args.kwargs["url_fetcher"]
+            self.assertIs(fetcher, PDFReport.URL_FETCHER)
+
+    def test_no_base_url_is_given_to_the_renderer(self):
+        """
+        Without a base URL a relative reference has nothing to resolve
+        against, so the document cannot reach its own output directory.
+        """
+
+        with patch("model_analyzer.reports.pdf_report.HTML", MagicMock()) as html_mock:
+            self.report.add_title("Test PDF Report")
+            self.report.write_report("test_report_filename")
+
+            self.assertNotIn("base_url", html_mock.call_args.kwargs)
+
+    def test_a_real_render_refuses_file_and_http_subresources(self):
+        """
+        End-to-end against the real renderer: a document that references a
+        local file and a remote image must produce a PDF with neither
+        fetched. This is the guarantee wkhtmltopdf could not make -- it had
+        no option that blocked remote resource loading.
+        """
+
+        with tempfile.TemporaryDirectory() as directory:
+            canary_path = os.path.join(directory, "canary.txt")
+            with open(canary_path, "w") as canary:
+                canary.write("secret-canary-contents")
+
+            report = PDFReport()
+            report._body = (
+                f'<img src="file://{canary_path}">'
+                '<img src="http://localhost:1/remote.png">'
+            )
+            output = os.path.join(directory, "report.pdf")
+
+            with self.assertLogs("weasyprint", level="WARNING") as captured:
+                report.write_report(output)
+
+            self.assertTrue(os.path.exists(output))
+            messages = " ".join(record.getMessage() for record in captured.records)
+            self.assertIn("disallowed protocol", messages)
+            with open(output, "rb") as rendered:
+                self.assertNotIn(b"secret-canary-contents", rendered.read())
 
 
 if __name__ == "__main__":

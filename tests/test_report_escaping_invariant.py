@@ -153,6 +153,106 @@ def find_unescaped_interpolations(source):
     return violations
 
 
+# A style attribute being opened inside a markup literal. Everything
+# interpolated while it is still open lands in a CSS context, not a text node.
+_STYLE_ATTRIBUTE = re.compile(r"style\s*=\s*[\"']")
+
+# Calls whose result is safe to drop into a CSS context. escape() is
+# deliberately not one of them: html.escape() leaves ``:`` and ``;``
+# untouched, so an escaped value can still close one declaration and open
+# another. int() qualifies because an integer cannot carry CSS syntax.
+_CSS_GUARD_CALLS = ("css_keyword", "css_length", "int")
+
+
+def _in_style_attribute(prefix):
+    """Whether the text so far leaves a style attribute open."""
+
+    opener = None
+    for opener in _STYLE_ATTRIBUTE.finditer(prefix):
+        pass
+    if opener is None:
+        return False
+    quote = prefix[opener.end() - 1]
+    return quote not in prefix[opener.end() :]
+
+
+def _css_guarded_names(tree):
+    """Locals bound from a guard call, e.g. ``size = css_length(...)``."""
+
+    names = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
+            continue
+        function = node.value.func
+        called = function.id if isinstance(function, ast.Name) else ""
+        if called in _CSS_GUARD_CALLS:
+            names.update(
+                target.id for target in node.targets if isinstance(target, ast.Name)
+            )
+    return names
+
+
+def _css_relevant_names(expression):
+    """
+    Names the interpolated expression actually carries into the attribute.
+
+    Two kinds are skipped. The name being called -- ``table_style()`` builds
+    the whole declaration from its own defaults, so the identifier is not a
+    value. And anything used only as an argument to len(), because a length
+    is an integer and cannot carry CSS syntax.
+    """
+
+    skipped = set()
+    for node in ast.walk(expression):
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name):
+                skipped.add(id(node.func))
+                if node.func.id == "len":
+                    for argument in node.args:
+                        skipped.update(id(inner) for inner in ast.walk(argument))
+    return {
+        node.id
+        for node in ast.walk(expression)
+        if isinstance(node, ast.Name) and id(node) not in skipped
+    }
+
+
+def find_unguarded_style_interpolations(source):
+    """
+    Report every value interpolated into a ``style=""`` attribute that is not
+    guarded.
+
+    This is the attribute-context half of the escaping rule, and it is a
+    separate walk from the text-node one because the two have different
+    remedies: text nodes are escaped, CSS values are validated. Conflating
+    them is exactly how an attribute sink gets "fixed" with escape() and
+    stays open.
+    """
+
+    tree = ast.parse(source)
+    guarded = _css_guarded_names(tree)
+    violations = []
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.JoinedStr):
+            continue
+
+        prefix = ""
+        for value in node.values:
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                prefix += value.value
+            elif isinstance(value, ast.FormattedValue):
+                if _in_style_attribute(prefix):
+                    segment = ast.get_source_segment(source, value.value) or ""
+                    if any(guard in segment for guard in _CSS_GUARD_CALLS):
+                        pass
+                    elif _css_relevant_names(value.value) - guarded:
+                        violations.append((value.lineno, segment.strip()))
+                prefix += "\x00"
+
+    return violations
+
+
 class TestReportEscapingInvariant(trc.TestResultCollector):
     """
     Escaping the report sentences one substitution at a time is only safe
@@ -276,6 +376,39 @@ class TestReportEscapingInvariant(trc.TestResultCollector):
 
         offending = 'out = "<b>" + str(model_name) + "</b>"'
         self.assertEqual(len(find_unescaped_interpolations(offending)), 1)
+
+    def test_no_value_is_interpolated_into_a_style_attribute_unguarded(self):
+        offenders = []
+        for path in sorted(_REPORTS.glob("*.py")):
+            for lineno, segment in find_unguarded_style_interpolations(
+                path.read_text()
+            ):
+                offenders.append(f"{path.name}:{lineno}: {segment}")
+
+        self.assertEqual(
+            offenders,
+            [],
+            "A value is interpolated into a style attribute without a CSS "
+            "guard. escape() does not close a CSS context -- use "
+            "css_keyword() or css_length().\n  " + "\n  ".join(offenders),
+        )
+
+    def test_style_invariant_detects_a_raw_interpolation(self):
+        source = "body += f'<div style=\"font-size:{font_size}\">x</div>'\n"
+        self.assertEqual(
+            [segment for _, segment in find_unguarded_style_interpolations(source)],
+            ["font_size"],
+        )
+
+    def test_style_invariant_accepts_a_guarded_interpolation(self):
+        source = (
+            'body += f\'<div style="font-size:{css_length(font_size, "f")}">x</div>\'\n'
+        )
+        self.assertEqual(find_unguarded_style_interpolations(source), [])
+
+    def test_style_invariant_ignores_text_nodes(self):
+        source = 'body += f"<p>{model_name}</p>"\n'
+        self.assertEqual(find_unguarded_style_interpolations(source), [])
 
 
 if __name__ == "__main__":

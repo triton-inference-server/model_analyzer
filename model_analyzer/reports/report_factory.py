@@ -17,7 +17,6 @@
 # limitations under the License.
 
 import logging
-import shutil
 
 from model_analyzer.constants import LOGGER_NAME
 
@@ -31,33 +30,27 @@ class ReportFactory:
     Factory that returns the correct report object
     """
 
-    PDF_PACKAGE = "wkhtmltopdf"
+    PDF_PACKAGE = "weasyprint"
     WARNING_PRINTED = False
 
     @staticmethod
     def create_report():
-        if ReportFactory._is_package_installed(f"{ReportFactory.PDF_PACKAGE}"):
-            try:
-                return ReportFactory._create_pdf_report()
-            except ImportError:
-                # The renderer is on PATH but the optional Python wrapper is
-                # not. HTML is still correct output, so warn and fall through
-                # rather than failing the run.
-                ReportFactory._warn_once(
-                    f"Warning: html reports are being generated instead of pdf "
-                    f"because {ReportFactory.PDF_PACKAGE} is installed but the "
-                    f"optional pdfkit package is not. If you want pdf reports, "
-                    f"reinstall Model Analyzer with its pdf extra: "
-                    f'"pip install triton-model-analyzer[pdf]"'
-                )
-        else:
+        try:
+            return ReportFactory._create_pdf_report()
+        except (ImportError, OSError) as error:
+            # ImportError: the "pdf" extra is not installed, or an older
+            # WeasyPrint without the URLFetcher this module needs.
+            # OSError: WeasyPrint is installed but its native libraries
+            # (Pango, HarfBuzz, fontconfig) are not -- importing it then
+            # fails with "cannot load library", not ImportError. Both mean
+            # the same thing to a user: no PDF renderer, so emit HTML.
             ReportFactory._warn_once(
-                f"Warning: html reports are being generated instead of pdf because "
-                f"{ReportFactory.PDF_PACKAGE} is not installed. If you want pdf "
-                f"reports, run the following command and then rerun Model Analyzer: "
-                f'"sudo apt-get update && sudo apt-get install wkhtmltopdf"'
+                f"Warning: html reports are being generated instead of pdf "
+                f"because {ReportFactory.PDF_PACKAGE} is not usable ({error}). "
+                f"If you want pdf reports, install Model Analyzer with its pdf "
+                f'extra: "pip install triton-model-analyzer[pdf]"'
             )
-        return ReportFactory._create_html_report()
+            return ReportFactory._create_html_report()
 
     @staticmethod
     def _warn_once(message):
@@ -67,11 +60,11 @@ class ReportFactory:
 
     @staticmethod
     def _create_pdf_report():
-        # Imported here, not at module scope: pdfkit is an optional dependency
-        # and model_analyzer must stay importable without it. An import at the
-        # top of this module runs before the PATH probe above, which would make
-        # the HTML fallback unreachable and break every command, not just
-        # report generation.
+        # Imported here, not at module scope: weasyprint is an optional
+        # dependency and model_analyzer must stay importable without it. An
+        # import at the top of this module would run before the guard in
+        # create_report, which would make the HTML fallback unreachable and
+        # break every command, not just report generation.
         from .pdf_report import PDFReport
 
         return PDFReport()
@@ -79,8 +72,3 @@ class ReportFactory:
     @staticmethod
     def _create_html_report():
         return HTMLReport()
-
-    @staticmethod
-    def _is_package_installed(package_name):
-        package_found = shutil.which(f"{package_name}")
-        return package_found is not None

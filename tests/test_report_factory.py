@@ -26,29 +26,51 @@ from model_analyzer.reports.report_factory import ReportFactory
 
 from .common import test_result_collector as trc
 
+_BLOCKED_MODULES = ("weasyprint", "model_analyzer.reports.pdf_report")
+
+
+def _weasyprint_importable():
+    try:
+        import weasyprint  # noqa: F401
+    except (ImportError, OSError):
+        return False
+    return True
+
 
 @contextmanager
-def pdfkit_unavailable():
-    """Make ``import pdfkit`` fail, as it does without the "pdf" extra.
+def weasyprint_broken(error):
+    """Make importing weasyprint fail the way a real environment does.
 
-    A ``None`` entry in ``sys.modules`` is the documented way to make an
-    import raise ``ImportError`` without touching the filesystem. Any module
-    that already imported pdfkit is evicted so it re-imports under the block.
+    ``None`` in sys.modules raises ImportError on import -- the "pdf" extra
+    is not installed. An object whose import raises OSError models the other
+    real case: WeasyPrint present, its native libraries missing.
     """
-    blocked = ["pdfkit", "model_analyzer.reports.pdf_report"]
-    saved = {name: sys.modules.pop(name) for name in blocked if name in sys.modules}
-    sys.modules["pdfkit"] = None
+
+    saved = {
+        name: sys.modules.pop(name) for name in _BLOCKED_MODULES if name in sys.modules
+    }
+    if error is ImportError:
+        sys.modules["weasyprint"] = None
+    else:
+
+        class _Exploding:
+            def __getattr__(self, name):
+                raise OSError("cannot load library 'libgobject-2.0-0'")
+
+        sys.modules["weasyprint"] = _Exploding()
+        sys.modules["weasyprint.urls"] = _Exploding()
     try:
         yield
     finally:
-        del sys.modules["pdfkit"]
+        sys.modules.pop("weasyprint", None)
+        sys.modules.pop("weasyprint.urls", None)
         sys.modules.update(saved)
 
 
 class TestReportFactory(trc.TestResultCollector):
     """
     Tests that report selection degrades to HTML rather than failing when the
-    optional PDF stack is absent.
+    optional PDF stack is absent or unusable.
     """
 
     def setUp(self):
@@ -58,20 +80,22 @@ class TestReportFactory(trc.TestResultCollector):
         ReportFactory.WARNING_PRINTED = False
         patch.stopall()
 
-    def test_model_analyzer_imports_without_pdfkit(self):
+    def test_model_analyzer_imports_without_weasyprint(self):
         """model_analyzer must stay importable without the optional extra.
 
-        This is the regression that matters: a module-scope ``import pdfkit``
-        anywhere in the import graph runs before the PATH probe, so it would
-        break every Model Analyzer command and not just reporting.
+        This is the regression that matters: a module-scope import of
+        weasyprint anywhere in the import graph runs before the guard in
+        create_report, so it would break every Model Analyzer command and
+        not just reporting.
 
         Run in a subprocess rather than by reloading in place -- a reload
-        rebinds the module's own ``ReportFactory`` while this module keeps the
-        original class, and the two then disagree about ``WARNING_PRINTED``.
+        rebinds the module's own ReportFactory while this module keeps the
+        original class, and the two then disagree about WARNING_PRINTED.
         """
+
         script = (
             "import sys\n"
-            "sys.modules['pdfkit'] = None\n"
+            "sys.modules['weasyprint'] = None\n"
             "import model_analyzer.entrypoint\n"
             "import model_analyzer.reports.report_factory\n"
             "import model_analyzer.reports.report_manager\n"
@@ -81,37 +105,41 @@ class TestReportFactory(trc.TestResultCollector):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
-    def test_html_is_used_when_the_renderer_is_absent(self):
-        with patch("shutil.which", return_value=None):
-            self.assertIsInstance(ReportFactory.create_report(), HTMLReport)
-
-    def test_html_is_used_when_the_renderer_is_present_but_pdfkit_is_not(self):
-        with patch("shutil.which", return_value="/usr/bin/wkhtmltopdf"):
-            with pdfkit_unavailable():
-                report = ReportFactory.create_report()
+    def test_html_is_used_when_weasyprint_is_not_installed(self):
+        with weasyprint_broken(ImportError):
+            report = ReportFactory.create_report()
         self.assertIsInstance(report, HTMLReport)
         self.assertNotEqual(type(report).__name__, "PDFReport")
 
-    def test_pdf_is_used_when_both_are_present(self):
-        if importlib.util.find_spec("pdfkit") is None:
-            self.skipTest("requires the optional pdfkit dependency")
-        with patch("shutil.which", return_value="/usr/bin/wkhtmltopdf"):
+    def test_html_is_used_when_weasyprints_native_libraries_are_missing(self):
+        """
+        WeasyPrint raises OSError, not ImportError, when Pango and friends
+        are absent. Catching only ImportError would crash the run instead of
+        falling back.
+        """
+
+        with weasyprint_broken(OSError):
             report = ReportFactory.create_report()
+        self.assertIsInstance(report, HTMLReport)
+        self.assertNotEqual(type(report).__name__, "PDFReport")
+
+    def test_pdf_is_used_when_weasyprint_is_usable(self):
+        if not _weasyprint_importable():
+            self.skipTest("requires the optional weasyprint dependency")
+        report = ReportFactory.create_report()
         self.assertEqual(type(report).__name__, "PDFReport")
 
     def test_the_fallback_warning_is_printed_once(self):
-        with patch("shutil.which", return_value=None):
+        with weasyprint_broken(ImportError):
             with self.assertLogs(level="WARNING") as captured:
                 ReportFactory.create_report()
                 ReportFactory.create_report()
         self.assertEqual(len(captured.records), 1)
-        self.assertIn("wkhtmltopdf is not installed", captured.records[0].getMessage())
 
-    def test_the_missing_pdfkit_warning_names_the_extra(self):
-        with patch("shutil.which", return_value="/usr/bin/wkhtmltopdf"):
-            with pdfkit_unavailable():
-                with self.assertLogs(level="WARNING") as captured:
-                    ReportFactory.create_report()
+    def test_the_fallback_warning_names_the_extra(self):
+        with weasyprint_broken(ImportError):
+            with self.assertLogs(level="WARNING") as captured:
+                ReportFactory.create_report()
         self.assertIn("triton-model-analyzer[pdf]", captured.records[0].getMessage())
 
 

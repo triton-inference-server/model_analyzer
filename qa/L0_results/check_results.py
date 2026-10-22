@@ -18,7 +18,6 @@
 
 import argparse
 import os
-import shutil
 import sys
 
 import yaml
@@ -28,14 +27,19 @@ def report_extension():
     """
     Returns the file extension Model Analyzer uses for reports.
 
-    ReportFactory emits PDF reports only when wkhtmltopdf is on PATH and
+    ReportFactory emits PDF reports only when WeasyPrint is importable and
     falls back to HTML otherwise, so the expected artifact depends on the
-    image the tests run in. Probe rather than assume: wkhtmltopdf is being
-    removed from the SDK and Model Analyzer images, and it remains
-    installable by hand in either.
+    image the tests run in. The import is attempted rather than looked up
+    with find_spec, because WeasyPrint installed without its native
+    libraries imports with OSError -- exactly the case ReportFactory treats
+    as "no renderer". The two must agree or the gate fails on correct output.
     """
 
-    return "pdf" if shutil.which("wkhtmltopdf") is not None else "html"
+    try:
+        import weasyprint  # noqa: F401
+    except (ImportError, OSError):
+        return "html"
+    return "pdf"
 
 
 class TestOutputValidator:
