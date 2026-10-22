@@ -82,8 +82,9 @@ def escape(value):
     Model names, config variant names and measured values originate in a
     model repository or a config file, so they are attacker-controlled when
     the models being benchmarked came from someone else. Interpolating them
-    raw lets that text close a tag and run as script in the reader's browser
-    -- and under the PDF renderer, inside QtWebKit.
+    raw lets that text close a tag and run as script in the reader's browser.
+    The PDF renderer no longer executes script at all, but the HTML report is
+    opened in a real browser, so the markup still has to be safe.
 
     A Markup value is returned untouched, because it is markup the report
     built and has already escaped. Everything else is escaped, so forgetting

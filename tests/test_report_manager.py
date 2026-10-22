@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import importlib.util
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -154,19 +153,16 @@ class TestReportManager(trc.TestResultCollector):
         )
         self.os_mock.start()
         self.os_mock.set_os_path_isfile_return_value(False)
-        # Required patch ordering here
-        # html_report must be patched before pdf_report
-        # Likely due to patching dealing with parent + child classes
-        report_mock_paths = ["model_analyzer.reports.html_report"]
-        # pdfkit is optional (the "pdf" extra). Without it pdf_report does not
-        # import, and ReportFactory never selects it, so there is nothing to
-        # patch -- naming it anyway fails setUp for a reason unrelated to the
-        # behaviour under test.
-        if importlib.util.find_spec("pdfkit") is not None:
-            report_mock_paths.append("model_analyzer.reports.pdf_report")
+        # Only html_report is patched. It owns the open() that writes a
+        # report; PDFReport renders through WeasyPrint, which never reaches
+        # open() in its own module, and these tests stop short of
+        # write_report in any case. pdf_report used to be listed here too,
+        # back when it was a thin wrapper whose parent class did the writing.
         self.io_mock = MockIOMethods(
-            mock_paths=report_mock_paths
-            + ["model_analyzer.state.analyzer_state_manager"],
+            mock_paths=[
+                "model_analyzer.reports.html_report",
+                "model_analyzer.state.analyzer_state_manager",
+            ],
             read_data=[bytes(">:(".encode("ascii"))],
         )
         self.io_mock.start()
