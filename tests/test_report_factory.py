@@ -112,9 +112,7 @@ class TestReportFactory(trc.TestResultCollector):
             with pdfkit_unavailable():
                 with self.assertLogs(level="WARNING") as captured:
                     ReportFactory.create_report()
-        self.assertIn(
-            "triton-model-analyzer[pdf]", captured.records[0].getMessage()
-        )
+        self.assertIn("triton-model-analyzer[pdf]", captured.records[0].getMessage())
 
 
 if __name__ == "__main__":
