@@ -19,6 +19,7 @@
 from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Tuple, Union
 
 if TYPE_CHECKING:
+    from model_analyzer.reports.pdf_report import PDFReport
     from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 import logging
@@ -39,7 +40,6 @@ from model_analyzer.constants import (
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.reports.html_report import HTMLReport, Markup, escape
-from model_analyzer.reports.pdf_report import PDFReport
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.result_table import ResultTable
@@ -98,12 +98,12 @@ class ReportManager:
         self._summary_data: DefaultDict[
             str, List[Tuple[RunConfig, RunConfigMeasurement]]
         ] = defaultdict(list)
-        self._summaries: Dict[str, Union[PDFReport, HTMLReport]] = {}
+        self._summaries: Dict[str, Union["PDFReport", HTMLReport]] = {}
 
         self._detailed_report_data: Dict[
             str, Tuple[RunConfig, RunConfigMeasurement]
         ] = {}
-        self._detailed_reports: Dict[str, Union[PDFReport, HTMLReport]] = {}
+        self._detailed_reports: Dict[str, Union["PDFReport", HTMLReport]] = {}
 
         self._reports_export_directory = os.path.join(config.export_path, "reports")
         os.makedirs(self._reports_export_directory, exist_ok=True)

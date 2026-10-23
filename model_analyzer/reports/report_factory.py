@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -15,12 +17,10 @@
 # limitations under the License.
 
 import logging
-import shutil
 
 from model_analyzer.constants import LOGGER_NAME
 
 from .html_report import HTMLReport
-from .pdf_report import PDFReport
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -30,33 +30,45 @@ class ReportFactory:
     Factory that returns the correct report object
     """
 
-    PDF_PACKAGE = "wkhtmltopdf"
+    PDF_PACKAGE = "weasyprint"
     WARNING_PRINTED = False
 
     @staticmethod
     def create_report():
-        if ReportFactory._is_package_installed(f"{ReportFactory.PDF_PACKAGE}"):
+        try:
             return ReportFactory._create_pdf_report()
-        else:
-            if not ReportFactory.WARNING_PRINTED:
-                ReportFactory.WARNING_PRINTED = True
-                logging.warning(
-                    f"Warning: html reports are being generated instead of pdf because "
-                    f"{ReportFactory.PDF_PACKAGE} is not installed. If you want pdf "
-                    f"reports, run the following command and then rerun Model Analyzer: "
-                    f'"sudo apt-get update && sudo apt-get install wkhtmltopdf"'
-                )
+        except (ImportError, OSError) as error:
+            # ImportError: the "pdf" extra is not installed, or an older
+            # WeasyPrint without the URLFetcher this module needs.
+            # OSError: WeasyPrint is installed but its native libraries
+            # (Pango, HarfBuzz, fontconfig) are not -- importing it then
+            # fails with "cannot load library", not ImportError. Both mean
+            # the same thing to a user: no PDF renderer, so emit HTML.
+            ReportFactory._warn_once(
+                f"Warning: html reports are being generated instead of pdf "
+                f"because {ReportFactory.PDF_PACKAGE} is not usable ({error}). "
+                f"If you want pdf reports, install Model Analyzer with its pdf "
+                f'extra: "pip install triton-model-analyzer[pdf]"'
+            )
             return ReportFactory._create_html_report()
 
     @staticmethod
+    def _warn_once(message):
+        if not ReportFactory.WARNING_PRINTED:
+            ReportFactory.WARNING_PRINTED = True
+            logging.warning(message)
+
+    @staticmethod
     def _create_pdf_report():
+        # Imported here, not at module scope: weasyprint is an optional
+        # dependency and model_analyzer must stay importable without it. An
+        # import at the top of this module would run before the guard in
+        # create_report, which would make the HTML fallback unreachable and
+        # break every command, not just report generation.
+        from .pdf_report import PDFReport
+
         return PDFReport()
 
     @staticmethod
     def _create_html_report():
         return HTMLReport()
-
-    @staticmethod
-    def _is_package_installed(package_name):
-        package_found = shutil.which(f"{package_name}")
-        return package_found is not None

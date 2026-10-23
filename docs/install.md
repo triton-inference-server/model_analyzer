@@ -187,20 +187,30 @@ You can then try installing model analyzer again.
 
 Model Analyzer generates HTML reports by default.
 
-Optionally, if you want PDF reports instead, you should also run the
-following:
+Optionally, if you want PDF reports instead, install Model Analyzer with its
+`pdf` extra:
 
 ```
-sudo apt-get update && sudo apt-get install wkhtmltopdf
+pip3 install triton-model-analyzer[pdf]
 ```
+
+This pulls in [WeasyPrint](https://weasyprint.org/), which needs Pango and
+fontconfig present as system libraries:
+
+```
+sudo apt-get update && sudo apt-get install fontconfig libpango-1.0-0 libpangoft2-1.0-0
+```
+
+Both halves are required. If either is missing, Model Analyzer logs a warning
+and produces HTML.
 
 > **Note**
-> `wkhtmltopdf` renders through QtWebKit, which is unmaintained upstream and
-> carries CVEs that are on the CISA Known Exploited Vulnerabilities list. For
-> that reason the Triton SDK container stopped shipping it in 26.10, and
-> Model Analyzer produces HTML reports there. Installing it is opt-in, and
-> the resulting PDF renderer is run with scripting and local file access
-> disabled.
+> Model Analyzer previously rendered PDFs with `wkhtmltopdf`, which embeds
+> QtWebKit -- unmaintained upstream and carrying CVEs on the CISA Known
+> Exploited Vulnerabilities list. It has been replaced by WeasyPrint, which
+> is not a browser engine: it has no JavaScript interpreter, and Model
+> Analyzer restricts its URL fetcher to `data:` URIs so a report cannot read
+> local files or make network requests while rendering.
 
 <br>
 

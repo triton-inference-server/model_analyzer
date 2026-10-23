@@ -18,8 +18,11 @@
 
 import importlib.util
 import os
+import sys
 import tempfile
+import types
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
@@ -28,6 +31,45 @@ from .common import test_result_collector as trc
 _CHECK_RESULTS_PATH = (
     Path(__file__).resolve().parents[1] / "qa" / "L0_results" / "check_results.py"
 )
+
+
+_ABSENT = object()
+
+
+@contextmanager
+def weasyprint_available(state):
+    """Control what ``import weasyprint`` does inside the qa script.
+
+    Three states, because there are three real ones. True: a usable install.
+    False: no "pdf" extra. "old": WeasyPrint present but older than the
+    URLFetcher pdf_report needs, so PDFReport does not import and HTML is
+    produced -- the gate has to say "html" for that case too, or it rejects
+    correct output.
+    """
+
+    names = ("weasyprint", "weasyprint.urls")
+    saved = {name: sys.modules.get(name, _ABSENT) for name in names}
+
+    if state is False:
+        sys.modules["weasyprint"] = None
+        sys.modules.pop("weasyprint.urls", None)
+    else:
+        package = types.ModuleType("weasyprint")
+        package.HTML = object()
+        urls = types.ModuleType("weasyprint.urls")
+        if state is True:
+            urls.URLFetcher = object()
+        package.urls = urls
+        sys.modules["weasyprint"] = package
+        sys.modules["weasyprint.urls"] = urls
+    try:
+        yield
+    finally:
+        for name, module in saved.items():
+            if module is _ABSENT:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = module
 
 
 def _load_check_results():
@@ -42,9 +84,9 @@ def _load_check_results():
 class TestQACheckResults(trc.TestResultCollector):
     """
     The L0_results gate asserts the report artifacts Model Analyzer wrote.
-    ReportFactory only emits PDFs when wkhtmltopdf is on PATH, and the SDK
-    image dropped wkhtmltopdf (with QtWebKit) in 26.10, so the gate has to
-    follow the same condition instead of hardcoding .pdf.
+    ReportFactory only emits PDFs when WeasyPrint is usable, and whether it
+    is installed depends on the image, so the gate has to follow the same
+    condition instead of hardcoding .pdf.
     """
 
     def setUp(self):
@@ -79,36 +121,42 @@ class TestQACheckResults(trc.TestResultCollector):
             self.check_results.TestOutputValidator(self.config, test_name, export_path)
         return context.exception.code
 
-    def test_report_extension_pdf_when_wkhtmltopdf_present(self):
-        with patch.object(
-            self.check_results.shutil, "which", return_value="/usr/bin/wkhtmltopdf"
-        ):
+    def test_report_extension_pdf_when_weasyprint_present(self):
+        with weasyprint_available(True):
             self.assertEqual(self.check_results.report_extension(), "pdf")
 
-    def test_report_extension_html_when_wkhtmltopdf_absent(self):
-        with patch.object(self.check_results.shutil, "which", return_value=None):
+    def test_report_extension_html_when_weasyprint_absent(self):
+        with weasyprint_available(False):
             self.assertEqual(self.check_results.report_extension(), "html")
 
-    def test_checks_pass_on_html_reports_without_wkhtmltopdf(self):
+    def test_report_extension_html_when_weasyprint_is_too_old(self):
         """
-        The 26.10+ SDK image: no wkhtmltopdf, so HTML reports are produced.
-        This failed before the fix because the gate looked for .pdf.
+        A WeasyPrint without URLFetcher cannot render: PDFReport fails to
+        import and ReportFactory produces HTML. A bare ``import weasyprint``
+        would still report "pdf" here and fail the gate on correct output.
         """
 
-        with patch.object(self.check_results.shutil, "which", return_value=None):
+        with weasyprint_available("old"):
+            self.assertEqual(self.check_results.report_extension(), "html")
+
+    def test_checks_pass_on_html_reports_without_weasyprint(self):
+        """
+        An image without the pdf extra, so HTML reports are produced. This
+        failed before the fix because the gate looked for .pdf.
+        """
+
+        with weasyprint_available(False):
             with tempfile.TemporaryDirectory() as export_path:
                 self._build_export_path(export_path, "html")
                 self.assertEqual(self._run_check("summaries", export_path), 0)
                 self.assertEqual(self._run_check("detailed_reports", export_path), 0)
 
-    def test_checks_pass_on_pdf_reports_with_wkhtmltopdf(self):
+    def test_checks_pass_on_pdf_reports_with_weasyprint(self):
         """
-        wkhtmltopdf installed by hand: PDF reports still gate correctly.
+        The pdf extra installed: PDF reports still gate correctly.
         """
 
-        with patch.object(
-            self.check_results.shutil, "which", return_value="/usr/bin/wkhtmltopdf"
-        ):
+        with weasyprint_available(True):
             with tempfile.TemporaryDirectory() as export_path:
                 self._build_export_path(export_path, "pdf")
                 self.assertEqual(self._run_check("summaries", export_path), 0)
@@ -120,7 +168,7 @@ class TestQACheckResults(trc.TestResultCollector):
         extension fix would have turned it into a no-op.
         """
 
-        with patch.object(self.check_results.shutil, "which", return_value=None):
+        with weasyprint_available(False):
             with tempfile.TemporaryDirectory() as export_path:
                 os.makedirs(os.path.join(export_path, "reports", "summaries"))
                 os.makedirs(os.path.join(export_path, "reports", "detailed"))

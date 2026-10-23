@@ -153,13 +153,14 @@ class TestReportManager(trc.TestResultCollector):
         )
         self.os_mock.start()
         self.os_mock.set_os_path_isfile_return_value(False)
-        # Required patch ordering here
-        # html_report must be patched before pdf_report
-        # Likely due to patching dealing with parent + child classes
+        # Only html_report is patched. It owns the open() that writes a
+        # report; PDFReport renders through WeasyPrint, which never reaches
+        # open() in its own module, and these tests stop short of
+        # write_report in any case. pdf_report used to be listed here too,
+        # back when it was a thin wrapper whose parent class did the writing.
         self.io_mock = MockIOMethods(
             mock_paths=[
                 "model_analyzer.reports.html_report",
-                "model_analyzer.reports.pdf_report",
                 "model_analyzer.state.analyzer_state_manager",
             ],
             read_data=[bytes(">:(".encode("ascii"))],
