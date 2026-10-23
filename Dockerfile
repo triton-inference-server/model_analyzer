@@ -19,7 +19,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # libpango/fontconfig are WeasyPrint's native dependencies, the
 # replacement for wkhtmltopdf. They carry no browser engine.
 RUN apt update -qq && apt install -y docker.io \
-        fontconfig libpango-1.0-0 libpangoft2-1.0-0
+        fontconfig libpango-1.0-0 libpangoft2-1.0-0 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Install tritonclient
 COPY --from=sdk /workspace/install/python /tmp/tritonclient
@@ -51,7 +53,7 @@ COPY . .
 
 RUN python3 -m build --wheel \
     && cd dist \
-    && python3 -m pip install "$(ls triton*model*analyzer*.whl)[pdf]"
+    && python3 -m pip install --no-cache-dir "$(ls triton*model*analyzer*.whl)[pdf]"
 
 RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
 
