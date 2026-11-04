@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
 # Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
@@ -50,7 +52,9 @@ def get_client_handle(config):
     if config.client_protocol == "http":
         http_ssl_options = get_http_ssl_options(config)
         client = TritonClientFactory.create_http_client(
-            server_url=config.triton_http_endpoint, ssl_options=http_ssl_options
+            server_url=config.triton_http_endpoint,
+            ssl_options=http_ssl_options,
+            headers=config.triton_http_headers,
         )
     elif config.client_protocol == "grpc":
         grpc_ssl_options = get_grpc_ssl_options(config)

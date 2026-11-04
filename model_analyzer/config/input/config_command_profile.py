@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
 import argparse
@@ -314,6 +314,32 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(str),
                 default_value=DEFAULT_MODEL_TYPE,
                 description="Type of model being profiled: generic or LLM",
+            )
+        )
+
+        def _preprocess_triton_http_headers(value):
+            """Parse JSON string from CLI into dict"""
+            if isinstance(value, str):
+                import json
+
+                try:
+                    return json.loads(value)
+                except json.JSONDecodeError as e:
+                    raise TritonModelAnalyzerException(
+                        f"Failed to parse triton_http_headers as JSON: {e}"
+                    )
+            return value
+
+        self._add_config(
+            ConfigField(
+                "triton_http_headers",
+                flags=["--triton-http-headers"],
+                field_type=ConfigObject(
+                    schema={"*": ConfigPrimitive(str)},
+                    preprocess=_preprocess_triton_http_headers,
+                ),
+                default_value={},
+                description="HTTP headers to send to Triton Server (key-value pairs)",
             )
         )
 

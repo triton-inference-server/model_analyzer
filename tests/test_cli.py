@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
 import copy
@@ -234,6 +234,15 @@ def get_test_options():
             ["local", "docker", "remote", "c_api"],
             "local",
             "SHOULD_FAIL",
+        ),
+        OptionStruct(
+            "dict",
+            "profile",
+            "--triton-http-headers",
+            None,
+            '{"Authorization": "Bearer token123"}',
+            "{}",
+            None,
         ),
         OptionStruct(
             "string",
@@ -574,6 +583,8 @@ class TestCLI(trc.TestResultCollector):
                 self._test_string_option(option)
             elif option.type in ["intlist", "stringlist"]:
                 self._test_list_option(option)
+            elif option.type == "dict":
+                self._test_dict_option(option)
             elif option.type in ["noop"]:
                 pass
             else:
@@ -765,6 +776,62 @@ class TestCLI(trc.TestResultCollector):
                 expected_default_value_converted,
             )
 
+    def _test_dict_option(self, option_struct):
+        """Test dictionary/JSON options that are parsed from CLI strings"""
+        long_option = option_struct.long_flag
+        short_option = option_struct.short_flag
+        expected_value = option_struct.expected_value
+        expected_default_value = option_struct.expected_default_value
+        expected_failing_value = option_struct.expected_failing_value
+        extra_commands = option_struct.extra_commands
+
+        # Convert JSON strings to dicts for comparison
+        expected_value_converted = self._convert_json_string_to_dict(expected_value)
+        if expected_default_value is not None:
+            expected_default_value_converted = self._convert_json_string_to_dict(
+                expected_default_value
+            )
+        else:
+            expected_default_value_converted = None
+
+        long_option_with_underscores = self._convert_flag_to_use_underscores(
+            long_option
+        )
+
+        # Test long flag
+        self._test_long_flag(
+            long_option,
+            option_struct.cli_subcommand,
+            expected_value,
+            long_option_with_underscores,
+            expected_value_converted,
+            extra_commands,
+        )
+
+        # Test short flag (if it exists)
+        self._test_short_flag(
+            short_option,
+            option_struct.cli_subcommand,
+            expected_value,
+            long_option_with_underscores,
+            expected_value_converted,
+        )
+
+        # Test default value
+        if expected_default_value is not None:
+            self._test_expected_default_value(
+                option_struct.cli_subcommand,
+                long_option_with_underscores,
+                expected_default_value_converted,
+            )
+
+        # Test invalid JSON causes failure
+        if expected_failing_value is not None:
+            cli = option_struct.cli_subcommand()
+            cli.args.extend([long_option, expected_failing_value])
+            with self.assertRaises(TritonModelAnalyzerException):
+                _, config = cli.parse()
+
     # Helper methods
 
     def _test_long_flag(
@@ -826,6 +893,11 @@ class TestCLI(trc.TestResultCollector):
         if len(ret_val) == 1:
             return ret_val[0]
         return ret_val
+
+    def _convert_json_string_to_dict(self, json_string):
+        import json
+
+        return json.loads(json_string)
 
 
 if __name__ == "__main__":
